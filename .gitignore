@@ -23,3 +23,14 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+# Exemple : ignorer un fichier de configuration
+/config/secret.env
+.env
+.env.dev
+
+# Exemple : ignorer tout le dossier de cache
+/var/cache/
+
+# Ignorer tous les fichiers log
+*.log
