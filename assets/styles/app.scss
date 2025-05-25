@@ -1,3 +1,142 @@
+// Personnalisation des couleurs Bootstrap pour CityFlow
+$primary: #333333;      // Gris foncé
+$secondary: #666666;    // Gris moyen
+$success: #4caf50;      // Vert
+$info: #03a9f4;         // Bleu info
+$warning: #ff9800;      // Orange
+$danger: #f44336;       // Rouge
+$light: #f5f5f5;        // Gris très clair
+$dark: #1a1a1a;         // Noir
+$body-bg: #f8f8f8;      // Fond gris clair
+$body-color: #333;      // Texte gris foncé
+
+// Import Bootstrap
+@import "~bootstrap/scss/bootstrap";
+
+// Styles personnalisés pour CityFlow
 body {
-    background-color: skyblue;
+    background-color: $body-bg;
+    color: $body-color;
+    font-family: 'Roboto', sans-serif;
+}
+
+.navbar {
+    background-color: $dark;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.card {
+    border: none;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,.05);
+    margin-bottom: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,.1);
+}
+
+.card-header {
+    font-weight: 600;
+    background-color: $dark;
+    color: $light;
+    border-bottom: none;
+}
+
+.btn-primary {
+    background-color: $primary;
+    border-color: $primary;
+}
+
+.btn-primary:hover {
+    background-color: darken($primary, 10%);
+    border-color: darken($primary, 10%);
+}
+
+.footer {
+    background-color: $dark;
+    color: $light;
+    padding: 2rem 0;
+    margin-top: 3rem;
+}
+
+// Styles pour la carte
+.map-container {
+    height: 500px;
+    width: 100%;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,.1);
+}
+
+// Styles pour les notifications
+.notification-badge {
+    position: relative;
+    display: inline-block;
+}
+
+.notification-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: $danger;
+    color: white;
+    border-radius: 50%;
+    padding: 0.25em 0.5em;
+    font-size: 0.75rem;
+    min-width: 20px;
+    text-align: center;
+}
+
+// Styles pour les signalements
+.signalement-item {
+    transition: background-color 0.2s;
+}
+
+.signalement-item:hover {
+    background-color: rgba(0,0,0,.03);
+}
+
+// Styles pour le statut
+.status-badge {
+    border-radius: 20px;
+    padding: 0.25em 0.75em;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status-nouveau {
+    background-color: $danger;
+    color: white;
+}
+
+.status-en_cours {
+    background-color: $warning;
+    color: white;
+}
+
+.status-resolu {
+    background-color: $success;
+    color: white;
+}
+
+.status-annule {
+    background-color: $secondary;
+    color: white;
+}
+
+// Animation pour les cartes
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animated-card {
+    animation: fadeIn 0.5s ease-out forwards;
 }
