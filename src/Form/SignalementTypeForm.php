@@ -22,69 +22,55 @@ class SignalementTypeForm extends AbstractType
     {
         $builder
             ->add('titre', TextType::class, [
-                'label' => 'Titre',
                 'constraints' => [
                     new NotBlank([
                         'message' => 'Veuillez entrer un titre',
                     ]),
                 ],
+                'attr' => ['placeholder' => 'Titre du signalement'],
             ])
             ->add('description', TextareaType::class, [
-                'label' => 'Description',
                 'constraints' => [
                     new NotBlank([
                         'message' => 'Veuillez entrer une description',
                     ]),
                 ],
+                'attr' => ['rows' => 5, 'placeholder' => 'Description détaillée du problème'],
             ])
-            ->add('photoFile', FileType::class, [
-                'label' => 'Photo',
+            ->add('latitude', HiddenType::class)
+            ->add('longitude', HiddenType::class)
+            ->add('photo', FileType::class, [
+                'label' => 'Photo du problème',
                 'mapped' => false,
-                'required' => true,
+                'required' => false,
                 'constraints' => [
                     new File([
-                        'maxSize' => '2M',
+                        'maxSize' => '5M',
                         'mimeTypes' => [
                             'image/jpeg',
                             'image/png',
                         ],
-                        'mimeTypesMessage' => 'Veuillez télécharger une image valide (JPEG ou PNG)',
+                        'mimeTypesMessage' => 'Veuillez uploader une image valide (JPEG ou PNG)',
                     ])
                 ],
             ])
             ->add('categorie', EntityType::class, [
                 'class' => Categorie::class,
                 'choice_label' => 'nom',
-                'label' => 'Catégorie',
-                'placeholder' => 'Sélectionnez une catégorie',
+                'placeholder' => 'Choisir une catégorie',
                 'constraints' => [
                     new NotBlank([
-                        'message' => 'Veuillez sélectionner une catégorie',
+                        'message' => 'Veuillez choisir une catégorie',
                     ]),
                 ],
             ])
             ->add('ville', EntityType::class, [
                 'class' => Ville::class,
                 'choice_label' => 'nom',
-                'label' => 'Ville',
-                'placeholder' => 'Sélectionnez une ville',
+                'placeholder' => 'Choisir une ville',
                 'constraints' => [
                     new NotBlank([
-                        'message' => 'Veuillez sélectionner une ville',
-                    ]),
-                ],
-            ])
-            ->add('latitude', HiddenType::class, [
-                'constraints' => [
-                    new NotBlank([
-                        'message' => 'La latitude est requise',
-                    ]),
-                ],
-            ])
-            ->add('longitude', HiddenType::class, [
-                'constraints' => [
-                    new NotBlank([
-                        'message' => 'La longitude est requise',
+                        'message' => 'Veuillez choisir une ville',
                     ]),
                 ],
             ])
