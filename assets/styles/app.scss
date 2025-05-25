@@ -69,10 +69,9 @@ body {
 
 // Styles pour la carte
 .map-container {
-    height: 500px;
-    width: 100%;
-    border-radius: 4px;
-    box-shadow: 0 2px 5px rgba(0,0,0,.1);
+    border-radius: 0.25rem;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
 }
 
 // Styles pour les notifications
@@ -111,32 +110,143 @@ body {
     font-weight: 500;
 }
 
+/* Styles pour les badges de statut */
 .status-nouveau {
-    background-color: $danger;
-    color: white;
+    background-color: #dc3545;
 }
 
 .status-en_cours {
-    background-color: $warning;
-    color: white;
+    background-color: #fd7e14;
 }
 
 .status-resolu {
-    background-color: $success;
-    color: white;
+    background-color: #198754;
 }
 
 .status-annule {
-    background-color: $secondary;
-    color: white;
+    background-color: #6c757d;
 }
 
-// Animation pour les cartes
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Style général */
+html, body {
+    height: 100%;
 }
 
-.animated-card {
-    animation: fadeIn 0.5s ease-out forwards;
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+.footer {
+    flex-shrink: 0;
+}
+
+/* Styles pour les badges de statut */
+.status-nouveau {
+    background-color: #dc3545;
+}
+
+.status-en_cours {
+    background-color: #fd7e14;
+}
+
+.status-resolu {
+    background-color: #198754;
+}
+
+.status-annule {
+    background-color: #6c757d;
+}
+
+/* Style pour la carte */
+.map-container {
+    height: 600px;
+    border-radius: 0.25rem;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+}
+
+/* Styles pour les cartes */
+.card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.card-img-top {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+/* Styles pour les liens sociaux dans le footer */
+.social-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+.social-links a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+}
+
+/* Styles pour la navbar */
+.navbar {
+    background-color: #343a40;
+}
+
+.navbar-dark .navbar-brand,
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #fff;
+}
+
+/* S'assurer que le menu hamburger est visible */
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.5);
+    padding: 0.5rem;
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.7%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Assurer que le menu déroulant s'affiche correctement sur mobile */
+@media (max-width: 991.98px) {
+    .navbar-collapse.show {
+        display: block;
+    }
+    
+    .dropdown-menu.show {
+        display: block;
+        position: static;
+        float: none;
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
+        padding-left: 1rem;
+    }
+    
+    .dropdown-menu.show .dropdown-item {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .dropdown-menu.show .dropdown-item:hover {
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
 }

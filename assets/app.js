@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+/*
+
 // Chargement conditionnel de Leaflet pour la carte
 if (document.getElementById('map')) {
     import('leaflet').then(({ default: L }) => {
@@ -105,3 +107,5 @@ if (document.getElementById('map')) {
         }
     });
 }
+
+*/

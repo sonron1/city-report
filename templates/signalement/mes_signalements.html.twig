@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes signalements - CityFlow{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <h1 class="mb-4">Mes signalements</h1>
+    
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">
+            {{ message }}
+        </div>
+    {% endfor %}
+    
+    <div class="mb-4">
+        <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Nouveau signalement
+        </a>
+    </div>
+    
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Titre</th>
+                            <th>Catégorie</th>
+                            <th>Ville</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for signalement in signalements %}
+                            <tr>
+                                <td>{{ signalement.dateSignalement|date('d/m/Y') }}</td>
+                                <td>{{ signalement.titre }}</td>
+                                <td><span class="badge bg-secondary">{{ signalement.categorie.nom }}</span></td>
+                                <td>{{ signalement.ville.nom }}</td>
+                                <td><span class="badge status-{{ signalement.statut.value }}">{{ signalement.statut.value|replace({'_': ' '})|capitalize }}</span></td>
+                                <td>
+                                    <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if signalement.statut.value == 'nouveau' %}
+                                        <button class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">Vous n'avez pas encore créé de signalement.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
