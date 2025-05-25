@@ -1,0 +1,156 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Carte des signalements - CityFlow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+{% endblock %}
+
+{% block body %}
+<h1 class="mb-4">Carte des signalements</h1>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Filtres</h5>
+            </div>
+            <div class="card-body">
+                <form id="filter-form">
+                    <div class="mb-3">
+                        <label for="ville" class="form-label">Ville</label>
+                        <select id="ville" class="form-select">
+                            <option value="">Toutes les villes</option>
+                            {% for ville in villes %}
+                                <option value="{{ ville.id }}">{{ ville.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="categorie" class="form-label">Catégorie</label>
+                        <select id="categorie" class="form-select">
+                            <option value="">Toutes les catégories</option>
+                            {% for categorie in categories %}
+                                <option value="{{ categorie.id }}">{{ categorie.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="statut" class="form-label">Statut</label>
+                        <select id="statut" class="form-select">
+                            <option value="">Tous les statuts</option>
+                            <option value="nouveau">Nouveau</option>
+                            <option value="en_cours">En cours</option>
+                            <option value="resolu">Résolu</option>
+                            <option value="annule">Annulé</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Légende</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-danger rounded-circle me-2" style="width: 20px; height: 20px;"></div>
+                    <span>Nouveau</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-warning rounded-circle me-2" style="width: 20px; height: 20px;"></div>
+                    <span>En cours</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-success rounded-circle me-2" style="width: 20px; height: 20px;"></div>
+                    <span>Résolu</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="bg-secondary rounded-circle me-2" style="width: 20px; height: 20px;"></div>
+                    <span>Annulé</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div id="map" class="map-container shadow rounded"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const map = L.map('map').setView([46.603354, 1.888334], 6); // Centre sur la France
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Chargement des signalements
+            fetchSignalements();
+            
+            // Gestion du formulaire de filtrage
+            document.getElementById('filter-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                fetchSignalements();
+            });
+            
+            // Fonction pour charger les signalements filtrés
+            function fetchSignalements() {
+                const villeId = document.getElementById('ville').value;
+                const categorieId = document.getElementById('categorie').value;
+                const statut = document.getElementById('statut').value;
+                
+                let url = '/api/signalements/valides?';
+                if (villeId) url += `villeId=${villeId}&`;
+                if (categorieId) url += `categorieId=${categorieId}&`;
+                if (statut) url += `statut=${statut}&`;
+                
+                fetch(url)
+                    .then(response => response.json())
+                    .then(signalements => {
+                        // Supprimer les marqueurs existants
+                        map.eachLayer(layer => {
+                            if (layer instanceof L.Marker) {
+                                map.removeLayer(layer);
+                            }
+                        });
+                        
+                        // Ajouter les nouveaux marqueurs
+                        signalements.forEach(signalement => {
+                            let markerColor;
+                            switch(signalement.statut) {
+                                case 'nouveau': markerColor = '#f44336'; break; // Rouge
+                                case 'en_cours': markerColor = '#ff9800'; break; // Orange
+                                case 'resolu': markerColor = '#4caf50'; break; // Vert
+                                default: markerColor = '#666666'; // Gris
+                            }
+                            
+                            const markerIcon = L.divIcon({
+                                className: 'custom-marker',
+                                html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+                                iconSize: [16, 16],
+                                iconAnchor: [8, 8]
+                            });
+                            
+                            L.marker([signalement.latitude, signalement.longitude], { icon: markerIcon })
+                                .addTo(map)
+                                .bindPopup(`
+                                    <strong>${signalement.titre}</strong><br>
+                                    Catégorie: ${signalement.categorie.nom}<br>
+                                    Statut: ${signalement.statut}<br>
+                                    <a href="/signalement/${signalement.id}" class="btn btn-sm btn-primary mt-2">Voir détails</a>
+                                `);
+                        });
+                    });
+            }
+        });
+    </script>
+{% endblock %}
