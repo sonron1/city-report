@@ -76,7 +76,7 @@
         </div>
     </div>
     <div class="col-md-9">
-        <div id="map" class="map-container shadow rounded"></div>
+        <div id="map-index" style="height: 600px;" class="map-container shadow rounded"></div>
     </div>
 </div>
 {% endblock %}
@@ -86,70 +86,81 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const map = L.map('map').setView([46.603354, 1.888334], 6); // Centre sur la France
+            // Utilisez l'ID unique pour cette carte
+            const mapElement = document.getElementById('map-index');
             
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-            
-            // Chargement des signalements
-            fetchSignalements();
-            
-            // Gestion du formulaire de filtrage
-            document.getElementById('filter-form').addEventListener('submit', function(e) {
-                e.preventDefault();
+            if (mapElement) {
+                const map = L.map('map-index').setView([46.603354, 1.888334], 6); // Centre sur la France
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                
+                // Chargement des signalements
                 fetchSignalements();
-            });
-            
-            // Fonction pour charger les signalements filtrés
-            function fetchSignalements() {
-                const villeId = document.getElementById('ville').value;
-                const categorieId = document.getElementById('categorie').value;
-                const statut = document.getElementById('statut').value;
                 
-                let url = '/api/signalements/valides?';
-                if (villeId) url += `villeId=${villeId}&`;
-                if (categorieId) url += `categorieId=${categorieId}&`;
-                if (statut) url += `statut=${statut}&`;
+                // Gestion du formulaire de filtrage
+                const filterForm = document.getElementById('filter-form');
+                if (filterForm) {
+                    filterForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        fetchSignalements();
+                    });
+                }
                 
-                fetch(url)
-                    .then(response => response.json())
-                    .then(signalements => {
-                        // Supprimer les marqueurs existants
-                        map.eachLayer(layer => {
-                            if (layer instanceof L.Marker) {
-                                map.removeLayer(layer);
-                            }
-                        });
-                        
-                        // Ajouter les nouveaux marqueurs
-                        signalements.forEach(signalement => {
-                            let markerColor;
-                            switch(signalement.statut) {
-                                case 'nouveau': markerColor = '#f44336'; break; // Rouge
-                                case 'en_cours': markerColor = '#ff9800'; break; // Orange
-                                case 'resolu': markerColor = '#4caf50'; break; // Vert
-                                default: markerColor = '#666666'; // Gris
-                            }
-                            
-                            const markerIcon = L.divIcon({
-                                className: 'custom-marker',
-                                html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
-                                iconSize: [16, 16],
-                                iconAnchor: [8, 8]
+                // Fonction pour charger les signalements filtrés
+                function fetchSignalements() {
+                    const villeId = document.getElementById('ville')?.value || '';
+                    const categorieId = document.getElementById('categorie')?.value || '';
+                    const statut = document.getElementById('statut')?.value || '';
+                    
+                    let url = '/api/signalements/valides?';
+                    if (villeId) url += `villeId=${villeId}&`;
+                    if (categorieId) url += `categorieId=${categorieId}&`;
+                    if (statut) url += `statut=${statut}&`;
+                    
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(signalements => {
+                            // Supprimer les marqueurs existants
+                            map.eachLayer(layer => {
+                                if (layer instanceof L.Marker) {
+                                    map.removeLayer(layer);
+                                }
                             });
                             
-                            L.marker([signalement.latitude, signalement.longitude], { icon: markerIcon })
-                                .addTo(map)
-                                .bindPopup(`
-                                    <strong>${signalement.titre}</strong><br>
-                                    Catégorie: ${signalement.categorie.nom}<br>
-                                    Statut: ${signalement.statut}<br>
-                                    <a href="/signalement/${signalement.id}" class="btn btn-sm btn-primary mt-2">Voir détails</a>
-                                `);
+                            // Ajouter les nouveaux marqueurs
+                            signalements.forEach(signalement => {
+                                let markerColor;
+                                switch(signalement.statut) {
+                                    case 'nouveau': markerColor = '#f44336'; break; // Rouge
+                                    case 'en_cours': markerColor = '#ff9800'; break; // Orange
+                                    case 'resolu': markerColor = '#4caf50'; break; // Vert
+                                    default: markerColor = '#666666'; // Gris
+                                }
+                                
+                                const markerIcon = L.divIcon({
+                                    className: 'custom-marker',
+                                    html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+                                    iconSize: [16, 16],
+                                    iconAnchor: [8, 8]
+                                });
+                                
+                                L.marker([signalement.latitude, signalement.longitude], { icon: markerIcon })
+                                    .addTo(map)
+                                    .bindPopup(`
+                                        <strong>${signalement.titre}</strong><br>
+                                        Catégorie: ${signalement.categorie.nom}<br>
+                                        Statut: ${signalement.statut}<br>
+                                        <a href="/signalement/${signalement.id}" class="btn btn-sm btn-primary mt-2">Voir détails</a>
+                                    `);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Erreur lors du chargement des signalements:', error);
                         });
-                    });
+                }
             }
         });
     </script>

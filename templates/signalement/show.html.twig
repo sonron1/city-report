@@ -8,122 +8,69 @@
 {% endblock %}
 
 {% block body %}
-<div class="mb-4">
-    <a href="{{ path('app_signalement_index') }}" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-1"></i> Retour aux signalements
-    </a>
-</div>
-
-<div class="card shadow mb-4">
-    <div class="card-header bg-dark text-white">
-        <h1 class="h3 mb-0">{{ signalement.titre }}</h1>
+<div class="container py-4">
+    <div class="mb-4">
+        <a href="{{ path('app_signalements') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour aux signalements
+        </a>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="img-fluid rounded mb-3" alt="{{ signalement.titre }}">
-                <div class="d-flex justify-content-between mb-3">
-                    <span class="badge status-{{ signalement.statut.value }} p-2">
-                        {{ signalement.statut.value|replace({'_': ' '})|capitalize }}
-                    </span>
-                    <span class="text-muted">
-                        <i class="fas fa-calendar-alt me-1"></i> {{ signalement.dateSignalement|date('d/m/Y à H:i') }}
-                    </span>
-                </div>
-                <p>{{ signalement.description }}</p>
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <strong><i class="fas fa-map-marker-alt me-1"></i> Ville:</strong> {{ signalement.ville.nom }}
-                    </div>
-                    <div>
-                        <strong><i class="fas fa-tag me-1"></i> Catégorie:</strong> {{ signalement.categorie.nom }}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div id="map" class="map-container mb-3" style="height: 300px;"></div>
-                
-                {% if signalement.reparation %}
-                    <div class="card mb-3">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="card-title mb-0">Réparation {{ signalement.reparation.statut }}</h5>
-                        </div>
-                        <div class="card-body">
-                            <p>{{ signalement.reparation.description }}</p>
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <strong>Date de début:</strong> {{ signalement.reparation.dateDebut|date('d/m/Y') }}
-                                </div>
-                                {% if signalement.reparation.dateFin %}
-                                    <div>
-                                        <strong>Date de fin:</strong> {{ signalement.reparation.dateFin|date('d/m/Y') }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-                
-                <div class="card">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="card-title mb-0">À propos de l'auteur</h5>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Nom:</strong> {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</p>
-                        <p><strong>Ville de résidence:</strong> {{ signalement.utilisateur.villeResidence.nom }}</p>
-                        <p><strong>Date d'inscription:</strong> {{ signalement.utilisateur.dateInscription|date('d/m/Y') }}</p>
-                    </div>
-                </div>
-            </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ signalement.titre }}</h1>
+            <span class="badge status-{{ signalement.statut.value }} fs-6">{{ signalement.statut.value|replace({'_': ' '})|capitalize }}</span>
         </div>
-    </div>
-</div>
-
-<div class="card shadow mb-4">
-    <div class="card-header bg-dark text-white">
-        <h2 class="h4 mb-0">Commentaires ({{ signalement.commentaires|length }})</h2>
-    </div>
-    <div class="card-body">
-        {% if signalement.commentaires|length > 0 %}
-            {% for commentaire in signalement.commentaires %}
-                {% if commentaire.etatValidation == 'validé' or (app.user and (app.user == commentaire.utilisateur or is_granted('ROLE_MODERATOR'))) %}
-                    <div class="card mb-3 {% if commentaire.etatValidation != 'validé' %}bg-light{% endif %}">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <h5 class="card-title">{{ commentaire.utilisateur.prenom }} {{ commentaire.utilisateur.nom }}</h5>
-                                <small class="text-muted">{{ commentaire.dateCommentaire|date('d/m/Y à H:i') }}</small>
-                            </div>
-                            <p class="card-text">{{ commentaire.contenu }}</p>
-                            {% if commentaire.etatValidation != 'validé' %}
-                                <div class="alert alert-warning mb-0">
-                                    <small>Ce commentaire est en attente de validation par un modérateur.</small>
-                                </div>
-                            {% endif %}
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    {% if signalement.photoUrl %}
+                        <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="img-fluid rounded" alt="{{ signalement.titre }}">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 300px;">
+                            <i class="fas fa-image fa-5x text-muted"></i>
                         </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">Informations</h2>
+                        <p class="mb-2"><strong>Catégorie :</strong> <span class="badge bg-secondary">{{ signalement.categorie.nom }}</span></p>
+                        <p class="mb-2"><strong>Ville :</strong> {{ signalement.ville.nom }}</p>
+                        <p class="mb-2"><strong>Date :</strong> {{ signalement.dateSignalement|date('d/m/Y H:i') }}</p>
+                        <p class="mb-2"><strong>Signalé par :</strong> {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</p>
                     </div>
-                {% endif %}
-            {% endfor %}
-        {% else %}
-            <div class="alert alert-info">Aucun commentaire pour l'instant.</div>
-        {% endif %}
-        
-        {% if app.user %}
+                    
+                    <div id="map-detail" class="map-container mb-3" style="height: 200px;"></div>
+                </div>
+            </div>
+            
             <div class="mt-4">
-                <h3 class="h5 mb-3">Ajouter un commentaire</h3>
-                {{ form_start(commentaire_form) }}
-                    {{ form_row(commentaire_form.contenu) }}
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-comment me-1"></i> Commenter
-                        </button>
-                    </div>
-                {{ form_end(commentaire_form) }}
+                <h2 class="h4 mb-3">Description</h2>
+                <p>{{ signalement.description|nl2br }}</p>
             </div>
-        {% else %}
-            <div class="alert alert-info mt-4">
-                <p class="mb-0">Vous devez être <a href="{{ path('app_login') }}">connecté</a> pour ajouter un commentaire.</p>
-            </div>
-        {% endif %}
+            
+            {% if is_granted('ROLE_MODERATOR') or signalement.utilisateur == app.user %}
+                <div class="mt-4 d-flex gap-2">
+                    {% if is_granted('ROLE_MODERATOR') %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                Changer le statut
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <li><a class="dropdown-item" href="#">Nouveau</a></li>
+                                <li><a class="dropdown-item" href="#">En cours</a></li>
+                                <li><a class="dropdown-item" href="#">Résolu</a></li>
+                                <li><a class="dropdown-item" href="#">Annulé</a></li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    {% if signalement.utilisateur == app.user and signalement.statut.value == 'nouveau' %}
+                        <button class="btn btn-outline-danger">Supprimer</button>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -133,15 +80,20 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const map = L.map('map').setView([{{ signalement.latitude }}, {{ signalement.longitude }}], 15);
+            const mapElement = document.getElementById('map-detail');
             
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-            
-            L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}]).addTo(map)
-                .bindPopup("{{ signalement.titre }}");
+            if (mapElement) {
+                const map = L.map('map-detail').setView([{{ signalement.latitude }}, {{ signalement.longitude }}], 15);
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                
+                L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}])
+                    .addTo(map)
+                    .bindPopup("{{ signalement.titre }}");
+            }
         });
     </script>
 {% endblock %}

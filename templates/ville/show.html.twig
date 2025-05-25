@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ ville.nom }} - CityFlow{% endblock %}
+{% block title %}{{ signalement.titre }} - CityFlow{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -8,69 +8,71 @@
 {% endblock %}
 
 {% block body %}
-<div class="mb-4">
-    <a href="{{ path('app_villes') }}" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-1"></i> Retour à la liste des villes
-    </a>
-</div>
-
-<div class="card shadow mb-4">
-    <div class="card-header bg-dark text-white">
-        <h1 class="h3 mb-0">{{ ville.nom }}</h1>
+<div class="container py-4">
+    <div class="mb-4">
+        <a href="{{ path('app_signalements') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour aux signalements
+        </a>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <p><strong>Nombre de signalements :</strong> {{ signalements|length }}</p>
-                <div id="map" class="map-container mb-3" style="height: 300px;"></div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">{{ signalement.titre }}</h1>
+            <span class="badge status-{{ signalement.statut.value }} fs-6">{{ signalement.statut.value|replace({'_': ' '})|capitalize }}</span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    {% if signalement.photoUrl %}
+                        <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="img-fluid rounded" alt="{{ signalement.titre }}">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 300px;">
+                            <i class="fas fa-image fa-5x text-muted"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">Informations</h2>
+                        <p class="mb-2"><strong>Catégorie :</strong> <span class="badge bg-secondary">{{ signalement.categorie.nom }}</span></p>
+                        <p class="mb-2"><strong>Ville :</strong> {{ signalement.ville.nom }}</p>
+                        <p class="mb-2"><strong>Date :</strong> {{ signalement.dateSignalement|date('d/m/Y H:i') }}</p>
+                        <p class="mb-2"><strong>Signalé par :</strong> {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</p>
+                    </div>
+                    
+                    <div id="map" class="map-container mb-3" style="height: 200px;"></div>
+                </div>
             </div>
-            <div class="col-md-6">
-                <h2 class="h4 mb-3">Statistiques</h2>
-                <ul class="list-group mb-3">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Nouveaux signalements
-                        <span class="badge bg-danger rounded-pill">{{ signalements|filter(s => s.statut.value == 'nouveau')|length }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Signalements en cours
-                        <span class="badge bg-warning rounded-pill">{{ signalements|filter(s => s.statut.value == 'en_cours')|length }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Signalements résolus
-                        <span class="badge bg-success rounded-pill">{{ signalements|filter(s => s.statut.value == 'resolu')|length }}</span>
-                    </li>
-                </ul>
+            
+            <div class="mt-4">
+                <h2 class="h4 mb-3">Description</h2>
+                <p>{{ signalement.description|nl2br }}</p>
             </div>
+            
+            {% if is_granted('ROLE_MODERATOR') or signalement.utilisateur == app.user %}
+                <div class="mt-4 d-flex gap-2">
+                    {% if is_granted('ROLE_MODERATOR') %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                Changer le statut
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <li><a class="dropdown-item" href="#">Nouveau</a></li>
+                                <li><a class="dropdown-item" href="#">En cours</a></li>
+                                <li><a class="dropdown-item" href="#">Résolu</a></li>
+                                <li><a class="dropdown-item" href="#">Annulé</a></li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    {% if signalement.utilisateur == app.user and signalement.statut.value == 'nouveau' %}
+                        <button class="btn btn-outline-danger">Supprimer</button>
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
-
-<h2 class="mb-4">Signalements à {{ ville.nom }}</h2>
-
-{% if signalements|length > 0 %}
-    <div class="row">
-        {% for signalement in signalements %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="card-img-top" alt="{{ signalement.titre }}">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ signalement.titre }}</h5>
-                        <p class="card-text">{{ signalement.description|u.truncate(100, '...') }}</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">{{ signalement.dateSignalement|date('d/m/Y') }}</small>
-                            <span class="badge status-{{ signalement.statut.value }}">{{ signalement.statut.value|replace({'_': ' '})|capitalize }}</span>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-transparent">
-                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary">Voir plus</a>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="alert alert-info">Aucun signalement n'a été trouvé dans cette ville.</div>
-{% endif %}
 {% endblock %}
 
 {% block javascripts %}
@@ -78,41 +80,16 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const map = L.map('map').setView([{{ ville.latitude }}, {{ ville.longitude }}], 13);
+            const map = L.map('map').setView([{{ signalement.latitude }}, {{ signalement.longitude }}], 15);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
             
-            // Ajouter un marqueur pour la ville
-            L.marker([{{ ville.latitude }}, {{ ville.longitude }}])
+            L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}])
                 .addTo(map)
-                .bindPopup("{{ ville.nom }}");
-                
-            // Ajouter des marqueurs pour chaque signalement
-            {% for signalement in signalements %}
-                {% if signalement.latitude and signalement.longitude %}
-                    let markerColor;
-                    switch("{{ signalement.statut.value }}") {
-                        case 'nouveau': markerColor = '#f44336'; break;
-                        case 'en_cours': markerColor = '#ff9800'; break;
-                        case 'resolu': markerColor = '#4caf50'; break;
-                        default: markerColor = '#666666';
-                    }
-                    
-                    const markerIcon = L.divIcon({
-                        className: 'custom-marker',
-                        html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
-                        iconSize: [16, 16],
-                        iconAnchor: [8, 8]
-                    });
-                    
-                    L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}], { icon: markerIcon })
-                        .addTo(map)
-                        .bindPopup("<strong>{{ signalement.titre }}</strong><br>{{ signalement.description|u.truncate(50, '...') }}<br><a href='{{ path('app_signalement_show', {'id': signalement.id}) }}'>Voir</a>");
-                {% endif %}
-            {% endfor %}
+                .bindPopup("{{ signalement.titre }}");
         });
     </script>
 {% endblock %}

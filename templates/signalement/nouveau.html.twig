@@ -8,54 +8,90 @@
 {% endblock %}
 
 {% block body %}
-<h1 class="mb-4">Signaler un problème</h1>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="card shadow mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="card-title mb-0">Informations du signalement</h5>
-            </div>
-            <div class="card-body">
-                {{ form_start(form) }}
-                    <div class="mb-3">
-                        {{ form_row(form.titre) }}
+<div class="container py-4">
+    <h1 class="mb-4">Nouveau signalement</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form_label(form.titre, 'Titre du signalement', {'label_attr': {'class': 'form-label'}}) }}
+                            {{ form_widget(form.titre, {'attr': {'class': 'form-control'}}) }}
+                            <div class="invalid-feedback">
+                                {{ form_errors(form.titre) }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form_label(form.description, 'Description du problème', {'label_attr': {'class': 'form-label'}}) }}
+                            {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
+                            <div class="invalid-feedback">
+                                {{ form_errors(form.description) }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form_label(form.ville, 'Ville', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.ville, {'attr': {'class': 'form-select'}}) }}
+                                <div class="invalid-feedback">
+                                    {{ form_errors(form.ville) }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_label(form.categorie, 'Catégorie', {'label_attr': {'class': 'form-label'}}) }}
+                                {{ form_widget(form.categorie, {'attr': {'class': 'form-select'}}) }}
+                                <div class="invalid-feedback">
+                                    {{ form_errors(form.categorie) }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form_label(form.photo, 'Photo du problème', {'label_attr': {'class': 'form-label'}}) }}
+                            {{ form_widget(form.photo, {'attr': {'class': 'form-control'}}) }}
+                            <div class="form-text">Ajoutez une photo pour illustrer le problème (JPEG ou PNG, max 5MB)</div>
+                            <div class="invalid-feedback">
+                                {{ form_errors(form.photo) }}
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        {{ form_row(form.description) }}
+                </div>
+                
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Localisation</h5>
                     </div>
-                    <div class="mb-3">
-                        {{ form_row(form.categorie) }}
+                    <div class="card-body">
+                        <p class="mb-3">Placez le marqueur à l'emplacement précis du problème signalé.</p>
+                        <div id="map-form" style="height: 400px;" class="mb-3"></div>
+                        {{ form_widget(form.latitude) }}
+                        {{ form_widget(form.longitude) }}
                     </div>
-                    <div class="mb-3">
-                        {{ form_row(form.ville) }}
-                    </div>
-                    <div class="mb-3">
-                        {{ form_row(form.photoFile) }}
-                    </div>
-                    <div class="mb-3">
-                        <p class="form-text">Cliquez sur la carte pour sélectionner l'emplacement exact du problème</p>
-                    </div>
-                    
-                    {{ form_row(form.latitude) }}
-                    {{ form_row(form.longitude) }}
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-1"></i> Envoyer le signalement
-                        </button>
-                    </div>
-                {{ form_end(form) }}
-            </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">Envoyer le signalement</button>
+                </div>
+            {{ form_end(form) }}
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-header bg-dark text-white">
-                <h5 class="card-title mb-0">Emplacement</h5>
-            </div>
-            <div class="card-body p-0">
-                <div id="map" class="map-container" style="height: 400px; border-radius: 0;"></div>
+        
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Conseils</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li class="mb-2">Soyez précis dans votre description</li>
+                        <li class="mb-2">Ajoutez une photo claire du problème</li>
+                        <li class="mb-2">Placez le marqueur à l'emplacement exact</li>
+                        <li class="mb-2">Choisissez la catégorie appropriée</li>
+                        <li>Vérifiez que le problème n'a pas déjà été signalé</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -67,55 +103,69 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const map = L.map('map').setView([46.603354, 1.888334], 6); // Centre sur la France
+            // Utilisez l'ID unique pour cette carte
+            const mapElement = document.getElementById('map-form');
             
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-            
-            // Gestion de la sélection de l'emplacement
-            let marker = null;
-            
-            map.on('click', function(e) {
-                // Supprimer le marqueur précédent s'il existe
-                if (marker) {
-                    map.removeLayer(marker);
+            if (mapElement) {
+                // Initialize the map
+                const map = L.map('map-form').setView([46.603354, 1.888334], 5); // Center on France
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                
+                // Add a marker that can be moved
+                let marker = null;
+                
+                // Set marker based on selected city
+                const villeSelect = document.querySelector('#signalement_ville');
+                if (villeSelect) {
+                    villeSelect.addEventListener('change', function() {
+                        const selectedOption = this.options[this.selectedIndex];
+                        if (selectedOption.value) {
+                            fetch(`/api/ville/${selectedOption.value}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    const lat = data.latitude;
+                                    const lng = data.longitude;
+                                    
+                                    if (marker) {
+                                        marker.setLatLng([lat, lng]);
+                                    } else {
+                                        marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+                                        marker.on('dragend', updateCoordinates);
+                                    }
+                                    
+                                    map.setView([lat, lng], 13);
+                                    updateCoordinates();
+                                })
+                                .catch(error => {
+                                    console.error('Erreur lors du chargement des données de la ville:', error);
+                                });
+                        }
+                    });
                 }
                 
-                // Ajouter un nouveau marqueur
-                marker = L.marker(e.latlng).addTo(map);
+                // Allow clicking on map to place marker
+                map.on('click', function(e) {
+                    if (marker) {
+                        marker.setLatLng(e.latlng);
+                    } else {
+                        marker = L.marker(e.latlng, {draggable: true}).addTo(map);
+                        marker.on('dragend', updateCoordinates);
+                    }
+                    updateCoordinates();
+                });
                 
-                // Mettre à jour les champs de latitude et longitude
-                document.getElementById('signalement_latitude').value = e.latlng.lat.toFixed(6);
-                document.getElementById('signalement_longitude').value = e.latlng.lng.toFixed(6);
-            });
-            
-            // Si on édite un signalement existant, afficher le marqueur
-            const latInput = document.getElementById('signalement_latitude');
-            const lngInput = document.getElementById('signalement_longitude');
-            
-            if (latInput.value && lngInput.value) {
-                const lat = parseFloat(latInput.value);
-                const lng = parseFloat(lngInput.value);
-                marker = L.marker([lat, lng]).addTo(map);
-                map.setView([lat, lng], 15);
+                function updateCoordinates() {
+                    if (marker) {
+                        const position = marker.getLatLng();
+                        document.querySelector('#signalement_latitude').value = position.lat;
+                        document.querySelector('#signalement_longitude').value = position.lng;
+                    }
+                }
             }
-            
-            // Gestion du changement de ville
-            document.getElementById('signalement_ville').addEventListener('change', function() {
-                const villeId = this.value;
-                if (villeId) {
-                    // Récupérer les coordonnées de la ville sélectionnée
-                    fetch(`/api/ville/${villeId}`)
-                        .then(response => response.json())
-                        .then(ville => {
-                            if (ville.latitude && ville.longitude) {
-                                map.setView([ville.latitude, ville.longitude], 13);
-                            }
-                        });
-                }
-            });
         });
     </script>
 {% endblock %}

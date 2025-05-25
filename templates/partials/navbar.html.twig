@@ -15,46 +15,24 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ path('app_carte') }}">Carte</a>
                 </li>
-                <!-- Route app_villes non implémentée -->
-                <!-- <li class="nav-item">
-                    <a class="nav-link" href="{{ path('app_villes') }}">Villes</a>
-                </li> -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_signalements') }}">Signalements</a>
+                </li>
                 {% if is_granted('ROLE_USER') %}
-                <!-- Route app_signalement_nouveau à implémenter -->
-                <!-- <li class="nav-item">
+                <li class="nav-item">
                     <a class="nav-link" href="{{ path('app_signalement_nouveau') }}">Signaler</a>
-                </li> -->
+                </li>
                 {% endif %}
             </ul>
             
             <ul class="navbar-nav">
                 {% if app.user %}
-                    <!-- Notifications - à implémenter -->
-                    <!-- <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownNotifications" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-count">{{ app.user.notifications|filter(n => n.statut == 'non_lue')|length }}</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownNotifications">
-                            {% set unreadNotifications = app.user.notifications|filter(n => n.statut == 'non_lue') %}
-                            {% if unreadNotifications|length > 0 %}
-                                {% for notification in unreadNotifications %}
-                                    <li><a class="dropdown-item" href="{{ path('app_notification_read', {'id': notification.id}) }}">{{ notification.message }}</a></li>
-                                {% endfor %}
-                            {% else %}
-                                <li><span class="dropdown-item text-muted">Aucune notification</span></li>
-                            {% endif %}
-                        </ul>
-                    </li> -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             {{ app.user.prenom }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
-                            <!-- Route app_profile non implémentée -->
-                            <!-- <li><a class="dropdown-item" href="{{ path('app_profile') }}">Mon profil</a></li> -->
-                            <!-- Route app_mes_signalements non implémentée -->
-                            <!-- <li><a class="dropdown-item" href="{{ path('app_mes_signalements') }}">Mes signalements</a></li> -->
+                            <li><a class="dropdown-item" href="{{ path('app_mes_signalements') }}">Mes signalements</a></li>
                             {% if is_granted('ROLE_MODERATOR') or is_granted('ROLE_ADMIN') %}
                                 <li><hr class="dropdown-divider"></li>
                                 <!-- Route app_admin non implémentée -->
