@@ -1,0 +1,78 @@
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="{{ path('app_home') }}">
+            <i class="fas fa-city me-2"></i> CityFlow
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_home') }}">Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_carte') }}">Carte</a>
+                </li>
+                <!-- Route app_villes non implémentée -->
+                <!-- <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_villes') }}">Villes</a>
+                </li> -->
+                {% if is_granted('ROLE_USER') %}
+                <!-- Route app_signalement_nouveau à implémenter -->
+                <!-- <li class="nav-item">
+                    <a class="nav-link" href="{{ path('app_signalement_nouveau') }}">Signaler</a>
+                </li> -->
+                {% endif %}
+            </ul>
+            
+            <ul class="navbar-nav">
+                {% if app.user %}
+                    <!-- Notifications - à implémenter -->
+                    <!-- <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownNotifications" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-count">{{ app.user.notifications|filter(n => n.statut == 'non_lue')|length }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownNotifications">
+                            {% set unreadNotifications = app.user.notifications|filter(n => n.statut == 'non_lue') %}
+                            {% if unreadNotifications|length > 0 %}
+                                {% for notification in unreadNotifications %}
+                                    <li><a class="dropdown-item" href="{{ path('app_notification_read', {'id': notification.id}) }}">{{ notification.message }}</a></li>
+                                {% endfor %}
+                            {% else %}
+                                <li><span class="dropdown-item text-muted">Aucune notification</span></li>
+                            {% endif %}
+                        </ul>
+                    </li> -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ app.user.prenom }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
+                            <!-- Route app_profile non implémentée -->
+                            <!-- <li><a class="dropdown-item" href="{{ path('app_profile') }}">Mon profil</a></li> -->
+                            <!-- Route app_mes_signalements non implémentée -->
+                            <!-- <li><a class="dropdown-item" href="{{ path('app_mes_signalements') }}">Mes signalements</a></li> -->
+                            {% if is_granted('ROLE_MODERATOR') or is_granted('ROLE_ADMIN') %}
+                                <li><hr class="dropdown-divider"></li>
+                                <!-- Route app_admin non implémentée -->
+                                <!-- <li><a class="dropdown-item" href="{{ path('app_admin') }}">Administration</a></li> -->
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ path('app_logout') }}">Déconnexion</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_login') }}">Connexion</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_register') }}">Inscription</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

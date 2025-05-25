@@ -1,0 +1,121 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau signalement - CityFlow{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+{% endblock %}
+
+{% block body %}
+<h1 class="mb-4">Signaler un problème</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Informations du signalement</h5>
+            </div>
+            <div class="card-body">
+                {{ form_start(form) }}
+                    <div class="mb-3">
+                        {{ form_row(form.titre) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.description) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.categorie) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.ville) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form_row(form.photoFile) }}
+                    </div>
+                    <div class="mb-3">
+                        <p class="form-text">Cliquez sur la carte pour sélectionner l'emplacement exact du problème</p>
+                    </div>
+                    
+                    {{ form_row(form.latitude) }}
+                    {{ form_row(form.longitude) }}
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i> Envoyer le signalement
+                        </button>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Emplacement</h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="map" class="map-container" style="height: 400px; border-radius: 0;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const map = L.map('map').setView([46.603354, 1.888334], 6); // Centre sur la France
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Gestion de la sélection de l'emplacement
+            let marker = null;
+            
+            map.on('click', function(e) {
+                // Supprimer le marqueur précédent s'il existe
+                if (marker) {
+                    map.removeLayer(marker);
+                }
+                
+                // Ajouter un nouveau marqueur
+                marker = L.marker(e.latlng).addTo(map);
+                
+                // Mettre à jour les champs de latitude et longitude
+                document.getElementById('signalement_latitude').value = e.latlng.lat.toFixed(6);
+                document.getElementById('signalement_longitude').value = e.latlng.lng.toFixed(6);
+            });
+            
+            // Si on édite un signalement existant, afficher le marqueur
+            const latInput = document.getElementById('signalement_latitude');
+            const lngInput = document.getElementById('signalement_longitude');
+            
+            if (latInput.value && lngInput.value) {
+                const lat = parseFloat(latInput.value);
+                const lng = parseFloat(lngInput.value);
+                marker = L.marker([lat, lng]).addTo(map);
+                map.setView([lat, lng], 15);
+            }
+            
+            // Gestion du changement de ville
+            document.getElementById('signalement_ville').addEventListener('change', function() {
+                const villeId = this.value;
+                if (villeId) {
+                    // Récupérer les coordonnées de la ville sélectionnée
+                    fetch(`/api/ville/${villeId}`)
+                        .then(response => response.json())
+                        .then(ville => {
+                            if (ville.latitude && ville.longitude) {
+                                map.setView([ville.latitude, ville.longitude], 13);
+                            }
+                        });
+                }
+            });
+        });
+    </script>
+{% endblock %}

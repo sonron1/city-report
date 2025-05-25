@@ -1,0 +1,100 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tous les signalements - CityFlow{% endblock %}
+
+{% block body %}
+<h1 class="mb-4">Tous les signalements</h1>
+
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        <h2 class="h5 mb-0">Filtres</h2>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ path('app_signalement_index') }}" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Recherche</label>
+                <input type="text" id="search" name="q" class="form-control" placeholder="Rechercher..." value="{{ app.request.query.get('q') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="ville" class="form-label">Ville</label>
+                <select id="ville" name="ville" class="form-select">
+                    <option value="">Toutes les villes</option>
+                    <!-- Options générées dynamiquement -->
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="categorie" class="form-label">Catégorie</label>
+                <select id="categorie" name="categorie" class="form-select">
+                    <option value="">Toutes les catégories</option>
+                    <!-- Options générées dynamiquement -->
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="statut" class="form-label">Statut</label>
+                <select id="statut" name="statut" class="form-select">
+                    <option value="">Tous les statuts</option>
+                    <option value="nouveau">Nouveau</option>
+                    <option value="en_cours">En cours</option>
+                    <option value="resolu">Résolu</option>
+                    <option value="annule">Annulé</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter me-1"></i> Filtrer
+                </button>
+                <a href="{{ path('app_signalement_index') }}" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-times me-1"></i> Réinitialiser
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if signalements|length > 0 %}
+    <div class="row">
+        {% for signalement in signalements %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 animated-card" style="animation-delay: {{ loop.index * 0.1 }}s">
+                    <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="card-img-top" alt="{{ signalement.titre }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ signalement.titre }}</h5>
+                        <p class="card-text">{{ signalement.description|u.truncate(100, '...') }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-map-marker-alt"></i> {{ signalement.ville.nom }}
+                            </small>
+                            <span class="badge status-{{ signalement.statut.value }}">
+                                {{ signalement.statut.value|replace({'_': ' '})|capitalize }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ signalement.dateSignalement|date('d/m/Y') }}</small>
+                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary">Voir plus</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Précédent</a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Suivant</a>
+            </li>
+        </ul>
+    </nav>
+{% else %}
+    <div class="alert alert-info">Aucun signalement ne correspond à votre recherche.</div>
+{% endif %}
+{% endblock %}

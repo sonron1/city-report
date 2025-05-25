@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}CityFlow - Améliorons notre ville ensemble{% endblock %}
+
+{% block body %}
+<div class="jumbotron bg-dark text-white py-5 mb-4 rounded">
+    <div class="container">
+        <h1 class="display-4">Signaler les problèmes urbains</h1>
+        <p class="lead">Participez à l'amélioration de votre ville en signalant les problèmes rencontrés</p>
+        <hr class="my-4">
+        <p>Nids de poule, lampadaires défectueux, graffitis... Aidez à rendre votre ville plus agréable.</p>
+        <div class="mt-4">
+            <a class="btn btn-primary btn-lg" href="{{ path('app_signalement_nouveau') }}" role="button">
+                <i class="fas fa-plus-circle"></i> Signaler un problème
+            </a>
+            <a class="btn btn-outline-light btn-lg ms-2" href="{{ path('app_carte') }}" role="button">
+                <i class="fas fa-map-marked-alt"></i> Voir la carte
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <h2 class="mb-4">Derniers signalements</h2>
+        
+        {% if derniers_signalements|length > 0 %}
+            <div class="row">
+                {% for signalement in derniers_signalements %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 animated-card" style="animation-delay: {{ loop.index * 0.1 }}s">
+                            <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="card-img-top" alt="{{ signalement.titre }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ signalement.titre }}</h5>
+                                <p class="card-text">{{ signalement.description|u.truncate(100, '...') }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt"></i> {{ signalement.ville.nom }}
+                                    </small>
+                                    <span class="badge status-{{ signalement.statut.value }}">
+                                        {{ signalement.statut.value|replace({'_': ' '})|capitalize }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary">Voir plus</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-3">
+                <a href="{{ path('app_signalement_index') }}" class="btn btn-outline-primary">Voir tous les signalements</a>
+            </div>
+        {% else %}
+            <div class="alert alert-info">Aucun signalement pour le moment.</div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <h2 class="mb-4">Villes actives</h2>
+        
+        <div class="list-group mb-4">
+            {% for ville in villes %}
+                <a href="{{ path('app_ville_show', {'id': ville.id}) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    {{ ville.nom }}
+                    <span class="badge bg-primary rounded-pill">{{ ville.signalements|length }}</span>
+                </a>
+            {% endfor %}
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="card-title mb-0">Comment ça marche ?</h5>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li>Inscrivez-vous en indiquant votre ville de résidence</li>
+                    <li>Signalez un problème rencontré dans votre ville</li>
+                    <li>Le signalement est validé par un modérateur</li>
+                    <li>Les services compétents sont informés et interviennent</li>
+                    <li>Suivez l'avancement de la réparation</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
