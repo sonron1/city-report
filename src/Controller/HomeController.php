@@ -15,7 +15,7 @@ class HomeController extends AbstractController
     {
         // Récupérer les derniers signalements validés
         $derniersSignalements = $signalementRepository->findBy(
-            ['etatValidation' => 'validé'],
+            ['statut' => 'Validé'],
             ['dateSignalement' => 'DESC'],
             5
         );
