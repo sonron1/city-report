@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Compte non vérifié - CityFlow{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8 col-sm-12">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-warning text-white">
+                    <h1 class="h3 mb-0 text-center">Compte non vérifié</h1>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-envelope-open-text fa-4x text-warning"></i>
+                    </div>
+                    
+                    <h2 class="h4 mb-3">Vérifiez votre adresse email</h2>
+                    
+                    <p class="mb-4">
+                        Votre compte a été créé, mais il n'est pas encore vérifié. 
+                        Veuillez vérifier votre boîte de réception et cliquer sur le lien de confirmation 
+                        que nous vous avons envoyé.
+                    </p>
+                    
+                    <p class="mb-4">
+                        Si vous n'avez pas reçu l'email ou si le lien a expiré, vous pouvez 
+                        <a href="{{ path('app_request_verify_email') }}" class="text-decoration-none fw-bold">demander un nouvel email de vérification</a>.
+                    </p>
+                    
+                    <a href="{{ path('app_logout') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-sign-out-alt me-1"></i> Déconnexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

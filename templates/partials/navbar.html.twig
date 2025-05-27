@@ -12,16 +12,16 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ path('app_home') }}">Accueil</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ path('app_carte') }}">Carte</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ path('app_signalements') }}">Signalements</a>
-                </li>
                 {% if is_granted('ROLE_USER') %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ path('app_signalement_nouveau') }}">Signaler</a>
-                </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_carte') }}">Carte</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_signalements') }}">Signalements</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_signalement_nouveau') }}">Signaler</a>
+                    </li>
                 {% endif %}
             </ul>
             
@@ -33,11 +33,20 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
                             <li><a class="dropdown-item" href="{{ path('app_mes_signalements') }}">Mes signalements</a></li>
-                            {% if is_granted('ROLE_MODERATOR') or is_granted('ROLE_ADMIN') %}
-                                <li><hr class="dropdown-divider"></li>
-                                <!-- Route app_admin non implémentée -->
-                                <!-- <li><a class="dropdown-item" href="{{ path('app_admin') }}">Administration</a></li> -->
+                            
+                            {% if is_granted('ROLE_AGENT') %}
+                                <li><a class="dropdown-item" href="{{ path('app_agent_dashboard') }}">Tableau de bord agent</a></li>
                             {% endif %}
+                            
+                            {% if is_granted('ROLE_SUPERVISOR') %}
+                                <li><a class="dropdown-item" href="{{ path('app_supervisor_dashboard') }}">Statistiques</a></li>
+                            {% endif %}
+                            
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ path('app_admin_dashboard') }}">Administration</a></li>
+                            {% endif %}
+                            
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ path('app_logout') }}">Déconnexion</a></li>
                         </ul>
