@@ -35,8 +35,8 @@ class AppFixtures extends Fixture
     foreach ($villesData as $villeData) {
       $ville = new Ville();
       $ville->setNom($villeData['nom']);
-      $ville->setLatitude($villeData['latitude']);
-      $ville->setLongitude($villeData['longitude']);
+      $ville->setLatitudeCentre($villeData['latitude']);
+      $ville->setLongitudeCentre($villeData['longitude']);
       $manager->persist($ville);
       $villes[] = $ville;
     }
@@ -148,8 +148,8 @@ class AppFixtures extends Fixture
       $ville = $villes[$i % count($villes)];
       $latOffset = (mt_rand(-100, 100) / 1000);
       $lngOffset = (mt_rand(-100, 100) / 1000);
-      $signalement->setLatitude($ville->getLatitude() + $latOffset);
-      $signalement->setLongitude($ville->getLongitude() + $lngOffset);
+      $signalement->setLatitude($ville->getLatitudeCentre() + $latOffset);
+      $signalement->setLongitude($ville->getLongitudeCentre() + $lngOffset);
 
       $signalement->setDateSignalement(new \DateTime("- {$i} days"));
       $signalement->setStatut($statuts[$i % count($statuts)]);
