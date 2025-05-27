@@ -37,4 +37,69 @@ class Commentaire
   }
 
   // Getters et setters...
+
+  public function getId(): ?int
+  {
+      return $this->id;
+  }
+
+  public function getContenu(): ?string
+  {
+      return $this->contenu;
+  }
+
+  public function setContenu(string $contenu): static
+  {
+      $this->contenu = $contenu;
+
+      return $this;
+  }
+
+  public function getDateCommentaire(): ?\DateTime
+  {
+      return $this->dateCommentaire;
+  }
+
+  public function setDateCommentaire(\DateTime $dateCommentaire): static
+  {
+      $this->dateCommentaire = $dateCommentaire;
+
+      return $this;
+  }
+
+  public function getEtatValidation(): ?string
+  {
+      return $this->etatValidation;
+  }
+
+  public function setEtatValidation(string $etatValidation): static
+  {
+      $this->etatValidation = $etatValidation;
+
+      return $this;
+  }
+
+  public function getUtilisateur(): ?Utilisateur
+  {
+      return $this->utilisateur;
+  }
+
+  public function setUtilisateur(?Utilisateur $utilisateur): static
+  {
+      $this->utilisateur = $utilisateur;
+
+      return $this;
+  }
+
+  public function getSignalement(): ?Signalement
+  {
+      return $this->signalement;
+  }
+
+  public function setSignalement(?Signalement $signalement): static
+  {
+      $this->signalement = $signalement;
+
+      return $this;
+  }
 }

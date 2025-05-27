@@ -39,4 +39,81 @@ class Notification
   }
 
   // Getters et setters...
+
+  public function getId(): ?int
+  {
+      return $this->id;
+  }
+
+  public function getMessage(): ?string
+  {
+      return $this->message;
+  }
+
+  public function setMessage(string $message): static
+  {
+      $this->message = $message;
+
+      return $this;
+  }
+
+  public function getDateEnvoi(): ?\DateTime
+  {
+      return $this->dateEnvoi;
+  }
+
+  public function setDateEnvoi(\DateTime $dateEnvoi): static
+  {
+      $this->dateEnvoi = $dateEnvoi;
+
+      return $this;
+  }
+
+  public function getType(): ?string
+  {
+      return $this->type;
+  }
+
+  public function setType(string $type): static
+  {
+      $this->type = $type;
+
+      return $this;
+  }
+
+  public function getStatut(): ?string
+  {
+      return $this->statut;
+  }
+
+  public function setStatut(string $statut): static
+  {
+      $this->statut = $statut;
+
+      return $this;
+  }
+
+  public function getDestinataire(): ?Utilisateur
+  {
+      return $this->destinataire;
+  }
+
+  public function setDestinataire(?Utilisateur $destinataire): static
+  {
+      $this->destinataire = $destinataire;
+
+      return $this;
+  }
+
+  public function getSignalement(): ?Signalement
+  {
+      return $this->signalement;
+  }
+
+  public function setSignalement(?Signalement $signalement): static
+  {
+      $this->signalement = $signalement;
+
+      return $this;
+  }
 }

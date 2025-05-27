@@ -35,4 +35,81 @@ class Reparation
   private ?Utilisateur $utilisateur = null;
 
   // Getters et setters...
+
+  public function getId(): ?int
+  {
+      return $this->id;
+  }
+
+  public function getDescription(): ?string
+  {
+      return $this->description;
+  }
+
+  public function setDescription(string $description): static
+  {
+      $this->description = $description;
+
+      return $this;
+  }
+
+  public function getDateDebut(): ?\DateTime
+  {
+      return $this->dateDebut;
+  }
+
+  public function setDateDebut(\DateTime $dateDebut): static
+  {
+      $this->dateDebut = $dateDebut;
+
+      return $this;
+  }
+
+  public function getDateFin(): ?\DateTime
+  {
+      return $this->dateFin;
+  }
+
+  public function setDateFin(?\DateTime $dateFin): static
+  {
+      $this->dateFin = $dateFin;
+
+      return $this;
+  }
+
+  public function getStatut(): ?string
+  {
+      return $this->statut;
+  }
+
+  public function setStatut(string $statut): static
+  {
+      $this->statut = $statut;
+
+      return $this;
+  }
+
+  public function getSignalement(): ?Signalement
+  {
+      return $this->signalement;
+  }
+
+  public function setSignalement(Signalement $signalement): static
+  {
+      $this->signalement = $signalement;
+
+      return $this;
+  }
+
+  public function getUtilisateur(): ?Utilisateur
+  {
+      return $this->utilisateur;
+  }
+
+  public function setUtilisateur(?Utilisateur $utilisateur): static
+  {
+      $this->utilisateur = $utilisateur;
+
+      return $this;
+  }
 }
