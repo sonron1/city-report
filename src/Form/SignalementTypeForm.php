@@ -2,8 +2,8 @@
 
 namespace App\Form;
 
-use App\Entity\Categorie;
 use App\Entity\Signalement;
+use App\Entity\Categorie;
 use App\Entity\Ville;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -14,7 +14,6 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
-use Symfony\Component\Validator\Constraints\NotBlank;
 
 class SignalementTypeForm extends AbstractType
 {
@@ -22,25 +21,27 @@ class SignalementTypeForm extends AbstractType
     {
         $builder
             ->add('titre', TextType::class, [
-                'constraints' => [
-                    new NotBlank([
-                        'message' => 'Veuillez entrer un titre',
-                    ]),
-                ],
-                'attr' => ['placeholder' => 'Titre du signalement'],
+                'label' => 'Titre',
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Titre de votre signalement']
             ])
             ->add('description', TextareaType::class, [
-                'constraints' => [
-                    new NotBlank([
-                        'message' => 'Veuillez entrer une description',
-                    ]),
-                ],
-                'attr' => ['rows' => 5, 'placeholder' => 'Description détaillée du problème'],
+                'label' => 'Description',
+                'attr' => ['class' => 'form-control', 'rows' => 5, 'placeholder' => 'Décrivez le problème en détail']
             ])
-            ->add('latitude', HiddenType::class)
-            ->add('longitude', HiddenType::class)
+            ->add('categorie', EntityType::class, [
+                'class' => Categorie::class,
+                'choice_label' => 'nom',
+                'label' => 'Catégorie',
+                'attr' => ['class' => 'form-select']
+            ])
+            ->add('ville', EntityType::class, [
+                'class' => Ville::class,
+                'choice_label' => 'nom',
+                'label' => 'Ville',
+                'attr' => ['class' => 'form-select', 'onchange' => 'centerMapOnCity(this.value)']
+            ])
             ->add('photo', FileType::class, [
-                'label' => 'Photo du problème',
+                'label' => 'Photo',
                 'mapped' => false,
                 'required' => false,
                 'constraints' => [
@@ -50,31 +51,18 @@ class SignalementTypeForm extends AbstractType
                             'image/jpeg',
                             'image/png',
                         ],
-                        'mimeTypesMessage' => 'Veuillez uploader une image valide (JPEG ou PNG)',
+                        'mimeTypesMessage' => 'Veuillez télécharger une image valide (JPEG ou PNG)',
                     ])
                 ],
+                'attr' => ['class' => 'form-control']
             ])
-            ->add('categorie', EntityType::class, [
-                'class' => Categorie::class,
-                'choice_label' => 'nom',
-                'placeholder' => 'Choisir une catégorie',
-                'constraints' => [
-                    new NotBlank([
-                        'message' => 'Veuillez choisir une catégorie',
-                    ]),
-                ],
+            // Ajoutez ces champs pour les coordonnées
+            ->add('latitude', HiddenType::class, [
+                'required' => true,
             ])
-            ->add('ville', EntityType::class, [
-                'class' => Ville::class,
-                'choice_label' => 'nom',
-                'placeholder' => 'Choisir une ville',
-                'constraints' => [
-                    new NotBlank([
-                        'message' => 'Veuillez choisir une ville',
-                    ]),
-                ],
-            ])
-        ;
+            ->add('longitude', HiddenType::class, [
+                'required' => true,
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

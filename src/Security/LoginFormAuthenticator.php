@@ -15,6 +15,8 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
+// En haut du fichier, ajoutez cette importation si elle n'est pas déjà présente
+use App\Entity\Utilisateur;
 
 class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
 {
@@ -43,21 +45,22 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
         );
     }
 
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
-    {
-        // Vérifier si l'utilisateur a validé son email
-        $user = $token->getUser();
-        if (!$user->isEstValide()) {
-            return new RedirectResponse($this->urlGenerator->generate('app_not_verified'));
-        }
-        
-        if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
-            return new RedirectResponse($targetPath);
-        }
-
-        // Par défaut, rediriger vers la page d'accueil
-        return new RedirectResponse($this->urlGenerator->generate('app_home'));
+// Modifiez la méthode onAuthenticationSuccess
+public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): Response
+{
+    if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
+        return new RedirectResponse($targetPath);
     }
+    
+    // Vérifier si l'utilisateur est vérifié
+    $user = $token->getUser();
+    if ($user instanceof Utilisateur && !$user->isEstValide()) {
+        return new RedirectResponse($this->urlGenerator->generate('app_not_verified'));
+    }
+    
+    // Rediriger vers la page d'accueil ou une autre page par défaut
+    return new RedirectResponse($this->urlGenerator->generate('app_home'));
+}
 
     protected function getLoginUrl(Request $request): string
     {

@@ -80,6 +80,14 @@ class Signalement
   #[ORM\ManyToOne(inversedBy: 'signalements')]
   private ?Cluster $cluster = null;
 
+  // Dans src/Entity/Signalement.php
+  // Ajoutez une propriété pour suivre les demandes de suppression
+  #[ORM\Column(length: 20, nullable: true)]
+  private ?string $demandeSuppressionStatut = null;
+
+  #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+  private ?\DateTimeInterface $dateDemandeSuppressionStatut = null;
+
   public function __construct()
   {
     $this->commentaires = new ArrayCollection();
@@ -361,5 +369,25 @@ class Signalement
       $this->cluster = $cluster;
 
       return $this;
+  }
+
+  // Ajoutez les getters et setters correspondants
+  public function getDemandeSuppressionStatut(): ?string
+  {
+      return $this->demandeSuppressionStatut;
+  }
+
+  public function setDemandeSuppressionStatut(?string $statut): static
+  {
+      $this->demandeSuppressionStatut = $statut;
+      if ($statut) {
+          $this->dateDemandeSuppressionStatut = new \DateTime();
+      }
+      return $this;
+  }
+
+  public function getDateDemandeSuppressionStatut(): ?\DateTimeInterface
+  {
+      return $this->dateDemandeSuppressionStatut;
   }
 }

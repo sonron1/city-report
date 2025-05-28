@@ -8,10 +8,11 @@ use App\Entity\Utilisateur;
 use App\Entity\Ville;
 use App\Enum\StatutSignalement;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-class AppFixtures extends Fixture
+class AppFixtures extends Fixture implements DependentFixtureInterface
 {
   private $passwordHasher;
 
@@ -20,35 +21,29 @@ class AppFixtures extends Fixture
     $this->passwordHasher = $passwordHasher;
   }
 
+  public function getDependencies(): array
+  {
+      return [
+          VilleFixtures::class,
+      ];
+  }
+
   public function load(ObjectManager $manager): void
   {
-    // Création de villes
-    $villes = [];
-    $villesData = [
-        ['nom' => 'Paris', 'latitude' => 48.8566, 'longitude' => 2.3522],
-        ['nom' => 'Lyon', 'latitude' => 45.7640, 'longitude' => 4.8357],
-        ['nom' => 'Marseille', 'latitude' => 43.2965, 'longitude' => 5.3698],
-        ['nom' => 'Bordeaux', 'latitude' => 44.8378, 'longitude' => -0.5792],
-        ['nom' => 'Lille', 'latitude' => 50.6292, 'longitude' => 3.0573],
-    ];
-
-    foreach ($villesData as $villeData) {
-      $ville = new Ville();
-      $ville->setNom($villeData['nom']);
-      $ville->setLatitudeCentre($villeData['latitude']);
-      $ville->setLongitudeCentre($villeData['longitude']);
-      $manager->persist($ville);
-      $villes[] = $ville;
-    }
+    // Récupération des villes du Bénin déjà chargées par VilleFixtures
+    $villeRepository = $manager->getRepository(Ville::class);
+    $villes = $villeRepository->findAll();
 
     // Création de catégories
     $categories = [];
     $categoriesData = [
         ['nom' => 'Voirie', 'description' => 'Problèmes liés à la chaussée, trottoirs, etc.'],
         ['nom' => 'Éclairage', 'description' => 'Problèmes liés à l\'éclairage public'],
-        ['nom' => 'Propreté', 'description' => 'Problèmes de déchets, graffitis, etc.'],
+        ['nom' => 'Propreté', 'description' => 'Problèmes de déchets, dépôts sauvages, etc.'],
         ['nom' => 'Espaces verts', 'description' => 'Problèmes dans les parcs et jardins'],
         ['nom' => 'Mobilier urbain', 'description' => 'Problèmes avec les bancs, poubelles, etc.'],
+        ['nom' => 'Assainissement', 'description' => 'Problèmes d\'eaux usées, caniveaux bouchés'],
+        ['nom' => 'Inondation', 'description' => 'Zones inondées ou à risque d\'inondation'],
     ];
 
     foreach ($categoriesData as $categorieData) {
@@ -64,12 +59,12 @@ class AppFixtures extends Fixture
 
     // Admin
     $admin = new Utilisateur();
-    $admin->setEmail('admin@cityflow.fr');
+    $admin->setEmail('admin@cityflow.bj');
     $admin->setNom('Admin');
     $admin->setPrenom('Super');
     $admin->setRoles(['ROLE_ADMIN']);
     $admin->setPassword($this->passwordHasher->hashPassword($admin, 'admin123'));
-    $admin->setVilleResidence($villes[0]);
+    $admin->setVilleResidence($villes[0]); // Cotonou
     $admin->setDateInscription(new \DateTime());
     $admin->setEstValide(true);
     $manager->persist($admin);
@@ -77,23 +72,26 @@ class AppFixtures extends Fixture
 
     // Modérateur
     $moderateur = new Utilisateur();
-    $moderateur->setEmail('modo@cityflow.fr');
+    $moderateur->setEmail('modo@cityflow.bj');
     $moderateur->setNom('Modo');
     $moderateur->setPrenom('Super');
     $moderateur->setRoles(['ROLE_MODERATOR']);
     $moderateur->setPassword($this->passwordHasher->hashPassword($moderateur, 'modo123'));
-    $moderateur->setVilleResidence($villes[1]);
+    $moderateur->setVilleResidence($villes[1]); // Porto-Novo
     $moderateur->setDateInscription(new \DateTime());
     $moderateur->setEstValide(true);
     $manager->persist($moderateur);
     $utilisateurs[] = $moderateur;
 
     // Utilisateurs normaux
-    for ($i = 1; $i <= 5; $i++) {
+    $prenoms = ['Kokou', 'Afiavi', 'Koffi', 'Abla', 'Kodjo'];
+    $noms = ['Agossou', 'Ahouansou', 'Dossou', 'Tohoun', 'Adoko'];
+    
+    for ($i = 0; $i < 5; $i++) {
       $utilisateur = new Utilisateur();
-      $utilisateur->setEmail("user{$i}@cityflow.fr");
-      $utilisateur->setNom("Nom{$i}");
-      $utilisateur->setPrenom("Prénom{$i}");
+      $utilisateur->setEmail("user{$i}@cityflow.bj");
+      $utilisateur->setNom($noms[$i % count($noms)]);
+      $utilisateur->setPrenom($prenoms[$i % count($prenoms)]);
       $utilisateur->setRoles(['ROLE_USER']);
       $utilisateur->setPassword($this->passwordHasher->hashPassword($utilisateur, 'user123'));
       $utilisateur->setVilleResidence($villes[$i % count($villes)]);
@@ -115,30 +113,40 @@ class AppFixtures extends Fixture
         'Nid de poule dangereux',
         'Lampadaire en panne',
         'Dépôt sauvage de déchets',
-        'Banc cassé dans le parc',
+        'Caniveau bouché',
         'Graffiti sur mur public',
         'Arbre tombé sur la voie',
         'Fuite d\'eau sur la chaussée',
         'Panneau de signalisation abîmé',
         'Trottoir endommagé',
-        'Passage piéton effacé'
+        'Passage piéton effacé',
+        'Inondation après la pluie',
+        'Eau stagnante',
+        'Route impraticable',
+        'Poteaux électriques dangereux',
+        'Déversement d\'eaux usées'
     ];
 
     $descriptions = [
-        'Un nid de poule profond est apparu après les dernières pluies, représentant un danger pour les cyclistes et motards.',
+        'Un nid de poule profond est apparu après les dernières pluies, représentant un danger pour les zémidjans et motards.',
         'Le lampadaire ne fonctionne plus depuis plusieurs jours, rendant la rue dangereusement sombre la nuit.',
         'Des déchets ont été déposés illégalement au coin de la rue, créant une nuisance visuelle et olfactive.',
-        'Le banc principal du parc est cassé, le rendant inutilisable et dangereux.',
+        'Le caniveau est complètement bouché par des déchets et de la boue, causant des inondations à chaque pluie.',
         'Un large graffiti est apparu sur le mur de l\'école municipale, avec des propos inappropriés.',
         'Un arbre est tombé suite à la tempête d\'hier soir, bloquant partiellement la voie.',
-        'Une fuite d\'eau importante sur la chaussée depuis ce matin, risque de verglas en cas de températures négatives.',
+        'Une fuite d\'eau importante sur la chaussée depuis ce matin, créant des flaques et rendant la route glissante.',
         'Le panneau de signalisation a été tordu, probablement suite à un choc, et n\'est plus lisible.',
-        'Le trottoir présente une fissure importante qui s\'agrandit et représente un risque de chute pour les piétons.',
-        'Les marquages du passage piéton sont presque entièrement effacés, créant un danger à cette intersection fréquentée.'
+        'Le trottoir présente une fissure importante qui s\'aggrandit et représente un risque de chute pour les piétons.',
+        'Les marquages du passage piéton sont presque entièrement effacés, créant un danger à cette intersection fréquentée.',
+        'La zone est complètement inondée après les pluies d\'hier, rendant impossible le passage des véhicules et piétons.',
+        'L\'eau stagne depuis plusieurs jours, créant un risque sanitaire et favorisant la prolifération de moustiques.',
+        'La route est devenue impraticable à cause des trous et de l\'érosion causée par les dernières pluies.',
+        'Des poteaux électriques penchent dangereusement et risquent de tomber sur la voie publique.',
+        'Les eaux usées sont déversées directement dans la rue, causant des odeurs nauséabondes et un risque sanitaire.'
     ];
 
-    // Créer 20 signalements
-    for ($i = 0; $i < 20; $i++) {
+    // Créer 30 signalements
+    for ($i = 0; $i < 30; $i++) {
       $signalement = new Signalement();
       $signalement->setTitre($titres[$i % count($titres)]);
       $signalement->setDescription($descriptions[$i % count($descriptions)]);
@@ -146,8 +154,8 @@ class AppFixtures extends Fixture
 
       // Coordonnées aléatoires proches de la ville
       $ville = $villes[$i % count($villes)];
-      $latOffset = (mt_rand(-100, 100) / 1000);
-      $lngOffset = (mt_rand(-100, 100) / 1000);
+      $latOffset = (random_int(-100, 100) / 1000);
+      $lngOffset = (random_int(-100, 100) / 1000);
       $signalement->setLatitude($ville->getLatitudeCentre() + $latOffset);
       $signalement->setLongitude($ville->getLongitudeCentre() + $lngOffset);
 
