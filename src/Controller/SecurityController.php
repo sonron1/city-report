@@ -2,10 +2,13 @@
 
 namespace App\Controller;
 
+// En haut du fichier, ajoutez ces importations si elles ne sont pas déjà présentes
+use App\Entity\Utilisateur;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\HttpFoundation\Request;
 
 class SecurityController extends AbstractController
 {
@@ -43,4 +46,28 @@ class SecurityController extends AbstractController
         
         return $this->render('security/not_verified.html.twig');
     }
+// Ajouter cette méthode à votre SecurityController
+
+/**
+ * @Route("/check-verification", name="app_check_verification")
+ */
+#[Route('/check-verification', name: 'app_check_verification')]
+public function checkVerification(Request $request): Response
+{
+    $session = $request->getSession();
+    
+    if ($session->has('_security_verification_needed')) {
+        $session->remove('_security_verification_needed');
+        return $this->redirectToRoute('app_not_verified');
+    }
+    
+    // Si l'utilisateur est connecté mais pas vérifié, rediriger également
+    $user = $this->getUser();
+    if ($user instanceof Utilisateur && !$user->isEstValide()) {
+        return $this->redirectToRoute('app_not_verified');
+    }
+    
+    // Sinon, rediriger vers la page d'accueil
+    return $this->redirectToRoute('app_home');
+}
 }

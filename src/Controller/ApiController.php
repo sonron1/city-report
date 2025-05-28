@@ -9,20 +9,20 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ApiController extends AbstractController
 {
-    #[Route('/api/ville/{id}', name: 'app_api_ville', methods: ['GET'])]
-    public function getVille(int $id, VilleRepository $villeRepository): JsonResponse
+    #[Route('/api/villes', name: 'api_villes', methods: ['GET'])]
+    public function getVilles(VilleRepository $villeRepository): JsonResponse
     {
-        $ville = $villeRepository->find($id);
-        
-        if (!$ville) {
-            return new JsonResponse(['error' => 'Ville non trouvée'], 404);
+        $villes = $villeRepository->findAll();
+        $data = [];
+
+        foreach ($villes as $ville) {
+            $data[$ville->getId()] = [
+                'nom' => $ville->getNom(),
+                'lat' => $ville->getLatitudeCentre(),
+                'lng' => $ville->getLongitudeCentre()
+            ];
         }
-        
-        return new JsonResponse([
-            'id' => $ville->getId(),
-            'nom' => $ville->getNom(),
-            'latitude' => $ville->getLatitude(),
-            'longitude' => $ville->getLongitude(),
-        ]);
+
+        return new JsonResponse($data);
     }
 }

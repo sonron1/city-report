@@ -9,7 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class VilleController extends AbstractController
 {
-    #[Route('/villes', name: 'app_villes')]
+    #[Route('/villes', name: 'app_ville')]
     public function index(VilleRepository $villeRepository): Response
     {
         return $this->render('ville/index.html.twig', [

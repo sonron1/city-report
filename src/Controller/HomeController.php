@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Enum\StatutSignalement;
 use App\Repository\SignalementRepository;
 use App\Repository\VilleRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +16,7 @@ class HomeController extends AbstractController
     {
         // Récupérer les derniers signalements validés
         $derniersSignalements = $signalementRepository->findBy(
-            ['statut' => 'Validé'],
+            ['statut' => StatutSignalement::NOUVEAU], // Utilisez une des valeurs de l'énumération
             ['dateSignalement' => 'DESC'],
             5
         );

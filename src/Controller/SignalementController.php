@@ -35,13 +35,13 @@ class SignalementController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function carte(VilleRepository $villeRepository, CategorieRepository $categorieRepository): Response
     {
-        return $this->render('index.html.twig', [
+        return $this->render('carte/index.html.twig', [
             'villes' => $villeRepository->findAll(),
             'categories' => $categorieRepository->findAll(),
         ]);
     }
 
-    #[Route('/signalement/{id}', name: 'app_signalement_show')]
+    #[Route('/signalement/{id}', name: 'app_signalement_show', requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_USER')]
     public function show(int $id, SignalementRepository $signalementRepository): Response
     {
@@ -49,6 +49,13 @@ class SignalementController extends AbstractController
 
         if (!$signalement) {
             throw $this->createNotFoundException('Signalement non trouvé');
+        }
+
+        // Vérifier que l'utilisateur a le droit de voir ce signalement
+        if ($signalement->getEtatValidation() !== 'valide' &&
+            $signalement->getUtilisateur() !== $this->getUser() &&
+            !$this->isGranted('ROLE_ADMIN')) {
+            throw $this->createAccessDeniedException('Vous n\'avez pas le droit de voir ce signalement.');
         }
 
         return $this->render('signalement/show.html.twig', [
@@ -60,55 +67,67 @@ class SignalementController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function nouveau(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
     {
-        // Suppression de la ligne redondante de vérification des droits
-        // car l'attribut IsGranted est déjà présent
+    $signalement = new Signalement();
+    $form = $this->createForm(SignalementTypeForm::class, $signalement);
+    $form->handleRequest($request);
 
-        $signalement = new Signalement();
-        $form = $this->createForm(SignalementTypeForm::class, $signalement);
-        $form->handleRequest($request);
+    if ($form->isSubmitted() && $form->isValid()) {
+        // Traitement de la photo
+        $photoFile = $form->get('photo')->getData();
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $photoFile = $form->get('photo')->getData();
+        if ($photoFile) {
+            $originalFilename = pathinfo($photoFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = $slugger->slug($originalFilename);
+            $newFilename = $safeFilename.'-'.uniqid('', true).'.'.$photoFile->guessExtension();
 
-            if ($photoFile) {
-                $originalFilename = pathinfo($photoFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename = $slugger->slug($originalFilename);
-                $newFilename = $safeFilename.'-'.uniqid('', true).'.'.$photoFile->guessExtension();
-
-                try {
-                    $photoFile->move(
-                        $this->getParameter('photos_directory'),
-                        $newFilename
-                    );
-                    $signalement->setPhotoUrl($newFilename);
-                } catch (FileException $e) {
-                    // Ajout d'un message d'erreur en cas d'échec de l'upload
-                    $this->addFlash('error', 'Un problème est survenu lors du téléchargement de votre photo.');
-                }
+            try {
+                $photoFile->move(
+                    $this->getParameter('photos_directory'),
+                    $newFilename
+                );
+                $signalement->setPhotoUrl($newFilename);
+            } catch (FileException $e) {
+                $this->addFlash('error', 'Un problème est survenu lors du téléchargement de votre photo.');
+                return $this->render('signalement/nouveau.html.twig', [
+                    'form' => $form->createView(),
+                ]);
             }
-
-            $user = $this->getUser();
-            if (!$user) {
-                throw $this->createAccessDeniedException('Vous devez être connecté pour créer un signalement.');
-            }
-            
-            $signalement->setUtilisateur($user);
-            $signalement->setDateSignalement(new \DateTime());
-            $signalement->setStatut(StatutSignalement::NOUVEAU);
-            $signalement->setEtatValidation('en_attente');
-
-            $entityManager->persist($signalement);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Votre signalement a été enregistré et sera validé prochainement.');
-
-            return $this->redirectToRoute('app_signalements');
+        } else {
+            $signalement->setPhotoUrl('default.jpg');
         }
 
-        return $this->render('signalement/nouveau.html.twig', [
-            'form' => $form->createView(),
-        ]);
+        // Vérifier la présence des coordonnées
+        if (!$signalement->getLatitude() || !$signalement->getLongitude()) {
+            // Utiliser les coordonnées de la ville si disponibles
+            $ville = $signalement->getVille();
+            if ($ville) {
+                $signalement->setLatitude($ville->getLatitudeCentre());
+                $signalement->setLongitude($ville->getLongitudeCentre());
+            } else {
+                // Coordonnées par défaut (Bénin)
+                $signalement->setLatitude(6.3676953);
+                $signalement->setLongitude(2.3912362);
+            }
+        }
+
+        // Finaliser le signalement
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+        $signalement->setUtilisateur($user);
+        $signalement->setStatut(StatutSignalement::NOUVEAU);
+        $signalement->setEtatValidation('en_attente');
+
+        $entityManager->persist($signalement);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Votre signalement a été enregistré et sera validé prochainement.');
+        return $this->redirectToRoute('app_signalements');
     }
+
+    return $this->render('signalement/nouveau.html.twig', [
+        'form' => $form->createView(),
+    ]);
+}
 
     #[Route('/mes-signalements', name: 'app_mes_signalements')]
     #[IsGranted('ROLE_USER')]
@@ -123,7 +142,7 @@ class SignalementController extends AbstractController
 
         return $this->render('signalement/mes_signalements.html.twig', [
             'signalements' => $signalementRepository->findBy(
-                ['utilisateur' => $user],
+                ['utilisateur' => $this->getUser()],
                 ['dateSignalement' => 'DESC']
             )
         ]);

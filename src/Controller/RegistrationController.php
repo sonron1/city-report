@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Utilisateur;
 use App\Form\RegistrationFormTypeForm as RegistrationFormType;
-use App\Security\EmailVerifier;
+//use App\Security\EmailVerifier;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -49,7 +49,7 @@ class RegistrationController extends AbstractController
             // Envoi de l'email de confirmation
             // Dans la méthode register() du RegistrationController.php
             $email = (new TemplatedEmail())
-                ->from(new Address('votre-adresse@gmail.com', 'CityFlow'))  // Changez ceci par l'adresse Gmail désirée
+                ->from(new Address($this->getParameter('app.email_sender'), 'CityFlow'))  // Changez ceci par l'adresse Gmail désirée
                 ->to($user->getEmail())
                 ->subject('Confirmation de votre compte CityFlow')
                 ->htmlTemplate('emails/confirmation.html.twig')
@@ -142,7 +142,7 @@ class RegistrationController extends AbstractController
         
         // Envoi de l'email de confirmation
         $email = (new TemplatedEmail())
-            ->from(new Address('noreply@cityflow.com', 'CityFlow'))
+            ->from(new Address($this->getParameter('app.email_sender'), 'CityFlow'))
             ->to($user->getEmail())
             ->subject('Confirmation de votre compte CityFlow')
             ->htmlTemplate('emails/confirmation.html.twig')

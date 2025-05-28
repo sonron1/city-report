@@ -1,30 +1,36 @@
 <?php
+// src/Controller/MailTestController.php
 
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
-use Symfony\Component\Routing\Annotation\Route;
 
 class TestMailController extends AbstractController
 {
-    #[Route('/test-mail', name: 'app_test_mail')]
-    public function index(MailerInterface $mailer): Response
-    {
+  /**
+   */
+  #[Route('/test-mail', name: 'test_mail')]
+  public function test(MailerInterface $mailer): Response
+  {
+    try {
         $email = (new Email())
-            ->from('test@example.com')
-            ->to('lolathread@gmail.com')
-            ->subject('Test email from Symfony')
-            ->text('This is a test email sent from Symfony.')
-            ->html('<p>This is a test email sent from Symfony.</p>');
+            ->from($this->getParameter('app.email_sender'))
+            ->to('you@example.com')
+            ->subject('Test Mail')
+            ->text('Ceci est un test de MailHog avec Symfony.');
 
-        try {
-            $mailer->send($email);
-            return new Response('Email envoyé avec succès! Vérifiez votre serveur SMTP.');
-        } catch (\Exception $e) {
-            return new Response('Erreur lors de l\'envoi de l\'email: ' . $e->getMessage(), 500);
-        }
+        $mailer->send($email);
+
+        $this->addFlash('success', 'L\'email a été envoyé avec succès.');
+        return new Response('Email envoyé avec succès.');
+    } catch (TransportExceptionInterface $e) {
+        $this->addFlash('error', 'Erreur lors de l\'envoi de l\'email: ' . $e->getMessage());
+        return new Response('Erreur lors de l\'envoi de l\'email: ' . $e->getMessage(), 500);
     }
+}
 }
