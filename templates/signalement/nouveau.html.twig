@@ -4,168 +4,99 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 {% endblock %}
 
 {% block body %}
-<div class="container py-4">
-    <h1 class="mb-4">Nouveau signalement</h1>
-    
-    <div class="row">
-        <div class="col-md-8">
-            {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
-                <div class="card shadow mb-4">
-                    <div class="card-body">
-                        <div class="mb-3">
-                            {{ form_label(form.titre, 'Titre du signalement', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.titre, {'attr': {'class': 'form-control'}}) }}
-                            <div class="invalid-feedback">
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow-lg border-0 rounded-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h1 class="h3 mb-0">Nouveau signalement</h1>
+                    </div>
+                    <div class="card-body p-4">
+                        {{ form_start(form) }}
+                            <div class="mb-3">
+                                {{ form_label(form.titre) }}
+                                {{ form_widget(form.titre) }}
                                 {{ form_errors(form.titre) }}
                             </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form_label(form.description, 'Description du problème', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
-                            <div class="invalid-feedback">
+                            
+                            <div class="mb-3">
+                                {{ form_label(form.description) }}
+                                {{ form_widget(form.description) }}
                                 {{ form_errors(form.description) }}
                             </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                {{ form_label(form.ville, 'Ville', {'label_attr': {'class': 'form-label'}}) }}
-                                {{ form_widget(form.ville, {'attr': {'class': 'form-select'}}) }}
-                                <div class="invalid-feedback">
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    {{ form_label(form.categorie) }}
+                                    {{ form_widget(form.categorie) }}
+                                    {{ form_errors(form.categorie) }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form_label(form.ville) }}
+                                    {{ form_widget(form.ville) }}
                                     {{ form_errors(form.ville) }}
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                {{ form_label(form.categorie, 'Catégorie', {'label_attr': {'class': 'form-label'}}) }}
-                                {{ form_widget(form.categorie, {'attr': {'class': 'form-select'}}) }}
-                                <div class="invalid-feedback">
-                                    {{ form_errors(form.categorie) }}
+                            
+                            <div class="mb-3">
+                                {{ form_label(form.photo) }}
+                                {{ form_widget(form.photo) }}
+                                {{ form_errors(form.photo) }}
+                                <small class="form-text text-muted">Formats acceptés: JPG, PNG. Taille maximale: 5Mo</small>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Localisation du problème</label>
+                                <div class="d-grid gap-2 mb-2">
+                                    <button type="button" class="btn btn-outline-primary" id="geolocate-btn">
+                                        <i class="fas fa-map-marker-alt"></i> Utiliser ma position actuelle
+                                    </button>
+                                </div>
+                                <div id="map" style="height: 400px; width: 100%;" class="mb-3 border rounded"></div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text">Latitude</span>
+                                            <input type="text" id="manual-latitude" class="form-control" placeholder="Ex: 6.3676953">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text">Longitude</span>
+                                            <input type="text" id="manual-longitude" class="form-control" placeholder="Ex: 2.3912362">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="button" class="btn btn-outline-secondary" id="apply-coords-btn">
+                                            Appliquer ces coordonnées
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            {{ form_label(form.photo, 'Photo du problème', {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.photo, {'attr': {'class': 'form-control'}}) }}
-                            <div class="form-text">Ajoutez une photo pour illustrer le problème (JPEG ou PNG, max 5MB)</div>
-                            <div class="invalid-feedback">
-                                {{ form_errors(form.photo) }}
+                            
+                            {# Champs cachés pour les coordonnées #}
+                            {{ form_widget(form.latitude) }}
+                            {{ form_widget(form.longitude) }}
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-paper-plane me-2"></i> Envoyer le signalement
+                                </button>
                             </div>
-                        </div>
+                        {{ form_end(form) }}
                     </div>
-                </div>
-                
-                <div class="card shadow mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Localisation</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-3">Placez le marqueur à l'emplacement précis du problème signalé.</p>
-                        <div id="map-form" style="height: 400px;" class="mb-3"></div>
-                        {{ form_widget(form.latitude) }}
-                        {{ form_widget(form.longitude) }}
-                    </div>
-                </div>
-                
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg">Envoyer le signalement</button>
-                </div>
-            {{ form_end(form) }}
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Conseils</h5>
-                </div>
-                <div class="card-body">
-                    <ul class="mb-0">
-                        <li class="mb-2">Soyez précis dans votre description</li>
-                        <li class="mb-2">Ajoutez une photo claire du problème</li>
-                        <li class="mb-2">Placez le marqueur à l'emplacement exact</li>
-                        <li class="mb-2">Choisissez la catégorie appropriée</li>
-                        <li>Vérifiez que le problème n'a pas déjà été signalé</li>
-                    </ul>
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Utilisez l'ID unique pour cette carte
-            const mapElement = document.getElementById('map-form');
-            
-            if (mapElement) {
-                // Initialize the map
-                const map = L.map('map-form').setView([46.603354, 1.888334], 5); // Center on France
-                
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© OpenStreetMap contributors'
-                }).addTo(map);
-                
-                // Add a marker that can be moved
-                let marker = null;
-                
-                // Set marker based on selected city
-                const villeSelect = document.querySelector('#signalement_ville');
-                if (villeSelect) {
-                    villeSelect.addEventListener('change', function() {
-                        const selectedOption = this.options[this.selectedIndex];
-                        if (selectedOption.value) {
-                            fetch(`/api/ville/${selectedOption.value}`)
-                                .then(response => response.json())
-                                .then(data => {
-                                    const lat = data.latitude;
-                                    const lng = data.longitude;
-                                    
-                                    if (marker) {
-                                        marker.setLatLng([lat, lng]);
-                                    } else {
-                                        marker = L.marker([lat, lng], {draggable: true}).addTo(map);
-                                        marker.on('dragend', updateCoordinates);
-                                    }
-                                    
-                                    map.setView([lat, lng], 13);
-                                    updateCoordinates();
-                                })
-                                .catch(error => {
-                                    console.error('Erreur lors du chargement des données de la ville:', error);
-                                });
-                        }
-                    });
-                }
-                
-                // Allow clicking on map to place marker
-                map.on('click', function(e) {
-                    if (marker) {
-                        marker.setLatLng(e.latlng);
-                    } else {
-                        marker = L.marker(e.latlng, {draggable: true}).addTo(map);
-                        marker.on('dragend', updateCoordinates);
-                    }
-                    updateCoordinates();
-                });
-                
-                function updateCoordinates() {
-                    if (marker) {
-                        const position = marker.getLatLng();
-                        document.querySelector('#signalement_latitude').value = position.lat;
-                        document.querySelector('#signalement_longitude').value = position.lng;
-                    }
-                }
-            }
-        });
-    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    {{ encore_entry_script_tags('signalement-map') }}
 {% endblock %}

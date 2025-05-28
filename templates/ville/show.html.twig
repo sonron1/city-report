@@ -5,74 +5,291 @@
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+        /* Styles généraux */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Style pour l'image */
+        .img-container {
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            margin-bottom: 2rem;
+        }
+        
+        .img-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+        }
+        
+        .img-signalement {
+            cursor: zoom-in;
+            transition: transform 0.5s ease;
+            width: 100%;
+            object-fit: cover;
+            max-height: 500px;
+        }
+        
+        .img-signalement:hover {
+            transform: scale(1.02);
+        }
+        
+        /* Style pour la carte */
+        .map-wrapper {
+            margin-top: 2rem;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .map-wrapper:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+        }
+        
+        .map-container {
+            height: 500px !important;
+            width: 100%;
+        }
+        
+        /* Style pour la modal */
+        .modal-image .modal-content {
+            background-color: rgba(0, 0, 0, 0.9);
+            border: none;
+            border-radius: 16px;
+        }
+        
+        .modal-image .modal-header {
+            border-bottom: none;
+            padding: 20px 30px;
+        }
+        
+        .modal-image .modal-body {
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-image img {
+            max-width: 95%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Badges et boutons */
+        .badge {
+            padding: 8px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-outline-secondary, 
+        .btn-outline-primary, 
+        .btn-outline-danger {
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-outline-secondary:hover, 
+        .btn-outline-primary:hover, 
+        .btn-outline-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 1s ease;
+        }
+        
+        .slide-in {
+            animation: slideInUp 0.7s ease;
+        }
+        
+        /* Info section */
+        .info-section {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .info-section:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+        }
+        
+        /* Séparateur */
+        .custom-divider {
+            height: 3px;
+            background: linear-gradient(90deg, #0d6efd, #0dcaf0);
+            border-radius: 3px;
+            margin: 2rem 0;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<div class="container py-4">
-    <div class="mb-4">
+<div class="container py-5">
+    <div class="mb-4 animate__animated animate__fadeIn">
         <a href="{{ path('app_signalements') }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-1"></i> Retour aux signalements
         </a>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+    <div class="card shadow mb-5 animate__animated animate__fadeInUp">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
             <h1 class="h3 mb-0">{{ signalement.titre }}</h1>
             <span class="badge status-{{ signalement.statut.value }} fs-6">{{ signalement.statut.value|replace({'_': ' '})|capitalize }}</span>
         </div>
-        <div class="card-body">
+        
+        <div class="card-body p-4">
+            <!-- Section principale avec image et infos -->
             <div class="row">
-                <div class="col-md-6 mb-4">
+                <div class="col-lg-8 fade-in">
+                    <!-- Image du signalement -->
                     {% if signalement.photoUrl %}
-                        <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="img-fluid rounded" alt="{{ signalement.titre }}">
+                        <div class="img-container">
+                            <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" 
+                                class="img-signalement" 
+                                alt="{{ signalement.titre }}"
+                                data-bs-toggle="modal"
+                                data-bs-target="#imageModal">
+                        </div>
                     {% else %}
-                        <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 300px;">
+                        <div class="img-container bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
                             <i class="fas fa-image fa-5x text-muted"></i>
                         </div>
                     {% endif %}
-                </div>
-                <div class="col-md-6">
-                    <div class="mb-4">
-                        <h2 class="h4 mb-3">Informations</h2>
-                        <p class="mb-2"><strong>Catégorie :</strong> <span class="badge bg-secondary">{{ signalement.categorie.nom }}</span></p>
-                        <p class="mb-2"><strong>Ville :</strong> {{ signalement.ville.nom }}</p>
-                        <p class="mb-2"><strong>Date :</strong> {{ signalement.dateSignalement|date('d/m/Y H:i') }}</p>
-                        <p class="mb-2"><strong>Signalé par :</strong> {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</p>
-                    </div>
                     
-                    <div id="map" class="map-container mb-3" style="height: 200px;"></div>
+                    <!-- Description du signalement -->
+                    <div class="mt-5 slide-in">
+                        <h2 class="h4 mb-3 d-flex align-items-center">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            Description
+                        </h2>
+                        <div class="p-3 bg-light rounded">
+                            <p class="mb-0">{{ signalement.description|nl2br }}</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="mt-4">
-                <h2 class="h4 mb-3">Description</h2>
-                <p>{{ signalement.description|nl2br }}</p>
-            </div>
-            
-            {% if is_granted('ROLE_MODERATOR') or signalement.utilisateur == app.user %}
-                <div class="mt-4 d-flex gap-2">
-                    {% if is_granted('ROLE_MODERATOR') %}
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                Changer le statut
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                <li><a class="dropdown-item" href="#">Nouveau</a></li>
-                                <li><a class="dropdown-item" href="#">En cours</a></li>
-                                <li><a class="dropdown-item" href="#">Résolu</a></li>
-                                <li><a class="dropdown-item" href="#">Annulé</a></li>
-                            </ul>
+                
+                <div class="col-lg-4 slide-in">
+                    <div class="info-section mb-4">
+                        <h2 class="h4 mb-3 d-flex align-items-center">
+                            <i class="fas fa-clipboard-list text-primary me-2"></i>
+                            Informations
+                        </h2>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                                <span>Catégorie</span>
+                                <span class="badge bg-secondary">{{ signalement.categorie.nom }}</span>
+                            </li>
+                            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                                <span>Ville</span>
+                                <span>{{ signalement.ville.nom }}</span>
+                            </li>
+                            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                                <span>Date</span>
+                                <span>{{ signalement.dateSignalement|date('d/m/Y H:i') }}</span>
+                            </li>
+                            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center">
+                                <span>Signalé par</span>
+                                <span>{{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {% if is_granted('ROLE_MODERATOR') or signalement.utilisateur == app.user %}
+                        <div class="info-section">
+                            <h2 class="h4 mb-3 d-flex align-items-center">
+                                <i class="fas fa-tools text-primary me-2"></i>
+                                Actions
+                            </h2>
+                            <div class="d-grid gap-2">
+                                {% if is_granted('ROLE_MODERATOR') %}
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fas fa-exchange-alt me-1"></i> Changer le statut
+                                        </button>
+                                        <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton">
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-circle text-info me-2"></i> Nouveau</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-spinner text-warning me-2"></i> En cours</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-check-circle text-success me-2"></i> Résolu</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-times-circle text-danger me-2"></i> Annulé</a></li>
+                                        </ul>
+                                    </div>
+                                {% endif %}
+
+                                {% if signalement.utilisateur == app.user and signalement.statut.value == 'nouveau' %}
+                                    <button class="btn btn-outline-danger">
+                                        <i class="fas fa-trash-alt me-1"></i> Supprimer
+                                    </button>
+                                {% endif %}
+                            </div>
                         </div>
                     {% endif %}
-                    
-                    {% if signalement.utilisateur == app.user and signalement.statut.value == 'nouveau' %}
-                        <button class="btn btn-outline-danger">Supprimer</button>
-                    {% endif %}
                 </div>
-            {% endif %}
+            </div>
+            
+            <div class="custom-divider"></div>
+            
+            <!-- Section carte (pleine largeur en bas) -->
+            <div class="animate__animated animate__fadeInUp">
+                <h2 class="h4 mb-3 d-flex align-items-center">
+                    <i class="fas fa-map-marked-alt text-primary me-2"></i>
+                    Localisation
+                </h2>
+                <div class="map-wrapper">
+                    <div id="map" class="map-container"></div>
+                </div>
+                <p class="text-muted mt-2">
+                    <i class="fas fa-map-marker-alt me-1"></i> 
+                    {{ signalement.ville.nom }}
+                </p>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Modal pour afficher l'image en plein écran -->
+{% if signalement.photoUrl %}
+<div class="modal modal-image fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-white" id="imageModalLabel">
+                    <i class="fas fa-image me-2"></i> {{ signalement.titre }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" alt="{{ signalement.titre }}" class="animate__animated animate__fadeIn">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block javascripts %}
@@ -80,16 +297,40 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const map = L.map('map').setView([{{ signalement.latitude }}, {{ signalement.longitude }}], 15);
+            // Animation des éléments au chargement
+            const animateElements = function() {
+                const elements = document.querySelectorAll('.fade-in, .slide-in');
+                elements.forEach((el, index) => {
+                    setTimeout(() => {
+                        if (el.classList.contains('fade-in')) {
+                            el.style.animation = 'fadeIn 0.8s ease forwards';
+                        } else if (el.classList.contains('slide-in')) {
+                            el.style.animation = 'slideInUp 0.8s ease forwards';
+                        }
+                    }, index * 150);
+                });
+            };
             
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            // Initialiser la carte avec un léger délai pour les animations
+            setTimeout(function() {
+                const map = L.map('map').setView([{{ signalement.latitude }}, {{ signalement.longitude }}], 15);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                const marker = L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}])
+                    .addTo(map)
+                    .bindPopup("{{ signalement.titre }}")
+                    .openPopup();
+                    
+                // Ajuster la carte après initialisation
+                setTimeout(() => map.invalidateSize(), 100);
+            }, 500);
             
-            L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}])
-                .addTo(map)
-                .bindPopup("{{ signalement.titre }}");
+            // Lancer les animations
+            animateElements();
         });
     </script>
 {% endblock %}
