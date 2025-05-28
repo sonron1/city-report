@@ -1,5 +1,7 @@
 parameters:
     photos_directory: '%kernel.project_dir%/public/uploads'
+    app.email_sender: 'noreply@cityflow.com'
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -21,3 +23,8 @@ services:
     App\Controller\:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
+
+
+    App\EventListener\LoginListener:
+        tags:
+            - { name: kernel.event_listener, event: security.authentication.success, method: onLoginSuccess }
