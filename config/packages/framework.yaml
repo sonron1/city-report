@@ -8,6 +8,10 @@ framework:
     #esi: true
     #fragments: true
 
+    router:
+        # ...
+        default_uri: 'http://127.0.0.1:8000' # Changer de https à http
+
 when@test:
     framework:
         test: true

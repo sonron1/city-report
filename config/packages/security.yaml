@@ -28,9 +28,17 @@ security:
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
-    # Easy way to control access for large sections of your site
-    # Note: Only the *first* access control that matches will be used
+
+    
     access_control:
+        # Permettre l'accès aux signalements validés pour tous les utilisateurs connectés
+        - { path: ^/signalement/\d+, roles: ROLE_USER}
+        # ... le reste de vos règles reste inchangé
+        # Permettre l'accès aux routes de vérification sans être connecté
+        - { path: ^/verify, roles: PUBLIC_ACCESS}
+        
+        # Routes accessibles uniquement aux utilisateurs vérifiés (à ajouter selon vos besoins)
+        # - { path: ^/signalement, roles: ROLE_USER }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/agent, roles: ROLE_AGENT }
         - { path: ^/supervisor, roles: ROLE_SUPERVISOR }
