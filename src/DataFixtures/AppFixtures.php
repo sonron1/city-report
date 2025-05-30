@@ -8,11 +8,12 @@ use App\Entity\Utilisateur;
 use App\Entity\Ville;
 use App\Enum\StatutSignalement;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-class AppFixtures extends Fixture implements DependentFixtureInterface
+class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureGroupInterface
 {
   private $passwordHasher;
 
@@ -26,6 +27,11 @@ class AppFixtures extends Fixture implements DependentFixtureInterface
       return [
           VilleFixtures::class,
       ];
+  }
+  
+  public static function getGroups(): array
+  {
+      return ['app'];
   }
 
   public function load(ObjectManager $manager): void
