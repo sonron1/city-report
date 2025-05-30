@@ -18,6 +18,10 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
+// Dans src/Controller/SignalementController.php
+use App\Enum\DemandeSuppressionStatut;
+use App\Entity\JournalValidation;
+
 class SignalementController extends AbstractController
 {
     #[Route('/signalements', name: 'app_signalements')]
@@ -25,21 +29,13 @@ class SignalementController extends AbstractController
     public function index(SignalementRepository $signalementRepository): Response
     {
         $signalements = $signalementRepository->findBy(['etatValidation' => 'valide'], ['dateSignalement' => 'DESC']);
-        
+
         return $this->render('signalement/index.html.twig', [
             'signalements' => $signalements,
         ]);
     }
-    
-    #[Route('/carte', name: 'app_carte')]
-    #[IsGranted('ROLE_USER')]
-    public function carte(VilleRepository $villeRepository, CategorieRepository $categorieRepository): Response
-    {
-        return $this->render('carte/index.html.twig', [
-            'villes' => $villeRepository->findAll(),
-            'categories' => $categorieRepository->findAll(),
-        ]);
-    }
+
+    // Suppression de la méthode carte() car elle est déjà gérée par CarteController
 
     #[Route('/signalement/{id}', name: 'app_signalement_show', requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_USER')]
@@ -67,84 +63,87 @@ class SignalementController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function nouveau(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
     {
-    $signalement = new Signalement();
-    $form = $this->createForm(SignalementTypeForm::class, $signalement);
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted() && $form->isValid()) {
-        // Traitement de la photo
+      $signalement = new Signalement();
+      $signalement->setUtilisateur($this->getUser());
+      $signalement->setStatut(StatutSignalement::NOUVEAU);
+  
+      $form = $this->createForm(SignalementTypeForm::class, $signalement);
+      $form->handleRequest($request);
+  
+      if ($form->isSubmitted() && $form->isValid()) {
+        // Gestion de l'upload de photo
         $photoFile = $form->get('photo')->getData();
-
+  
         if ($photoFile) {
-            $originalFilename = pathinfo($photoFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeFilename = $slugger->slug($originalFilename);
-            $newFilename = $safeFilename.'-'.uniqid('', true).'.'.$photoFile->guessExtension();
-
-            try {
-                $photoFile->move(
-                    $this->getParameter('photos_directory'),
-                    $newFilename
-                );
-                $signalement->setPhotoUrl($newFilename);
-            } catch (FileException $e) {
-                $this->addFlash('error', 'Un problème est survenu lors du téléchargement de votre photo.');
-                return $this->render('signalement/nouveau.html.twig', [
-                    'form' => $form->createView(),
-                ]);
-            }
-        } else {
-            $signalement->setPhotoUrl('default.jpg');
+          $originalFilename = pathinfo($photoFile->getClientOriginalName(), PATHINFO_FILENAME);
+          $safeFilename = $slugger->slug($originalFilename);
+          $newFilename = $safeFilename.'-'.uniqid('', true).'.'.$photoFile->guessExtension();
+  
+          try {
+            $photoFile->move(
+                $this->getParameter('photos_directory'),
+                $newFilename
+            );
+            $signalement->setPhotoUrl($newFilename);
+          } catch (FileException $e) {
+            $this->addFlash('error', 'Une erreur est survenue lors de l\'upload de l\'image.');
+          }
         }
-
-        // Vérifier la présence des coordonnées
-        if (!$signalement->getLatitude() || !$signalement->getLongitude()) {
-            // Utiliser les coordonnées de la ville si disponibles
-            $ville = $signalement->getVille();
-            if ($ville) {
-                $signalement->setLatitude($ville->getLatitudeCentre());
-                $signalement->setLongitude($ville->getLongitudeCentre());
-            } else {
-                // Coordonnées par défaut (Bénin)
-                $signalement->setLatitude(6.3676953);
-                $signalement->setLongitude(2.3912362);
-            }
-        }
-
-        // Finaliser le signalement
-        /** @var Utilisateur $user */
-        $user = $this->getUser();
-        $signalement->setUtilisateur($user);
-        $signalement->setStatut(StatutSignalement::NOUVEAU);
-        $signalement->setEtatValidation('en_attente');
-
+  
         $entityManager->persist($signalement);
         $entityManager->flush();
-
-        $this->addFlash('success', 'Votre signalement a été enregistré et sera validé prochainement.');
-        return $this->redirectToRoute('app_signalements');
+  
+        $this->addFlash('success', 'Votre signalement a été créé avec succès!');
+        return $this->redirectToRoute('app_mes_signalements');
+      }
+  
+      return $this->render('signalement/nouveau.html.twig', [
+          'form' => $form->createView(),
+      ]);
     }
-
-    return $this->render('signalement/nouveau.html.twig', [
-        'form' => $form->createView(),
-    ]);
-}
 
     #[Route('/mes-signalements', name: 'app_mes_signalements')]
     #[IsGranted('ROLE_USER')]
     public function mesSignalements(SignalementRepository $signalementRepository): Response
     {
-        // Suppression de la vérification redondante car l'attribut IsGranted est déjà présent
-        
-        $user = $this->getUser();
-        if (!$user) {
-            throw $this->createAccessDeniedException('Vous devez être connecté pour voir vos signalements.');
-        }
+      /** @var Utilisateur $utilisateur */
+      $utilisateur = $this->getUser();
+      $signalements = $signalementRepository->findBy(
+          ['utilisateur' => $utilisateur],
+          ['dateSignalement' => 'DESC']
+      );
+  
+      return $this->render('signalement/mes_signalements.html.twig', [
+          'signalements' => $signalements,
+      ]);
+    }
 
-        return $this->render('signalement/mes_signalements.html.twig', [
-            'signalements' => $signalementRepository->findBy(
-                ['utilisateur' => $this->getUser()],
-                ['dateSignalement' => 'DESC']
-            )
-        ]);
+    #[Route('/signalement/{id}/demande-suppression', name: 'app_signalement_demande_suppression')]
+    #[IsGranted('request_delete', subject: 'signalement')]
+    public function demanderSuppression(Signalement $signalement, EntityManagerInterface $entityManager): Response
+    {
+      // Vérifier que le signalement n'a pas déjà une demande de suppression
+      if ($signalement->getDemandeSuppressionStatut() !== null) {
+        $this->addFlash('warning', 'Une demande de suppression est déjà en cours pour ce signalement.');
+        return $this->redirectToRoute('app_signalement_show', ['id' => $signalement->getId()]);
+      }
+  
+      // Enregistrer la demande de suppression
+      $signalement->setDemandeSuppressionStatut(DemandeSuppressionStatut::DEMANDEE->value);
+  
+      // Créer une entrée dans le journal de validation
+      $journal = new JournalValidation();
+      $journal->setSignalement($signalement);
+      $journal->setUtilisateur($this->getUser());
+      $journal->setDateAction(new \DateTime());
+      $journal->setAction('Demande de suppression');
+      $journal->setCommentaire('L\'utilisateur a demandé la suppression de ce signalement');
+  
+      $entityManager->persist($journal);
+      $entityManager->flush();
+  
+      $this->addFlash('success', 'Votre demande de suppression a été enregistrée et sera traitée prochainement.');
+  
+      return $this->redirectToRoute('app_mes_signalements');
     }
 }
