@@ -88,6 +88,22 @@ class Signalement
   #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
   private ?\DateTimeInterface $dateDemandeSuppressionStatut = null;
 
+  // Dans Signalement.php, ajoutez cette relation
+  #[ORM\ManyToOne(inversedBy: 'signalements')]
+  private ?Arrondissement $arrondissement = null;
+
+  // Et ces méthodes
+  public function getArrondissement(): ?Arrondissement
+  {
+    return $this->arrondissement;
+  }
+
+  public function setArrondissement(?Arrondissement $arrondissement): static
+  {
+    $this->arrondissement = $arrondissement;
+    return $this;
+  }
+
   public function __construct()
   {
     $this->commentaires = new ArrayCollection();

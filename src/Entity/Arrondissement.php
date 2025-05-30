@@ -2,13 +2,15 @@
 
 namespace App\Entity;
 
-use App\Repository\CategorieRepository;
+use App\Repository\ArrondissementRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 
-#[ORM\Entity(repositoryClass: CategorieRepository::class)]
-class Categorie
+#[ORM\Entity(repositoryClass: ArrondissementRepository::class)]
+class Arrondissement
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -18,16 +20,18 @@ class Categorie
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
+    
+    #[ORM\Column(length: 255, unique: true)]
+    #[Gedmo\Slug(fields: ['nom'])]
+    private ?string $slug = null;
 
-    #[ORM\Column(length: 50, nullable: true)]
-    private ?string $icone = null;
-
-    #[ORM\Column(length: 25, nullable: true)]
-    private ?string $couleur = null;
-
-    #[ORM\OneToMany(mappedBy: 'categorie', targetEntity: Signalement::class)]
+    #[ORM\ManyToOne(inversedBy: 'arrondissements')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Ville $ville = null;
+    
+    #[ORM\OneToMany(mappedBy: 'arrondissement', targetEntity: Signalement::class)]
     private Collection $signalements;
 
     public function __construct()
@@ -63,31 +67,31 @@ class Categorie
 
         return $this;
     }
-
-    public function getIcone(): ?string
+    
+    public function getSlug(): ?string
     {
-        return $this->icone;
+        return $this->slug;
     }
 
-    public function setIcone(?string $icone): static
+    public function setSlug(string $slug): static
     {
-        $this->icone = $icone;
+        $this->slug = $slug;
 
         return $this;
     }
 
-    public function getCouleur(): ?string
+    public function getVille(): ?Ville
     {
-        return $this->couleur;
+        return $this->ville;
     }
 
-    public function setCouleur(?string $couleur): static
+    public function setVille(?Ville $ville): static
     {
-        $this->couleur = $couleur;
+        $this->ville = $ville;
 
         return $this;
     }
-
+    
     /**
      * @return Collection<int, Signalement>
      */
@@ -100,7 +104,7 @@ class Categorie
     {
         if (!$this->signalements->contains($signalement)) {
             $this->signalements->add($signalement);
-            $signalement->setCategorie($this);
+            $signalement->setArrondissement($this);
         }
 
         return $this;
@@ -110,11 +114,16 @@ class Categorie
     {
         if ($this->signalements->removeElement($signalement)) {
             // set the owning side to null (unless already changed)
-            if ($signalement->getCategorie() === $this) {
-                $signalement->setCategorie(null);
+            if ($signalement->getArrondissement() === $this) {
+                $signalement->setArrondissement(null);
             }
         }
 
         return $this;
+    }
+    
+    public function __toString(): string
+    {
+        return $this->nom ?? '';
     }
 }

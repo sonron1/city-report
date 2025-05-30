@@ -38,11 +38,21 @@ class Ville
   #[ORM\OneToMany(mappedBy: 'ville', targetEntity: Cluster::class)]
   private Collection $clusters;
 
+  #[ORM\ManyToOne(inversedBy: 'villes')]
+  #[ORM\JoinColumn(nullable: false)]
+  private ?Departement $departement = null;
+
+  #[ORM\OneToMany(mappedBy: 'ville', targetEntity: Arrondissement::class, orphanRemoval: true)]
+  private Collection $arrondissements;
+
+
   public function __construct()
   {
     $this->utilisateurs = new ArrayCollection();
     $this->signalements = new ArrayCollection();
     $this->clusters = new ArrayCollection();
+    $this->arrondissements = new ArrayCollection();
+
   }
 
   // Getters et setters...
@@ -159,6 +169,51 @@ class Ville
 
       return $this;
   }
+
+
+
+  public function getDepartement(): ?Departement
+  {
+    return $this->departement;
+  }
+
+  public function setDepartement(?Departement $departement): static
+  {
+    $this->departement = $departement;
+
+    return $this;
+  }
+
+  /**
+   * @return Collection<int, Arrondissement>
+   */
+  public function getArrondissements(): Collection
+  {
+    return $this->arrondissements;
+  }
+
+  public function addArrondissement(Arrondissement $arrondissement): static
+  {
+    if (!$this->arrondissements->contains($arrondissement)) {
+      $this->arrondissements->add($arrondissement);
+      $arrondissement->setVille($this);
+    }
+
+    return $this;
+  }
+
+  public function removeArrondissement(Arrondissement $arrondissement): static
+  {
+    if ($this->arrondissements->removeElement($arrondissement)) {
+      // set the owning side to null (unless already changed)
+      if ($arrondissement->getVille() === $this) {
+        $arrondissement->setVille(null);
+      }
+    }
+
+    return $this;
+  }
+
 
   /**
    * @return Collection<int, Cluster>
