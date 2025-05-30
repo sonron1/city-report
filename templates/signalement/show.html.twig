@@ -4,7 +4,14 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
+    <style>
+        #map-detail {
+            height: 200px;
+            width: 100%;
+            border-radius: 0.25rem;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
@@ -38,9 +45,15 @@
                         <p class="mb-2"><strong>Ville :</strong> {{ signalement.ville.nom }}</p>
                         <p class="mb-2"><strong>Date :</strong> {{ signalement.dateSignalement|date('d/m/Y H:i') }}</p>
                         <p class="mb-2"><strong>Signalé par :</strong> {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</p>
+                        <p class="mb-2"><strong>Département :</strong> {{ signalement.ville.departement.nom }}</p>
+                        <p class="mb-2"><strong>Ville :</strong> {{ signalement.ville.nom }}</p>
+                        {% if signalement.arrondissement %}
+                            <p class="mb-2"><strong>Arrondissement :</strong> {{ signalement.arrondissement.nom }}</p>
+                        {% endif %}
+
                     </div>
                     
-                    <div id="map-detail" class="map-container mb-3" style="height: 200px;"></div>
+                    <div id="map-detail" class="map-container mb-3"></div>
                 </div>
             </div>
             
@@ -70,6 +83,18 @@
                     {% endif %}
                 </div>
             {% endif %}
+            
+            {% if is_granted('request_delete', signalement) and not signalement.demandeSuppressionStatut %}
+                <a href="{{ path('app_signalement_demande_suppression', {'id': signalement.id}) }}" 
+                   class="btn btn-danger btn-sm" 
+                   onclick="return confirm('Êtes-vous sûr de vouloir demander la suppression de ce signalement?')">
+                    <i class="fas fa-trash-alt"></i> Demander la suppression
+                </a>
+            {% elseif signalement.demandeSuppressionStatut == 'demandee' %}
+                <span class="badge bg-warning">Suppression en attente d'approbation</span>
+            {% elseif signalement.demandeSuppressionStatut == 'rejetee' %}
+                <span class="badge bg-danger">Demande de suppression rejetée</span>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -77,12 +102,15 @@
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const mapElement = document.getElementById('map-detail');
             
             if (mapElement) {
+                // Vérifier que les coordonnées existent et sont valides
+                {% if signalement.latitude is defined and signalement.longitude is defined and 
+                      signalement.latitude is not null and signalement.longitude is not null %}
                 const map = L.map('map-detail').setView([{{ signalement.latitude }}, {{ signalement.longitude }}], 15);
                 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -90,9 +118,30 @@
                     attribution: '© OpenStreetMap contributors'
                 }).addTo(map);
                 
-                L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}])
+                // Créer une icône pour le marqueur - utiliser une couleur fixe pour éviter les erreurs
+                var icon = L.icon({
+                    {% if signalement.categorie is defined and signalement.categorie is not null and signalement.categorie.id is defined %}
+                        // Utiliser directement une couleur basée sur l'ID de la catégorie, sans variable intermédiaire
+                        {% set colors = ['red', 'green', 'orange', 'yellow', 'blue', 'purple', 'grey', 'black'] %}
+                        {% set colorIndex = (signalement.categorie.id - 1) % 8 %}
+                        iconUrl: '{{ asset('images/markers/marker-icon-2x-' ~ colors[colorIndex] ~ '.png') }}',
+                    {% else %}
+                        iconUrl: '{{ asset('images/markers/marker-icon-2x-blue.png') }}',
+                    {% endif %}
+                    shadowUrl: '{{ asset('images/markers/marker-shadow.png') }}',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                });
+                
+                L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}], {icon: icon})
                     .addTo(map)
-                    .bindPopup("{{ signalement.titre }}");
+                    .bindPopup("{{ signalement.titre|e('js') }}");
+                {% else %}
+                // Afficher un message si les coordonnées ne sont pas disponibles
+                mapElement.innerHTML = '<div class="alert alert-warning m-0 d-flex align-items-center justify-content-center" style="height: 100%;">Coordonnées non disponibles</div>';
+                {% endif %}
             }
         });
     </script>

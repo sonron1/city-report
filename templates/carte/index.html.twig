@@ -1,61 +1,290 @@
+{# templates/carte/index.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Carte des signalements{% endblock %}
+{% block title %}Carte des signalements - CityFlow{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
+    <style>
+        #map-signalements {
+            height: 700px;
+            width: 100%;
+        }
+        .filter-controls {
+            margin-bottom: 20px;
+        }
+        .filter-scroll {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 10px;
+        }
+        .filter-scroll .btn {
+            margin-right: 5px;
+        }
+        .filter-group {
+            display: inline-block;
+        }
+        .category-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+            vertical-align: text-bottom;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <h1>Carte des signalements au Bénin</h1>
-
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card mb-4">
-                <div class="card-header">Filtres</div>
-                <div class="card-body">
-                    <h5>Villes</h5>
-                    <ul class="list-group mb-3">
-                        {% for ville in villes %}
-                            <li class="list-group-item">
-                                <div class="form-check">
-                                    <input class="form-check-input filter-ville" type="checkbox" value="{{ ville.id }}" id="ville-{{ ville.id }}">
-                                    <label class="form-check-label" for="ville-{{ ville.id }}">
-                                        {{ ville.nom }}
-                                    </label>
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
-
-                    <h5>Catégories</h5>
-                    <ul class="list-group">
-                        {% for categorie in categories %}
-                            <li class="list-group-item">
-                                <div class="form-check">
-                                    <input class="form-check-input filter-categorie" type="checkbox" value="{{ categorie.id }}" id="categorie-{{ categorie.id }}">
-                                    <label class="form-check-label" for="categorie-{{ categorie.id }}">
-                                        {{ categorie.nom }}
-                                    </label>
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Carte des signalements</h1>
+        </div>
+    </div>
+    
+    <div class="filter-controls">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-primary text-white">
+                Filtres
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label" for="filter-categories"><strong>Catégories :</strong></label>
+                        <div class="filter-scroll" id="filter-categories" role="group" aria-label="Filtrer par catégorie">
+                            <button type="button" class="btn btn-sm btn-outline-primary filter-category active" data-category="all" aria-pressed="true">
+                                Toutes les catégories
+                            </button>
+                            {% for categorie in categories %}
+                                <button type="button" class="btn btn-sm btn-outline-primary filter-category" data-category="{{ categorie.id }}" aria-pressed="false">
+                                    {{ categorie.nom }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label" for="filter-cities"><strong>Villes :</strong></label>
+                        <div class="filter-scroll" id="filter-cities" role="group" aria-label="Filtrer par ville">
+                            <button type="button" class="btn btn-sm btn-outline-primary filter-city active" data-city="all" aria-pressed="true">
+                                Toutes les villes
+                            </button>
+                            {% for ville in villes %}
+                                <button type="button" class="btn btn-sm btn-outline-primary filter-city" data-city="{{ ville.id }}" aria-pressed="false">
+                                    {{ ville.nom }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-9">
-            <div id="map" style="height: 600px;"></div>
+    </div>
+    
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div id="map-signalements"></div>
         </div>
     </div>
+    
+    {% if signalements is empty %}
+    <div class="alert alert-info mt-3">
+        Aucun signalement n'est disponible pour affichage sur la carte.
+    </div>
+    {% else %}
+    <div class="card mt-3">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Légende</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for categorie in categories %}
+                <div class="col-md-4 col-lg-3 mb-2">
+                    <div class="d-flex align-items-center">
+                        {% set categorieColor = categorie.couleur is defined and categorie.couleur 
+                            ? categorie.couleur 
+                            : '#' ~ ((loop.index * 17231) % 16777215)|format('%06X') %}
+                        <div class="me-2" style="width: 24px; height: 24px; background-color: {{ categorieColor }}; border-radius: 50%;"></div>
+                        <span>{{ categorie.nom }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    {{ encore_entry_script_tags('carte-index') }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Vérifier si l'élément de carte existe
+            const mapElement = document.getElementById('map-signalements');
+            if (!mapElement) return;
+            
+            // Initialisation de la carte
+            var map = L.map('map-signalements').setView([6.3676953, 2.3912362], 7); // Coordonnées par défaut (Bénin)
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Création d'icônes personnalisées pour chaque catégorie
+            var icons = {};
+            var defaultIcon = L.icon({
+                iconUrl: '{{ asset('images/markers/marker-icon-2x-blue.png') }}',
+                shadowUrl: '{{ asset('images/markers/marker-shadow.png') }}',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            // Définir des couleurs pour les marqueurs
+            var markerColors = [
+                'red', 'darkgreen', 'orange', 'darkblue', 
+                'purple', 'darkred', 'cadetblue', 'black',
+                'green', 'darkpurple', 'pink', 'yellow'
+            ];
+            
+            // Générer des icônes pour chaque catégorie
+            {% for categorie in categories %}
+                {% if categorie.id is defined %}
+                icons[{{ categorie.id }}] = L.icon({
+                    iconUrl: '{{ asset('images/markers/marker-icon-2x-' ~ ["red", "green", "orange", "yellow", "blue", "purple", "grey", "black"][(loop.index - 1) % 8] ~ '.png') }}',
+                    shadowUrl: '{{ asset('images/markers/marker-shadow.png') }}',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                });
+                {% endif %}
+            {% endfor %}
+            
+            // Stocker tous les marqueurs pour le filtrage
+            var allMarkers = [];
+            
+            // Ajouter les marqueurs pour tous les signalements
+            {% if signalements is defined and signalements is not empty %}
+                {% for signalement in signalements %}
+                    {% if signalement.categorie is defined and signalement.categorie is not null and 
+                          signalement.latitude is defined and signalement.longitude is defined %}
+                    
+                    var icon = {% if signalement.categorie.id is defined %}icons[{{ signalement.categorie.id }}]{% else %}defaultIcon{% endif %} || defaultIcon;
+                    
+                    var marker = L.marker(
+                        [{{ signalement.latitude }}, {{ signalement.longitude }}], 
+                        {icon: icon}
+                    ).addTo(map);
+                    
+                    marker.bindPopup(
+                        '<div class="popup-content">' +
+                        '<h5>{{ signalement.titre|e('js') }}</h5>' +
+                        '<p><strong>Catégorie:</strong> {{ signalement.categorie.nom|e('js') }}</p>' +
+                        '<p><strong>Date:</strong> {{ signalement.dateSignalement|date("d/m/Y")|e('js') }}</p>' +
+                        {% if signalement.statut is defined and signalement.statut is not null and signalement.statut.value is defined %}
+                        '<p><strong>Statut:</strong> <span class="badge bg-{{ {"nouveau": "primary", "en_cours": "warning", "resolu": "success", "annule": "danger"}[signalement.statut.value] }}">{{ signalement.statut.value|replace({"_": " "})|capitalize|e('js') }}</span></p>' +
+                        {% else %}
+                        '<p><strong>Statut:</strong> <span class="badge bg-secondary">Non défini</span></p>' +
+                        {% endif %}
+                        '<div class="mt-2 text-center">' +
+                        '<a href="{{ path("app_signalement_show", {"id": signalement.id}) }}" class="btn btn-sm btn-primary">Voir les détails</a>' +
+                        '</div>' +
+                        '</div>'
+                    );
+                    
+                    // Stocker les données pour le filtrage
+                    marker.categoryId = {{ signalement.categorie.id|default(0) }};
+                    marker.cityId = {% if signalement.ville is defined and signalement.ville is not null %}{{ signalement.ville.id|default(0) }}{% else %}0{% endif %};
+                    
+                    allMarkers.push(marker);
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            
+            // Regrouper les signalements si nécessaire
+            var bounds = L.latLngBounds();
+            
+            if (allMarkers.length > 0) {
+                allMarkers.forEach(function(marker) {
+                    bounds.extend(marker.getLatLng());
+                });
+                
+                // Ajuster la vue de la carte pour montrer tous les signalements
+                map.fitBounds(bounds, {padding: [50, 50]});
+            }
+            
+            // Filtrage par catégorie
+            document.querySelectorAll('.filter-category').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var categoryId = this.dataset.category;
+                    
+                    // Mise à jour des boutons actifs et attributs aria
+                    document.querySelectorAll('.filter-category').forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.setAttribute('aria-pressed', 'false');
+                    });
+                    this.classList.add('active');
+                    this.setAttribute('aria-pressed', 'true');
+                    
+                    filterMarkers();
+                });
+            });
+            
+            // Filtrage par ville
+            document.querySelectorAll('.filter-city').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var cityId = this.dataset.city;
+                    
+                    // Mise à jour des boutons actifs et attributs aria
+                    document.querySelectorAll('.filter-city').forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.setAttribute('aria-pressed', 'false');
+                    });
+                    this.classList.add('active');
+                    this.setAttribute('aria-pressed', 'true');
+                    
+                    filterMarkers();
+                });
+            });
+            
+            // Fonction de filtrage combiné
+            function filterMarkers() {
+                var selectedCategory = document.querySelector('.filter-category.active').dataset.category;
+                var selectedCity = document.querySelector('.filter-city.active').dataset.city;
+                
+                var visibleMarkers = [];
+                
+                allMarkers.forEach(function(marker) {
+                    // Afficher ou masquer selon les filtres
+                    var showByCategory = selectedCategory === 'all' || marker.categoryId == selectedCategory;
+                    var showByCity = selectedCity === 'all' || marker.cityId == selectedCity;
+                    
+                    if (showByCategory && showByCity) {
+                        if (!map.hasLayer(marker)) {
+                            map.addLayer(marker);
+                        }
+                        visibleMarkers.push(marker);
+                    } else {
+                        if (map.hasLayer(marker)) {
+                            map.removeLayer(marker);
+                        }
+                    }
+                });
+                
+                // Ajuster la vue aux marqueurs visibles
+                if (visibleMarkers.length > 0) {
+                    var newBounds = L.latLngBounds();
+                    visibleMarkers.forEach(function(marker) {
+                        newBounds.extend(marker.getLatLng());
+                    });
+                    map.fitBounds(newBounds, {padding: [50, 50]});
+                }
+            }
+        });
+    </script>
 {% endblock %}
