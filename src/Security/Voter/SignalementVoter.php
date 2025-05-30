@@ -14,6 +14,8 @@ class SignalementVoter extends Voter
     const VIEW = 'view';
     const EDIT = 'edit';
     const DELETE = 'delete';
+    // Dans src/Security/Voter/SignalementVoter.php
+    const REQUEST_DELETE = 'request_delete';
 
     private $security;
 
@@ -24,8 +26,9 @@ class SignalementVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
+        // Ajoutez REQUEST_DELETE à la liste des attributs supportés
         // Si l'attribut n'est pas l'un de ceux que nous supportons, return false
-        if (!in_array($attribute, [self::VIEW, self::EDIT, self::DELETE])) {
+        if (!in_array($attribute, [self::VIEW, self::EDIT, self::DELETE, self::REQUEST_DELETE])) {
             return false;
         }
 
@@ -56,6 +59,9 @@ class SignalementVoter extends Voter
                 return $this->canEdit($signalement, $user);
             case self::DELETE:
                 return $this->canDelete($signalement, $user);
+                // ...
+        case self::REQUEST_DELETE:
+            return $this->canRequestDelete($signalement, $user);
         }
 
         throw new \LogicException('Cette ligne ne devrait jamais être atteinte!');
@@ -112,5 +118,11 @@ class SignalementVoter extends Voter
     {
         // Seul l'administrateur peut supprimer un signalement
         return $this->security->isGranted('ROLE_ADMIN');
+    }
+
+    private function canRequestDelete(Signalement $signalement, Utilisateur $user): bool
+    {
+        // L'utilisateur peut demander la suppression de ses propres signalements
+        return $signalement->getUtilisateur() === $user;
     }
 }
