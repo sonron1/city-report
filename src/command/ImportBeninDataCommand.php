@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Command;
+namespace App\command;
 
 use App\Entity\Arrondissement;
 use App\Entity\Departement;
