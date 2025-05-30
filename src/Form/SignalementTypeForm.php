@@ -40,6 +40,28 @@ class SignalementTypeForm extends AbstractType
                 'label' => 'Ville',
                 'attr' => ['class' => 'form-select', 'onchange' => 'centerMapOnCity(this.value)']
             ])
+
+
+            ->add('arrondissement', EntityType::class, [
+                'class' => Arrondissement::class,
+                'choice_label' => 'nom',
+                'placeholder' => 'Sélectionnez un arrondissement (optionnel)',
+                'required' => false,
+                'label' => 'Arrondissement',
+                'query_builder' => function (ArrondissementRepository $er) use ($options) {
+                  $builder = $er->createQueryBuilder('a')
+                      ->orderBy('a.nom', 'ASC');
+
+                  // Si une ville est déjà sélectionnée, filtrer les arrondissements par ville
+                  if ($options['data'] && $options['data']->getVille()) {
+                    $builder->where('a.ville = :ville')
+                        ->setParameter('ville', $options['data']->getVille());
+                  }
+
+                  return $builder;
+                },
+            ])
+
             ->add('photo', FileType::class, [
                 'label' => 'Photo',
                 'mapped' => false,
