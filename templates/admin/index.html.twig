@@ -1,65 +1,374 @@
+{# templates/admin/index.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Administration - CityFlow{% endblock %}
+{% block title %}Administration - City Report{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .stats-card {
+            transition: all 0.3s;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .stats-card .card-body {
+            position: relative;
+            z-index: 1;
+        }
+        .stats-card .card-icon {
+            font-size: 3rem;
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            opacity: 0.2;
+        }
+        .admin-card {
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .admin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .admin-card .card-header {
+            height: 120px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .admin-card .card-header h4 {
+            position: relative;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        .admin-card .icon-large {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Dégradés de couleur pour les entêtes de cartes */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #0d6efd, #0143a3);
+        }
+        .bg-gradient-success {
+            background: linear-gradient(135deg, #198754, #115c39);
+        }
+        .bg-gradient-info {
+            background: linear-gradient(135deg, #0dcaf0, #0995b2);
+        }
+        .bg-gradient-danger {
+            background: linear-gradient(135deg, #dc3545, #a71d2a);
+        }
+        .bg-gradient-dark {
+            background: linear-gradient(135deg, #343a40, #121416);
+        }
+        .bg-gradient-warning {
+            background: linear-gradient(135deg, #ffc107, #ba8b00);
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Administration</h1>
+    <div class="container-fluid py-4">
+        <h1 class="mb-4">Tableau de bord administrateur</h1>
+        
+        {# Statistiques en cartes #}
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white stats-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Signalements</h5>
+                        <h2 class="display-4">{{ stats.totalSignalements|default(0) }}</h2>
+                        <p class="card-text">Total des signalements</p>
+                        <i class="fas fa-map-marker-alt card-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning text-dark stats-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">En attente</h5>
+                        <h2 class="display-4">{{ stats.signalementsEnAttente|default(0) }}</h2>
+                        <p class="card-text">Signalements à modérer</p>
+                        <i class="fas fa-clock card-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white stats-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Résolus</h5>
+                        <h2 class="display-4">{{ stats.signalementsResolus|default(0) }}</h2>
+                        <p class="card-text">Signalements résolus</p>
+                        <i class="fas fa-check-circle card-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white stats-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Utilisateurs</h5>
+                        <h2 class="display-4">{{ stats.totalUtilisateurs|default(0) }}</h2>
+                        <p class="card-text">Total des utilisateurs</p>
+                        <i class="fas fa-users card-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-danger text-white stats-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Demandes de suppression</h5>
+                        <h2 class="display-4">{{ stats.demandesSuppressions|default(0) }}</h2>
+                        <p class="card-text">À traiter</p>
+                        <i class="fas fa-trash-alt card-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-secondary text-white stats-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Utilisateurs non validés</h5>
+                        <h2 class="display-4">{{ stats.utilisateursNonValides|default(0) }}</h2>
+                        <p class="card-text">En attente</p>
+                        <i class="fas fa-user-clock card-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-light stats-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Catégories</h5>
+                        <h2 class="display-4">{{ stats.totalCategories|default(0) }}</h2>
+                        <p class="card-text">Total des catégories</p>
+                        <i class="fas fa-tag card-icon"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-white bg-dark stats-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Villes</h5>
+                        <h2 class="display-4">{{ stats.totalVilles|default(0) }}</h2>
+                        <p class="card-text">Total des villes</p>
+                        <i class="fas fa-city card-icon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {# Modules de gestion #}
+        <h2 class="mb-3">Modules de gestion</h2>
+        <div class="row mb-5">
+            {# Gestion des signalements #}
+            <div class="col-md-4 mb-4">
+                <div class="card admin-card shadow">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h4 class="m-0">Signalements</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <i class="fas fa-map-marker-alt icon-large text-primary"></i>
+                        <p class="card-text">Gérer tous les signalements de la plateforme. Validation, modération et traitement.</p>
+                        <div class="d-grid gap-2">
+                            <a href="{{ path('app_admin_signalements') }}" class="btn btn-primary">
+                                <i class="fas fa-tasks me-2"></i>Gérer les signalements
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-info-circle me-1"></i> {{ stats.totalSignalements|default(0) }} signalements</span>
+                            <span class="badge bg-warning text-dark">{{ stats.signalementsEnAttente|default(0) }} en attente</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {# Gestion des catégories #}
+            <div class="col-md-4 mb-4">
+                <div class="card admin-card shadow">
+                    <div class="card-header bg-gradient-success text-white">
+                        <h4 class="m-0">Catégories</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <i class="fas fa-tag icon-large text-success"></i>
+                        <p class="card-text">Gérer les catégories de signalements. Créer, modifier ou supprimer des catégories.</p>
+                        <div class="d-grid gap-2">
+                            <a href="{{ path('app_admin_categories') }}" class="btn btn-success">
+                                <i class="fas fa-tags me-2"></i>Gérer les catégories
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-info-circle me-1"></i> {{ stats.totalCategories|default(0) }} catégories</span>
+                            <a href="{{ path('app_admin_categories_new') }}" class="text-success">
+                                <i class="fas fa-plus-circle"></i> Ajouter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {# Gestion des villes #}
+            <div class="col-md-4 mb-4">
+                <div class="card admin-card shadow">
+                    <div class="card-header bg-gradient-info text-white">
+                        <h4 class="m-0">Villes</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <i class="fas fa-city icon-large text-info"></i>
+                        <p class="card-text">Gérer les villes couvertes par l'application. Ajouter de nouvelles zones géographiques.</p>
+                        <div class="d-grid gap-2">
+                            <a href="{{ path('app_admin_villes') }}" class="btn btn-info text-white">
+                                <i class="fas fa-map-marked-alt me-2"></i>Gérer les villes
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-info-circle me-1"></i> {{ stats.totalVilles|default(0) }} villes</span>
+                            <a href="{{ path('app_admin_villes_new') }}" class="text-info">
+                                <i class="fas fa-plus-circle"></i> Ajouter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {# Gestion des utilisateurs #}
+            <div class="col-md-4 mb-4">
+                <div class="card admin-card shadow">
+                    <div class="card-header bg-gradient-dark text-white">
+                        <h4 class="m-0">Utilisateurs</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <i class="fas fa-users icon-large text-dark"></i>
+                        <p class="card-text">Gérer les utilisateurs de la plateforme. Ajouter, modifier ou valider des comptes.</p>
+                        <div class="d-grid gap-2">
+                            <a href="{{ path('app_admin_users') }}" class="btn btn-dark">
+                                <i class="fas fa-user-cog me-2"></i>Gérer les utilisateurs
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-info-circle me-1"></i> {{ stats.totalUtilisateurs|default(0) }} utilisateurs</span>
+                            <span class="badge bg-secondary">{{ stats.utilisateursNonValides|default(0) }} non validés</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {# Demandes de suppression #}
+            <div class="col-md-4 mb-4">
+                <div class="card admin-card shadow">
+                    <div class="card-header bg-gradient-danger text-white">
+                        <h4 class="m-0">Demandes de suppression</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <i class="fas fa-trash-alt icon-large text-danger"></i>
+                        <p class="card-text">Gérer les demandes de suppression de signalements. Valider ou rejeter les demandes.</p>
+                        <div class="d-grid gap-2">
+                            <a href="{{ path('app_admin_demandes_suppression') }}" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Voir les demandes
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-info-circle me-1"></i> Demandes en attente</span>
+                            <span class="badge bg-danger">{{ stats.demandesSuppressions|default(0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {# Tableau de bord #}
+            <div class="col-md-4 mb-4">
+                <div class="card admin-card shadow">
+                    <div class="card-header bg-gradient-warning text-dark">
+                        <h4 class="m-0">Statistiques</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line icon-large text-warning"></i>
+                        <p class="card-text">Visualiser les statistiques et rapports. Analyser les tendances et l'activité.</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-warning text-dark" disabled>
+                                <i class="fas fa-chart-bar me-2"></i>Voir les statistiques
+                            </button>
+                            <small class="text-muted">Fonctionnalité à venir</small>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-info-circle me-1"></i> Statistiques générales</span>
+                            <span class="badge bg-secondary">Bientôt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {# Derniers signalements #}
+        <h2 class="mb-3">Derniers signalements</h2>
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Signalements récents</h5>
+                    <a href="{{ path('app_admin_signalements') }}" class="btn btn-sm btn-light">
+                        <i class="fas fa-external-link-alt me-1"></i>Voir tous
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Titre</th>
+                                <th>Date</th>
+                                <th>Utilisateur</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for signalement in derniersSignalements|default([]) %}
+                                <tr>
+                                    <td>{{ signalement.id }}</td>
+                                    <td>{{ signalement.titre }}</td>
+                                    <td>{{ signalement.dateSignalement|date('d/m/Y H:i') }}</td>
+                                    <td>{{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</td>
+                                    <td>
+                                        <span class="badge {% if signalement.statut.value == 'NOUVEAU' %}bg-info{% elseif signalement.statut.value == 'EN_COURS' %}bg-warning{% elseif signalement.statut.value == 'RESOLU' %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {{ signalement.statut.value }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-3">Aucun signalement récent</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4">
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-users fa-3x mb-3 text-primary"></i>
-                    <h3 class="card-title">Utilisateurs</h3>
-                    <p class="card-text">Gérez les utilisateurs et leurs droits d'accès</p>
-                    <a href="{{ path('app_admin_users') }}" class="btn btn-primary">
-                        <i class="fas fa-cog me-1"></i> Gérer
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-map-marker-alt fa-3x mb-3 text-success"></i>
-                    <h3 class="card-title">Signalements</h3>
-                    <p class="card-text">Gérez et modérez les signalements</p>
-                    <a href="#" class="btn btn-success">
-                        <i class="fas fa-cog me-1"></i> Gérer
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-list-alt fa-3x mb-3 text-warning"></i>
-                    <h3 class="card-title">Catégories</h3>
-                    <p class="card-text">Gérez les catégories de signalements</p>
-                    <a href="#" class="btn btn-warning">
-                        <i class="fas fa-cog me-1"></i> Gérer
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-city fa-3x mb-3 text-info"></i>
-                    <h3 class="card-title">Villes</h3>
-                    <p class="card-text">Gérez les villes couvertes par l'application</p>
-                    <a href="#" class="btn btn-info">
-                        <i class="fas fa-cog me-1"></i> Gérer
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}

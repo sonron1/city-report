@@ -1,65 +1,239 @@
+{# templates/admin/layout.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Administration - CityFlow{% endblock %}
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-sidebar {
+            height: calc(100vh - 56px);
+            position: sticky;
+            top: 56px;
+            overflow-y: auto;
+            border-right: 1px solid #dee2e6;
+            padding-top: 15px;
+            background-color: #f8f9fa;
+            z-index: 100;
+        }
+        .admin-sidebar .nav-link {
+            color: #333;
+            border-radius: 0;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+        }
+        .admin-sidebar .nav-link:hover {
+            background-color: #e9ecef;
+        }
+        .admin-sidebar .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .admin-sidebar .nav-link i {
+            width: 24px;
+            text-align: center;
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+        .admin-sidebar .nav-link .badge {
+            margin-left: auto;
+        }
+        .admin-sidebar .dropdown-menu {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            border: none;
+        }
+        .admin-sidebar .dropdown-item {
+            padding-left: 40px;
+        }
+        .admin-content {
+            padding: 20px;
+        }
+        @media (max-width: 767.98px) {
+            .admin-sidebar {
+                height: auto;
+                position: relative;
+                top: 0;
+                margin-bottom: 1rem;
+            }
+        }
+        .admin-sidebar .section-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
+            color: #6c757d;
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+        }
+        .admin-sidebar .nav-separator {
+            height: 1px;
+            background-color: #dee2e6;
+            margin: 0.5rem 1rem;
+        }
+        .toggle-sidebar {
+            display: none;
+        }
+        @media (max-width: 767.98px) {
+            .toggle-sidebar {
+                display: block;
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1030;
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Administration</h1>
+    <div class="container-fluid">
+        <div class="row">
+            {# Sidebar #}
+            <div class="col-md-3 col-lg-2 d-md-block admin-sidebar" id="adminSidebar">
+                <h6 class="section-title">Administration</h6>
+                
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if app.request.attributes.get('_route') == 'app_admin_dashboard' %}active{% endif %}" href="{{ path('app_admin_dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Tableau de bord
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if app.request.attributes.get('_route') starts with 'app_admin_signalements' %}active{% endif %}" href="{{ path('app_admin_signalements') }}">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Signalements
+                            {% if stats is defined and stats.signalementsEnAttente|default(0) > 0 %}
+                                <span class="badge bg-warning text-dark">{{ stats.signalementsEnAttente }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if app.request.attributes.get('_route') starts with 'app_admin_categories' %}active{% endif %}" href="{{ path('app_admin_categories') }}">
+                            <i class="fas fa-tag"></i>
+                            Catégories
+                            {% if stats is defined and stats.totalCategories|default(0) > 0 %}
+                                <span class="badge bg-light text-dark">{{ stats.totalCategories }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if app.request.attributes.get('_route') starts with 'app_admin_villes' %}active{% endif %}" href="{{ path('app_admin_villes') }}">
+                            <i class="fas fa-city"></i>
+                            Villes
+                            {% if stats is defined and stats.totalVilles|default(0) > 0 %}
+                                <span class="badge bg-light text-dark">{{ stats.totalVilles }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if app.request.attributes.get('_route') starts with 'app_admin_users' %}active{% endif %}" href="{{ path('app_admin_users') }}">
+                            <i class="fas fa-users"></i>
+                            Utilisateurs
+                            {% if stats is defined and stats.utilisateursNonValides|default(0) > 0 %}
+                                <span class="badge bg-warning text-dark">{{ stats.utilisateursNonValides }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    
+                    <li class="nav-separator"></li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if app.request.attributes.get('_route') == 'app_admin_demandes_suppression' %}active{% endif %}" href="{{ path('app_admin_demandes_suppression') }}">
+                            <i class="fas fa-trash-alt"></i>
+                            Demandes de suppression
+                            {% if stats is defined and stats.demandesSuppressions|default(0) > 0 %}
+                                <span class="badge bg-danger">{{ stats.demandesSuppressions }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                </ul>
+                
+                <h6 class="section-title">Rapports</h6>
+                
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#">
+                            <i class="fas fa-chart-bar"></i>
+                            Statistiques
+                            <span class="badge bg-secondary">Bientôt</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#">
+                            <i class="fas fa-file-export"></i>
+                            Exporter les données
+                            <span class="badge bg-secondary">Bientôt</span>
+                        </a>
+                    </li>
+                </ul>
+                
+                <h6 class="section-title">Système</h6>
+                
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('app_home') }}">
+                            <i class="fas fa-home"></i>
+                            Retour au site
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#">
+                            <i class="fas fa-cog"></i>
+                            Paramètres
+                            <span class="badge bg-secondary">Bientôt</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            {# Contenu principal #}
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 admin-content">
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ label }} alert-dismissible fade show mt-3" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                
+                {% block admin_content %}{% endblock %}
+            </main>
+        </div>
     </div>
+    
+    {# Bouton mobile pour afficher/masquer la sidebar #}
+    <button class="btn btn-primary toggle-sidebar" id="toggleSidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+{% endblock %}
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4">
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-users fa-3x mb-3 text-primary"></i>
-                    <h3 class="card-title">Utilisateurs</h3>
-                    <p class="card-text">Gérez les utilisateurs et leurs droits d'accès</p>
-                    <a href="{{ path('app_admin_users') }}" class="btn btn-primary">
-                        <i class="fas fa-cog me-1"></i> Gérer
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-map-marker-alt fa-3x mb-3 text-success"></i>
-                    <h3 class="card-title">Signalements</h3>
-                    <p class="card-text">Gérez et modérez les signalements</p>
-                    <a href="#" class="btn btn-success">
-                        <i class="fas fa-cog me-1"></i> Gérer
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-list-alt fa-3x mb-3 text-warning"></i>
-                    <h3 class="card-title">Catégories</h3>
-                    <p class="card-text">Gérez les catégories de signalements</p>
-                    <a href="#" class="btn btn-warning">
-                        <i class="fas fa-cog me-1"></i> Gérer
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-city fa-3x mb-3 text-info"></i>
-                    <h3 class="card-title">Villes</h3>
-                    <p class="card-text">Gérez les villes couvertes par l'application</p>
-                    <a href="#" class="btn btn-info">
-                        <i class="fas fa-cog me-1"></i> Gérer
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gestion du menu latéral sur mobile
+            const toggleSidebar = document.getElementById('toggleSidebar');
+            const adminSidebar = document.getElementById('adminSidebar');
+            
+            if (toggleSidebar && adminSidebar) {
+                toggleSidebar.addEventListener('click', function() {
+                    adminSidebar.classList.toggle('d-md-block');
+                    adminSidebar.classList.toggle('d-block');
+                });
+            }
+        });
+    </script>
 {% endblock %}
