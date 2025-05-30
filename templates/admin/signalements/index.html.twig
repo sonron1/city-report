@@ -1,0 +1,204 @@
+{# templates/admin/signalements/index.html.twig #}
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %}Gestion des signalements{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <style>
+        .filters-container {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            width: 100%;
+            text-align: center;
+        }
+        .validation-badge {
+            width: 100%;
+            text-align: center;
+        }
+        .photo-thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .photo-modal-img {
+            max-width: 100%;
+            max-height: 80vh;
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+    <h1 class="mb-4">Gestion des signalements</h1>
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Liste des signalements</h5>
+            <div>
+                <button class="btn btn-sm btn-light me-2" type="button" data-bs-toggle="collapse" data-bs-target="#filtresCollapse">
+                    <i class="fas fa-filter me-1"></i> Filtres
+                </button>
+            </div>
+        </div>
+
+        <div class="collapse" id="filtresCollapse">
+            <div class="card-body bg-light">
+                <form id="filtreForm" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="filtreStatut" class="form-label">Statut</label>
+                        <select class="form-select" id="filtreStatut" name="statut">
+                            <option value="">Tous</option>
+                            <option value="NOUVEAU">Nouveau</option>
+                            <option value="EN_COURS">En cours</option>
+                            <option value="RESOLU">Résolu</option>
+                            <option value="FERME">Fermé</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filtreValidation" class="form-label">Validation</label>
+                        <select class="form-select" id="filtreValidation" name="validation">
+                            <option value="">Tous</option>
+                            <option value="en_attente">En attente</option>
+                            <option value="valide">Validé</option>
+                            <option value="rejete">Rejeté</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filtreCategorie" class="form-label">Catégorie</label>
+                        <select class="form-select" id="filtreCategorie" name="categorie">
+                            <option value="">Toutes</option>
+                            {% for categorie in categories %}
+                                <option value="{{ categorie.id }}">{{ categorie.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filtreDateDebut" class="form-label">Date (début)</label>
+                        <input type="date" class="form-control" id="filtreDateDebut" name="dateDebut">
+                    </div>
+                    <div class="col-md-12 mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i> Filtrer
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">Réinitialiser</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Titre</th>
+                    <th>Date</th>
+                    <th>Catégorie</th>
+                    <th>Utilisateur</th>
+                    <th>Statut</th>
+                    <th>Validation</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for signalement in signalements %}
+                    <tr>
+                        <td>{{ signalement.id }}</td>
+                        <td>{{ signalement.titre }}</td>
+                        <td>{{ signalement.dateSignalement|date('d/m/Y H:i') }}</td>
+                        <td>
+                            {% if signalement.categorie %}
+                                <span class="badge bg-secondary">{{ signalement.categorie.nom }}</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">Non catégorisé</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if signalement.utilisateur %}
+                                {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}
+                            {% else %}
+                                <span class="text-muted">Anonyme</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if signalement.statut.value == 'NOUVEAU' %}
+                                <span class="badge bg-info">Nouveau</span>
+                            {% elseif signalement.statut.value == 'EN_COURS' %}
+                                <span class="badge bg-warning text-dark">En cours</span>
+                            {% elseif signalement.statut.value == 'RESOLU' %}
+                                <span class="badge bg-success">Résolu</span>
+                            {% elseif signalement.statut.value == 'FERME' %}
+                                <span class="badge bg-secondary">Fermé</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if signalement.etatValidation == 'en_attente' %}
+                                <span class="badge bg-warning text-dark">En attente</span>
+                            {% elseif signalement.etatValidation == 'valide' %}
+                                <span class="badge bg-success">Validé</span>
+                            {% elseif signalement.etatValidation == 'rejete' %}
+                                <span class="badge bg-danger">Rejeté</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-success" title="Valider"
+                                        {% if signalement.etatValidation == 'valide' %}disabled{% endif %}
+                                        data-bs-toggle="modal" data-bs-target="#validateModal{{ signalement.id }}">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" title="Rejeter"
+                                        {% if signalement.etatValidation == 'rejete' %}disabled{% endif %}
+                                        data-bs-toggle="modal" data-bs-target="#rejectModal{{ signalement.id }}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-warning" title="Changer statut"
+                                        data-bs-toggle="modal" data-bs-target="#statusModal{{ signalement.id }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+
+                            {# Modals #}
+                            {% include 'admin/signalements/_validate_modal.html.twig' with {'signalement': signalement} %}
+                            {% include 'admin/signalements/_reject_modal.html.twig' with {'signalement': signalement} %}
+                            {% include 'admin/signalements/_status_modal.html.twig' with {'signalement': signalement} %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">Aucun signalement trouvé</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#signalements-table').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json'
+                },
+                responsive: true,
+                order: [[3, 'desc']], // Trier par date (descendant)
+                pageLength: 25
+            });
+        });
+    </script>
+{% endblock %}

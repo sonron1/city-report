@@ -1,0 +1,26 @@
+{# templates/admin/signalements/_validate_modal.html.twig #}
+<div class="modal fade" id="validateModal{{ signalement.id }}" tabindex="-1" aria-labelledby="validateModalLabel{{ signalement.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="validateModalLabel{{ signalement.id }}">Valider le signalement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form action="{{ path('app_admin_signalements_valider', {'id': signalement.id}) }}" method="post">
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir valider ce signalement ?</p>
+                    <p><strong>Titre :</strong> {{ signalement.titre }}</p>
+                    
+                    <div class="mb-3">
+                        <label for="commentaire{{ signalement.id }}" class="form-label">Commentaire (optionnel)</label>
+                        <textarea class="form-control" id="commentaire{{ signalement.id }}" name="commentaire" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-success">Valider</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
