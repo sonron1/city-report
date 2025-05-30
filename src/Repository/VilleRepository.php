@@ -6,6 +6,12 @@ use App\Entity\Ville;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+// src/Repository/VilleRepository.php
+
+// Ajoutez ces imports en haut du fichier
+use Doctrine\ORM\Tools\Pagination\Paginator;
+use App\Utils\Paginator as PaginatorResult;
+
 /**
  * @extends ServiceEntityRepository<Ville>
  */
@@ -40,4 +46,20 @@ class VilleRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+// Ajoutez cette méthode dans la classe VilleRepository
+public function findPaginated(int $page = 1, int $limit = 10): PaginatorResult
+{
+    $query = $this->createQueryBuilder('v')
+        ->orderBy('v.nom', 'ASC')
+        ->getQuery();
+
+    $paginator = new Paginator($query);
+    $paginator
+        ->getQuery()
+        ->setFirstResult($limit * ($page - 1))
+        ->setMaxResults($limit);
+
+    return new PaginatorResult($paginator, $page, $limit);
+}
 }
