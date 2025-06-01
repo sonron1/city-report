@@ -42,17 +42,13 @@ class Ville
   #[ORM\JoinColumn(nullable: false)]
   private ?Departement $departement = null;
 
-  #[ORM\OneToMany(mappedBy: 'ville', targetEntity: Arrondissement::class, orphanRemoval: true)]
+  #[ORM\OneToMany(mappedBy: 'ville', targetEntity: Arrondissement::class)]
   private Collection $arrondissements;
-
 
   public function __construct()
   {
-    $this->utilisateurs = new ArrayCollection();
-    $this->signalements = new ArrayCollection();
-    $this->clusters = new ArrayCollection();
     $this->arrondissements = new ArrayCollection();
-
+    $this->signalements = new ArrayCollection();
   }
 
   // Getters et setters...

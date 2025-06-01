@@ -2,8 +2,8 @@
 
 namespace App\Entity;
 
+use App\Enum\EtatValidation;
 use App\Enum\StatutSignalement;
-use App\Entity\Ville;
 use App\Repository\SignalementRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -50,8 +50,12 @@ class Signalement
   #[ORM\Column]
   private ?int $priorite = 1;
 
+  /**
+   * État de validation du signalement
+   * Valeurs possibles : en_attente, validé, rejeté
+   */
   #[ORM\Column(length: 50)]
-  private ?string $etatValidation = 'en_attente';
+  private ?string $etatValidation = EtatValidation::EN_ATTENTE->value;
 
   #[ORM\ManyToOne(inversedBy: 'signalements')]
   #[ORM\JoinColumn(nullable: false)]
@@ -226,6 +230,22 @@ class Signalement
 
       return $this;
   }
+
+  /**
+   * Récupère l'état de validation sous forme d'enum
+   */
+  public function getEtatValidationEnum(): EtatValidation
+  {
+    return EtatValidation::from($this->etatValidation);
+  }
+
+  public function setEtatValidationEnum(EtatValidation $etat): static
+  {
+    $this->etatValidation = $etat->value;
+    return $this;
+  }
+
+
 
   public function getUtilisateur(): ?Utilisateur
   {

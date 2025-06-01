@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\StatutReparation;
 use App\Repository\ReparationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -23,8 +24,8 @@ class Reparation
   #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
   private ?\DateTimeInterface $dateFin = null;
 
-  #[ORM\Column(length: 50)]
-  private ?string $statut = 'planifiée';
+  #[ORM\Column(length: 255)]
+  private ?string $statut = null;
 
   #[ORM\OneToOne(inversedBy: 'reparation', cascade: ['persist', 'remove'])]
   #[ORM\JoinColumn(nullable: false)]
@@ -77,16 +78,15 @@ class Reparation
       return $this;
   }
 
-  public function getStatut(): ?string
+  public function getStatut(): ?StatutReparation
   {
-      return $this->statut;
+    return $this->statut ? StatutReparation::from($this->statut) : null;
   }
 
-  public function setStatut(string $statut): static
+  public function setStatut(?StatutReparation $statut): static
   {
-      $this->statut = $statut;
-
-      return $this;
+    $this->statut = $statut?->value;
+    return $this;
   }
 
   public function getSignalement(): ?Signalement
