@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\ArrondissementRepository;
 use App\Repository\CategorieRepository;
 use App\Repository\SignalementRepository;
 use App\Repository\VilleRepository;
@@ -17,16 +18,13 @@ class CarteController extends AbstractController
     public function index(
         VilleRepository $villeRepository, 
         CategorieRepository $categorieRepository,
-        SignalementRepository $signalementRepository
+        ArrondissementRepository $arrondissementRepository
     ): Response
     {
-        // Récupérer uniquement les signalements validés
-        $signalements = $signalementRepository->findBy(['etatValidation' => 'valide']);
-        
         return $this->render('carte/index.html.twig', [
             'villes' => $villeRepository->findAll(),
             'categories' => $categorieRepository->findAll(),
-            'signalements' => $signalements,
+            'arrondissements' => $arrondissementRepository->findAll(),
         ]);
     }
 }

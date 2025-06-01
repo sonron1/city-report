@@ -17,10 +17,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
-
 // Dans src/Controller/SignalementController.php
 use App\Enum\DemandeSuppressionStatut;
 use App\Entity\JournalValidation;
+use App\Entity\Commentaire;
+use App\Form\CommentaireTypeForm;
 
 class SignalementController extends AbstractController
 {
@@ -28,7 +29,7 @@ class SignalementController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function index(SignalementRepository $signalementRepository): Response
     {
-        $signalements = $signalementRepository->findBy(['etatValidation' => 'valide'], ['dateSignalement' => 'DESC']);
+        $signalements = $signalementRepository->findBy(['etatValidation' => 'validé'], ['dateSignalement' => 'DESC']);
 
         return $this->render('signalement/index.html.twig', [
             'signalements' => $signalements,
@@ -39,23 +40,21 @@ class SignalementController extends AbstractController
 
     #[Route('/signalement/{id}', name: 'app_signalement_show', requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_USER')]
-    public function show(int $id, SignalementRepository $signalementRepository): Response
+    public function show(Signalement $signalement): Response
     {
-        $signalement = $signalementRepository->find($id);
-
-        if (!$signalement) {
-            throw $this->createNotFoundException('Signalement non trouvé');
-        }
-
-        // Vérifier que l'utilisateur a le droit de voir ce signalement
-        if ($signalement->getEtatValidation() !== 'valide' &&
-            $signalement->getUtilisateur() !== $this->getUser() &&
-            !$this->isGranted('ROLE_ADMIN')) {
-            throw $this->createAccessDeniedException('Vous n\'avez pas le droit de voir ce signalement.');
-        }
-
+        // Créer un nouvel objet Commentaire
+        $commentaire = new Commentaire();
+        $commentaire->setSignalement($signalement);
+        
+        // Créer le formulaire
+        $commentForm = $this->createForm(CommentaireTypeForm::class, $commentaire, [
+            'action' => $this->generateUrl('app_commentaire_add', ['signalement_id' => $signalement->getId()])
+        ]);
+        
+        // Rendre la vue avec le formulaire
         return $this->render('signalement/show.html.twig', [
             'signalement' => $signalement,
+            'commentForm' => $commentForm->createView()
         ]);
     }
 
