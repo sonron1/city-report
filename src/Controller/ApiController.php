@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\Arrondissement;
 use App\Enum\EtatValidation;
+use App\Repository\VilleRepository;
 use App\Repository\SignalementRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -88,4 +90,42 @@ class ApiController extends AbstractController
             ], 500);
         }
     }
+
+  #[Route('/arrondissements-by-ville/{villeId}', name: 'api_arrondissements_by_ville')]
+    public function getArrondissementsByVille(int $villeId, VilleRepository $villeRepository): JsonResponse
+    {
+      $ville = $villeRepository->find($villeId);
+
+      if (!$ville) {
+        return $this->json([], Response::HTTP_NOT_FOUND);
+      }
+
+      $arrondissements = [];
+      foreach ($ville->getArrondissements() as $arrondissement) {
+        $arrondissements[] = [
+            'id' => $arrondissement->getId(),
+            'nom' => $arrondissement->getNom()
+        ];
+      }
+
+      return $this->json($arrondissements);
+    }
+
+  #[Route('/api/arrondissement/{id}', name: 'api_arrondissement', methods: ['GET'])]
+  public function getArrondissement(Arrondissement $arrondissement): JsonResponse
+  {
+    // Récupérer les données de l'arrondissement et de sa ville
+    $data = [
+        'id' => $arrondissement->getId(),
+        'nom' => $arrondissement->getNom(),
+        'ville' => [
+            'id' => $arrondissement->getVille()->getId(),
+            'nom' => $arrondissement->getVille()->getNom()
+        ]
+    ];
+
+    return $this->json($data);
+  }
+
+
 }
