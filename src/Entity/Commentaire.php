@@ -23,13 +23,14 @@ class Commentaire
   #[ORM\Column(length: 50)]
   private ?string $etatValidation = 'en_attente';
 
+// Dans l'entité Commentaire
   #[ORM\ManyToOne(inversedBy: 'commentaires')]
-  #[ORM\JoinColumn(nullable: false)]
-  private ?Utilisateur $utilisateur = null;
+  #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+  private ?Signalement $signalement = null;
 
   #[ORM\ManyToOne(inversedBy: 'commentaires')]
-  #[ORM\JoinColumn(nullable: false)]
-  private ?Signalement $signalement = null;
+  #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+  private ?Utilisateur $utilisateur = null;
 
   public function __construct()
   {
