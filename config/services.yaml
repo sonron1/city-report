@@ -24,7 +24,12 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
-
     App\EventListener\LoginListener:
         tags:
             - { name: kernel.event_listener, event: security.authentication.success, method: onLoginSuccess }
+
+    # Dans config/services.yaml
+    App\Form\SignalementTypeForm:
+        arguments:
+            $villeRepository: '@App\Repository\VilleRepository'
+            $entityManager: '@doctrine.orm.entity_manager'
