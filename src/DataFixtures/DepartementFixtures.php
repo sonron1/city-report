@@ -9,21 +9,26 @@ use Doctrine\Persistence\ObjectManager;
 
 class DepartementFixtures extends Fixture implements FixtureGroupInterface
 {
+    public static function getGroups(): array
+    {
+        return ['departements', 'geo'];
+    }
+
     public function load(ObjectManager $manager): void
     {
         $departements = [
-            ['nom' => 'Alibori', 'description' => 'Département du nord du Bénin'],
-            ['nom' => 'Atacora', 'description' => 'Département du nord-ouest du Bénin'],
-            ['nom' => 'Atlantique', 'description' => 'Département du sud du Bénin'],
-            ['nom' => 'Borgou', 'description' => 'Département du nord-est du Bénin'],
-            ['nom' => 'Collines', 'description' => 'Département du centre du Bénin'],
-            ['nom' => 'Couffo', 'description' => 'Département du sud-ouest du Bénin'],
-            ['nom' => 'Donga', 'description' => 'Département du nord-ouest du Bénin'],
-            ['nom' => 'Littoral', 'description' => 'Département du sud du Bénin, comprenant Cotonou'],
-            ['nom' => 'Mono', 'description' => 'Département du sud-ouest du Bénin'],
-            ['nom' => 'Ouémé', 'description' => 'Département du sud-est du Bénin'],
-            ['nom' => 'Plateau', 'description' => 'Département du sud-est du Bénin'],
-            ['nom' => 'Zou', 'description' => 'Département du centre du Bénin'],
+            ['nom' => 'Alibori', 'description' => 'Département du nord du Bénin, chef-lieu: Kandi'],
+            ['nom' => 'Atacora', 'description' => 'Département du nord-ouest du Bénin, chef-lieu: Natitingou'],
+            ['nom' => 'Atlantique', 'description' => 'Département du sud du Bénin, chef-lieu: Allada'],
+            ['nom' => 'Borgou', 'description' => 'Département du nord-est du Bénin, chef-lieu: Parakou'],
+            ['nom' => 'Collines', 'description' => 'Département du centre du Bénin, chef-lieu: Dassa-Zoumè'],
+            ['nom' => 'Couffo', 'description' => 'Département du sud-ouest du Bénin, chef-lieu: Aplahoué'],
+            ['nom' => 'Donga', 'description' => 'Département du nord-ouest du Bénin, chef-lieu: Djougou'],
+            ['nom' => 'Littoral', 'description' => 'Département du sud du Bénin, composé uniquement de la ville de Cotonou'],
+            ['nom' => 'Mono', 'description' => 'Département du sud-ouest du Bénin, chef-lieu: Lokossa'],
+            ['nom' => 'Ouémé', 'description' => 'Département du sud-est du Bénin, chef-lieu: Porto-Novo'],
+            ['nom' => 'Plateau', 'description' => 'Département du sud-est du Bénin, chef-lieu: Pobè'],
+            ['nom' => 'Zou', 'description' => 'Département du centre-sud du Bénin, chef-lieu: Abomey']
         ];
 
         foreach ($departements as $data) {
@@ -33,16 +38,11 @@ class DepartementFixtures extends Fixture implements FixtureGroupInterface
             
             $manager->persist($departement);
             
-            // Créer une référence pour utilisation dans d'autres fixtures
-            $this->addReference('departement_'.$this->slugify($data['nom']), $departement);
+            // Ajouter une référence pour utilisation future
+            $this->addReference('departement_' . $this->slugify($data['nom']), $departement);
         }
 
         $manager->flush();
-    }
-    
-    public static function getGroups(): array
-    {
-        return ['departements', 'geo'];
     }
     
     private function slugify(string $text): string

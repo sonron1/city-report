@@ -2,6 +2,7 @@
 
 namespace App\DataFixtures;
 
+use App\Entity\Arrondissement;
 use App\Entity\Categorie;
 use App\Entity\Signalement;
 use App\Entity\Utilisateur;
@@ -24,42 +25,79 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
 
   public function getDependencies(): array
   {
-      return [
-          VilleFixtures::class,
-      ];
+    return [
+        VilleFixtures::class,
+        ArrondissementFixtures::class,
+    ];
   }
-  
+
   public static function getGroups(): array
   {
-      return ['app'];
+    return ['app'];
   }
 
   public function load(ObjectManager $manager): void
   {
-    // Récupération des villes du Bénin déjà chargées par VilleFixtures
-    $villeRepository = $manager->getRepository(Ville::class);
-    $villes = $villeRepository->findAll();
+    // Vérifier que les fixtures dépendantes ont été chargées correctement
+    if (!$this->hasReference('ville_cotonou', Ville::class)) {
+      throw new \RuntimeException('Les fixtures de villes doivent être chargées avant AppFixtures');
+    }
 
-    // Création de catégories
+    // Récupérer les villes à partir des références plutôt que par requête
+    $villes = [];
+    $villeRefs = ['cotonou', 'porto-novo', 'abomey-calavi', 'parakou', 'lokossa'];
+    foreach ($villeRefs as $ref) {
+        if ($this->hasReference('ville_' . $ref, Ville::class)) {
+            $villes[] = $this->getReference('ville_' . $ref, Ville::class);
+        }
+    }
+
+    if (empty($villes)) {
+        throw new \RuntimeException('Aucune ville n\'a été trouvée dans les références');
+    }
+
+    // Récupération des arrondissements (on garde la requête pour l'exemple)
+    $arrondissementRepository = $manager->getRepository(Arrondissement::class);
+    $arrondissements = $arrondissementRepository->findAll();
+
+    // Préparation d'un tableau d'arrondissements par ville
+    $arrondissementsParVille = [];
+    foreach ($arrondissements as $arrondissement) {
+        $ville = $arrondissement->getVille();
+        if ($ville !== null) {
+            $villeId = $ville->getId();
+            if ($villeId !== null) {
+                if (!isset($arrondissementsParVille[$villeId])) {
+                    $arrondissementsParVille[$villeId] = [];
+                }
+                $arrondissementsParVille[$villeId][] = $arrondissement;
+            }
+        }
+    }
+
+    // Création de catégories avec icônes et couleurs
     $categories = [];
     $categoriesData = [
-        ['nom' => 'Voirie', 'description' => 'Problèmes liés à la chaussée, trottoirs, etc.'],
-        ['nom' => 'Éclairage', 'description' => 'Problèmes liés à l\'éclairage public'],
-        ['nom' => 'Propreté', 'description' => 'Problèmes de déchets, dépôts sauvages, etc.'],
-        ['nom' => 'Espaces verts', 'description' => 'Problèmes dans les parcs et jardins'],
-        ['nom' => 'Mobilier urbain', 'description' => 'Problèmes avec les bancs, poubelles, etc.'],
-        ['nom' => 'Assainissement', 'description' => 'Problèmes d\'eaux usées, caniveaux bouchés'],
-        ['nom' => 'Inondation', 'description' => 'Zones inondées ou à risque d\'inondation'],
+        ['nom' => 'Voirie', 'description' => 'Problèmes liés à la chaussée, trottoirs, etc.', 'icone' => 'fa-road', 'couleur' => '#f39c12'],
+        ['nom' => 'Éclairage', 'description' => 'Problèmes liés à l\'éclairage public', 'icone' => 'fa-lightbulb', 'couleur' => '#f1c40f'],
+        ['nom' => 'Propreté', 'description' => 'Problèmes de déchets, dépôts sauvages, etc.', 'icone' => 'fa-trash', 'couleur' => '#27ae60'],
+        ['nom' => 'Espaces verts', 'description' => 'Problèmes dans les parcs et jardins', 'icone' => 'fa-tree', 'couleur' => '#2ecc71'],
+        ['nom' => 'Mobilier urbain', 'description' => 'Problèmes avec les bancs, poubelles, etc.', 'icone' => 'fa-bench', 'couleur' => '#8e44ad'],
+        ['nom' => 'Assainissement', 'description' => 'Problèmes d\'eaux usées, caniveaux bouchés', 'icone' => 'fa-water', 'couleur' => '#3498db'],
+        ['nom' => 'Inondation', 'description' => 'Zones inondées ou à risque d\'inondation', 'icone' => 'fa-water-rise', 'couleur' => '#2980b9'],
     ];
 
     foreach ($categoriesData as $categorieData) {
-      $categorie = new Categorie();
-      $categorie->setNom($categorieData['nom']);
-      $categorie->setDescription($categorieData['description']);
-      $manager->persist($categorie);
-      $categories[] = $categorie;
+        $categorie = new Categorie();
+        $categorie->setNom($categorieData['nom']);
+        $categorie->setDescription($categorieData['description']);
+        $categorie->setIcone($categorieData['icone']);
+        $categorie->setCouleur($categorieData['couleur']);
+        $manager->persist($categorie);
+        $categories[] = $categorie;
     }
 
+    // Le reste du code reste similaire...
     // Création d'utilisateurs
     $utilisateurs = [];
 
@@ -92,7 +130,7 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
     // Utilisateurs normaux
     $prenoms = ['Kokou', 'Afiavi', 'Koffi', 'Abla', 'Kodjo'];
     $noms = ['Agossou', 'Ahouansou', 'Dossou', 'Tohoun', 'Adoko'];
-    
+
     for ($i = 0; $i < 5; $i++) {
       $utilisateur = new Utilisateur();
       $utilisateur->setEmail("user{$i}@cityflow.bj");
@@ -151,15 +189,36 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
         'Les eaux usées sont déversées directement dans la rue, causant des odeurs nauséabondes et un risque sanitaire.'
     ];
 
+    // Préparation d'un tableau d'arrondissements par ville
+    $arrondissementsParVille = [];
+    foreach ($arrondissements as $arrondissement) {
+      $villeId = $arrondissement->getVille()->getId();
+      if (!isset($arrondissementsParVille[$villeId])) {
+        $arrondissementsParVille[$villeId] = [];
+      }
+      $arrondissementsParVille[$villeId][] = $arrondissement;
+    }
+
     // Créer 30 signalements
     for ($i = 0; $i < 30; $i++) {
       $signalement = new Signalement();
       $signalement->setTitre($titres[$i % count($titres)]);
       $signalement->setDescription($descriptions[$i % count($descriptions)]);
-      $signalement->setPhotoUrl('default.jpg'); // Assurez-vous d'avoir cette image dans public/uploads/
+      $signalement->setPhotoUrl('default.jpg');
+
+      // Choisir une ville
+      $ville = $villes[$i % count($villes)];
+      $signalement->setVille($ville);
+
+      // Associer un arrondissement de cette ville s'il en existe
+      $villeId = $ville->getId();
+      if (isset($arrondissementsParVille[$villeId]) && !empty($arrondissementsParVille[$villeId])) {
+        $index = $i % count($arrondissementsParVille[$villeId]);
+        $arrondissement = $arrondissementsParVille[$villeId][$index];
+        $signalement->setArrondissement($arrondissement);
+      }
 
       // Coordonnées aléatoires proches de la ville
-      $ville = $villes[$i % count($villes)];
       $latOffset = (random_int(-100, 100) / 1000);
       $lngOffset = (random_int(-100, 100) / 1000);
       $signalement->setLatitude($ville->getLatitudeCentre() + $latOffset);
@@ -171,7 +230,6 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
       $signalement->setEtatValidation('validé');
       $signalement->setUtilisateur($utilisateurs[$i % count($utilisateurs)]);
       $signalement->setCategorie($categories[$i % count($categories)]);
-      $signalement->setVille($ville);
 
       $manager->persist($signalement);
     }

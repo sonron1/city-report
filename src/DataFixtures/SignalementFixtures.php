@@ -14,7 +14,7 @@ class SignalementFixtures extends Fixture
         // ... code existant ...
         
         // Utiliser l'enum pour l'état de validation
-        $signalement->setEtatValidation(EtatValidation::VALIDE->value);
+        //$signalement->setEtatValidation(EtatValidation::VALIDE->value);
         
         // ... suite du code ...
     }
