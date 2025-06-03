@@ -6,6 +6,51 @@ import 'bootstrap';
 // Import Leaflet
 import './js/leaflet-setup';
 
+// Fonction pour mettre à jour les arrondissements
+function updateArrondissements() {
+    const villeSelect = document.getElementById('ville-select'); // Assurez-vous que l'ID correspond
+    const arrondissementSelect = document.getElementById('arrondissement-select'); // Assurez-vous que l'ID correspond
+    
+    if (!villeSelect || !arrondissementSelect) return;
+    
+    const villeId = villeSelect.value;
+    
+    // Désactiver le select d'arrondissement pendant le chargement
+    arrondissementSelect.disabled = true;
+    
+    if (villeId) {
+        // Faire une requête AJAX pour obtenir les arrondissements de la ville sélectionnée
+        fetch(`/api/arrondissements-by-ville/${villeId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Vider le select d'arrondissement
+                arrondissementSelect.innerHTML = '<option value="">Sélectionnez un arrondissement (optionnel)</option>';
+                
+                // Ajouter les nouveaux arrondissements
+                data.forEach(arrondissement => {
+                    const option = document.createElement('option');
+                    option.value = arrondissement.id;
+                    option.textContent = arrondissement.nom;
+                    arrondissementSelect.appendChild(option);
+                });
+                
+                // Réactiver le select d'arrondissement
+                arrondissementSelect.disabled = false;
+            });
+    } else {
+        // Si aucune ville n'est sélectionnée, vider le select d'arrondissement
+        arrondissementSelect.innerHTML = '<option value="">Sélectionnez d\'abord une ville</option>';
+        arrondissementSelect.disabled = true;
+    }
+}
+
+// Ajouter un écouteur d'événement au select de ville
+document.addEventListener('DOMContentLoaded', function() {
+    const villeSelect = document.getElementById('ville-select');
+    if (villeSelect) {
+        villeSelect.addEventListener('change', updateArrondissements);
+    }
+});
 
 // Activation des fonctionnalités Bootstrap
 document.addEventListener('DOMContentLoaded', () => {
