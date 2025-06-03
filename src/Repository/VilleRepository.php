@@ -3,63 +3,97 @@
 namespace App\Repository;
 
 use App\Entity\Ville;
+use App\Entity\Arrondissement;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
-// src/Repository/VilleRepository.php
-
-// Ajoutez ces imports en haut du fichier
-use Doctrine\ORM\Tools\Pagination\Paginator;
-use App\Utils\Paginator as PaginatorResult;
-
-/**
- * @extends ServiceEntityRepository<Ville>
- */
 class VilleRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
-        parent::__construct($registry, Ville::class);
+  public function __construct(ManagerRegistry $registry)
+  {
+    parent::__construct($registry, Ville::class);
+  }
+
+  /**
+   * Retourne une liste de villes sans doublons basée sur le nom et le département
+   *
+   * @return array<int, Ville>
+   */
+  public function findVillesUniques(): array
+  {
+    $entityManager = $this->getEntityManager();
+
+    // Sous-requête pour obtenir les IDs uniques
+    $query = $entityManager->createQuery('
+            SELECT MIN(v.id) as id
+            FROM App\Entity\Ville v
+            GROUP BY v.nom, d.id
+        ');
+
+    $ids = array_column($query->getScalarResult(), 'id');
+
+    // Requête principale pour récupérer les entités complètes
+    if (empty($ids)) {
+      return [];
     }
 
-    //    /**
-    //     * @return Ville[] Returns an array of Ville objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('v.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Ville
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
-
-// Ajoutez cette méthode dans la classe VilleRepository
-public function findPaginated(int $page = 1, int $limit = 10): PaginatorResult
-{
-    $query = $this->createQueryBuilder('v')
+    $queryBuilder = $this->createQueryBuilder('v')
+        ->where('v.id IN (:ids)')
+        ->setParameter('ids', $ids)
+        ->leftJoin('v.departement', 'd')
+        ->addSelect('d') // Fetch join pour éviter les requêtes N+1
         ->orderBy('v.nom', 'ASC')
-        ->getQuery();
+        ->addOrderBy('d.nom', 'ASC');
 
-    $paginator = new Paginator($query);
-    $paginator
-        ->getQuery()
-        ->setFirstResult($limit * ($page - 1))
-        ->setMaxResults($limit);
+    return $queryBuilder->getQuery()->getResult();
+  }
 
-    return new PaginatorResult($paginator, $page, $limit);
-}
+  /**
+   * Retourne les villes du Bénin
+   *
+   * @return array<int, Ville>
+   */
+  public function findVillesDuBenin(): array
+  {
+    // Liste des principales villes du Bénin
+    $villesBeninNomsPartiels = [
+        'Cotonou', 'Porto-Novo', 'Parakou', 'Abomey', 'Djougou',
+        'Natitingou', 'Ouidah', 'Bohicon', 'Lokossa', 'Kandi',
+        'Abomey-Calavi', 'Dassa-Zoumé', 'Savè', 'Nikki', 'Pobè',
+        'Bembèrèkè', 'Savalou', 'Malanville', 'Comè', 'Dogbo'
+    ];
+
+    // Construction d'une requête LIKE pour trouver les villes correspondant à ces noms
+    $qb = $this->createQueryBuilder('v');
+
+    $orX = $qb->expr()->orX();
+    foreach ($villesBeninNomsPartiels as $index => $villeNom) {
+      $orX->add($qb->expr()->like('v.nom', ':ville' . $index));
+      $qb->setParameter('ville' . $index, '%' . $villeNom . '%');
+    }
+
+    $qb->where($orX)
+        ->orderBy('v.nom', 'ASC');
+
+    return $qb->getQuery()->getResult();
+  }
+
+  /**
+   * Retourne les arrondissements d'une ville
+   *
+   * @param int $villeId
+   * @return array<int, Arrondissement>
+   */
+  public function findArrondissementsByVilleId(int $villeId): array
+  {
+    // Optimisation : requête directe pour les arrondissements
+    $queryBuilder = $this->getEntityManager()->createQueryBuilder()
+        ->select('a')
+        ->from(Arrondissement::class, 'a')
+        ->where('a.ville = :villeId')
+        ->setParameter('villeId', $villeId)
+        ->orderBy('a.nom', 'ASC');
+
+    return $queryBuilder->getQuery()->getResult();
+  }
 }
