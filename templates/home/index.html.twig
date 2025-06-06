@@ -1,88 +1,564 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}CityFlow - Améliorons notre ville ensemble{% endblock %}
+{% block title %}CityFlow Bénin - Améliorons nos villes ensemble{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #1e4b8c 0%, #2980b9 100%);
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --card-shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+            --border-radius: 12px;
+        }
+
+        .hero-section {
+            background: var(--primary-gradient);
+            position: relative;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><polygon points="1000,0 1000,100 0,100"/></svg>');
+            background-size: cover;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-modern {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card-modern:hover {
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-5px);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .ville-grid-item {
+            background: white;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0,0,0,0.1);
+            text-decoration: none !important;
+        }
+
+        .ville-grid-item:hover {
+            background: #f8f9fa;
+            border-color: #007bff;
+            transform: translateX(5px);
+        }
+
+        .animated-card {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .animated-card.fadeIn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .category-badge {
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-modern {
+            border-radius: 25px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.875rem;
+        }
+
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .section-divider {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: var(--border-radius);
+            position: relative;
+        }
+
+        .section-divider::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #007bff, transparent);
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                border-radius: 0;
+                margin-bottom: 1rem !important;
+            }
+
+            .ville-grid-item {
+                margin-bottom: 0.25rem;
+                padding: 0.5rem;
+            }
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
-<div class="jumbotron bg-dark text-white py-5 mb-4 rounded">
-    <div class="container">
-        <h1 class="display-4">Signaler les problèmes urbains</h1>
-        <p class="lead">Participez à l'amélioration de votre ville en signalant les problèmes rencontrés</p>
-        <hr class="my-4">
-        <p>Nids de poule, lampadaires défectueux, graffitis... Aidez à rendre votre ville plus agréable.</p>
-        <div class="mt-4">
-            <a class="btn btn-primary btn-lg" href="{{ path('app_signalement_nouveau') }}" role="button">
-                <i class="fas fa-plus-circle"></i> Signaler un problème
-            </a>
-            <a class="btn btn-outline-light btn-lg ms-2" href="{{ path('app_carte') }}" role="button">
-                <i class="fas fa-map-marked-alt"></i> Voir la carte
-            </a>
+    <!-- Section Hero améliorée -->
+    <div class="hero-section text-white py-5 mb-5">
+        <div class="container hero-content">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-3">
+                        Signaler les problèmes urbains au Bénin
+                    </h1>
+                    <p class="lead mb-4">
+                        Participez activement à l'amélioration de votre ville en signalant
+                        les problèmes rencontrés dans votre commune.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-road me-1"></i> Nids de poule
+                        </span>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-lightbulb me-1"></i> Éclairage défectueux
+                        </span>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-trash me-1"></i> Ordures non collectées
+                        </span>
+                        <span class="badge bg-light text-dark px-3 py-2">
+                            <i class="fas fa-tint me-1"></i> Eaux stagnantes
+                        </span>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <div class="d-grid gap-2">
+                        {% if app.user and app.user.estValide %}
+                            <a class="btn btn-warning btn-lg btn-modern" href="{{ path('app_signalement_nouveau') }}">
+                                <i class="fas fa-plus-circle me-2"></i> Signaler un problème
+                            </a>
+                            <a class="btn btn-outline-light btn-lg btn-modern" href="{{ path('app_carte') }}">
+                                <i class="fas fa-map-marked-alt me-2"></i> Explorer la carte
+                            </a>
+                        {% else %}
+                            <a class="btn btn-warning btn-lg btn-modern" href="{{ path('app_register') }}">
+                                <i class="fas fa-user-plus me-2"></i> S'inscrire pour signaler
+                            </a>
+                            <small class="text-light mt-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Inscription gratuite requise
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-8">
-        <h2 class="mb-4">Derniers signalements</h2>
-        
-        {% if derniers_signalements|length > 0 %}
-            <div class="row">
-                {% for signalement in derniers_signalements %}
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100 animated-card" style="animation-delay: {{ loop.index * 0.1 }}s">
-                            <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="card-img-top" alt="{{ signalement.titre }}">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ signalement.titre }}</h5>
-                                <p class="card-text">{{ signalement.description|u.truncate(100, '...') }}</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        <i class="fas fa-map-marker-alt"></i> {{ signalement.ville.nom }}
-                                    </small>
-                                    <span class="badge status-{{ signalement.statut.value }}">
-                                        {{ signalement.statut.value|replace({'_': ' '})|capitalize }}
-                                    </span>
+    <div class="container">
+        <!-- Statistiques en haut -->
+        <div class="row mb-5">
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="h4 fw-bold text-primary">{{ derniers_signalements|length }}</h3>
+                    <p class="text-muted small mb-0">Signalements récents</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-city"></i>
+                    </div>
+                    <h3 class="h4 fw-bold text-primary">{{ villes|length }}</h3>
+                    <p class="text-muted small mb-0">Communes actives</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="h4 fw-bold text-success">
+                        {% set resolved = 0 %}
+                        {% for ville in villes %}
+                            {% for s in ville.signalements %}
+                                {% if s.statut.value == 'resolu' %}
+                                    {% set resolved = resolved + 1 %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                        {{ resolved }}
+                    </h3>
+                    <p class="text-muted small mb-0">Problèmes résolus</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="h4 fw-bold text-info">12K+</h3>
+                    <p class="text-muted small mb-0">Citoyens engagés</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Section principale -->
+            <div class="col-lg-8">
+                <!-- Derniers signalements -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="h3 fw-bold">
+                        <i class="fas fa-bell me-2 text-primary"></i>
+                        Derniers signalements
+                    </h2>
+                    {% if app.user and app.user.estValide %}
+                        <a href="{{ path('app_signalements') }}" class="btn btn-outline-primary btn-modern">
+                            <i class="fas fa-list me-1"></i> Tout voir
+                        </a>
+                    {% endif %}
+                </div>
+
+                {% if derniers_signalements|length > 0 %}
+                    <div class="row">
+                        {% for signalement in derniers_signalements %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card card-modern h-100 animated-card"
+                                     style="animation-delay: {{ loop.index * 0.1 }}s; border-top: 4px solid {{ signalement.categorie.couleur ?? '#6c757d' }};">
+                                    <div class="position-relative">
+                                        <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}"
+                                             class="card-img-top"
+                                             alt="{{ signalement.titre }}"
+                                             style="height: 200px; object-fit: cover;">
+                                        <span class="badge category-badge position-absolute top-0 end-0 m-3"
+                                              style="background-color: {{ signalement.categorie.couleur ?? '#6c757d' }};">
+                                            <i class="{{ signalement.categorie.icone ?? 'fas fa-exclamation-circle' }} me-1"></i>
+                                            {{ signalement.categorie.nom ?? 'Non catégorisé' }}
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-bold">{{ signalement.titre }}</h5>
+                                        <p class="card-text text-muted">
+                                            {{ signalement.description|u.truncate(100, '...') }}
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <small class="text-muted">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                {{ signalement.ville.nom }}
+                                            </small>
+                                            <span class="badge status-{{ signalement.statut.value }} px-2 py-1">
+                                                {{ signalement.statut.value|replace({'_': ' '})|title }}
+                                            </span>
+                                        </div>
+                                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                           class="btn btn-primary btn-modern w-100">
+                                            <i class="fas fa-eye me-1"></i> Voir les détails
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="card-footer bg-transparent">
-                                <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary">Voir plus</a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info border-0" style="border-radius: var(--border-radius);">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle fa-2x me-3"></i>
+                            <div>
+                                <h6 class="alert-heading">Aucun signalement pour le moment</h6>
+                                <p class="mb-0">Soyez le premier à contribuer à l'amélioration de votre ville !</p>
                             </div>
                         </div>
                     </div>
-                {% endfor %}
+                {% endif %}
             </div>
-            <div class="text-center mt-3">
-                <a href="{{ path('app_signalements') }}" class="btn btn-outline-primary">Voir tous les signalements</a>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Communes principales -->
+                <div class="card card-modern mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-city me-2"></i>
+                            Communes principales
+                        </h5>
+                    </div>
+                    <div class="card-body p-2">
+                        {% set topCommunesCount = 8 %}
+                        {% set topCommunes = villes|slice(0, topCommunesCount) %}
+                        {% for ville in topCommunes %}
+                            {% if app.user and app.user.estValide %}
+                                <a href="{{ path('app_ville_show', {'slug': ville.slug}) }}" class="ville-grid-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                        {{ ville.nom }}
+                                    </span>
+                                    <span class="badge bg-primary rounded-pill">
+                                        {{ ville.signalements|length }}
+                                    </span>
+                                </a>
+                            {% else %}
+                                <div class="ville-grid-item d-flex justify-content-between align-items-center opacity-75">
+                                    <span>
+                                        <i class="fas fa-map-marker-alt text-secondary me-2"></i>
+                                        {{ ville.nom }}
+                                    </span>
+                                    <span class="badge bg-secondary rounded-pill">
+                                        {{ ville.signalements|length }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer bg-light text-center">
+                        <button class="btn btn-outline-primary btn-modern btn-sm"
+                                type="button" data-bs-toggle="modal" data-bs-target="#allCommunesModal">
+                            <i class="fas fa-list me-1"></i> Voir toutes les communes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Comment ça marche -->
+                <div class="card card-modern mb-4">
+                    <div class="card-header bg-gradient" style="background: var(--primary-gradient); color: white;">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-question-circle me-2"></i>
+                            Comment ça marche ?
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <span class="badge bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">1</span>
+                                    <p class="mb-0">Inscrivez-vous en indiquant votre commune</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <span class="badge bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">2</span>
+                                    <p class="mb-0">Prenez une photo du problème</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <span class="badge bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">3</span>
+                                    <p class="mb-0">Localisez le problème sur la carte</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item mb-3">
+                                <div class="d-flex">
+                                    <span class="badge bg-success rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">4</span>
+                                    <p class="mb-0">Suivez l'avancement en temps réel</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white text-center">
+                        {% if app.user and app.user.estValide %}
+                            <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-success btn-modern">
+                                <i class="fas fa-plus-circle me-2"></i> Créer un signalement
+                            </a>
+                        {% else %}
+                            <a href="{{ path('app_register') }}" class="btn btn-success btn-modern">
+                                <i class="fas fa-user-plus me-2"></i> Commencer maintenant
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Application mobile -->
+                <div class="card card-modern bg-light border-0">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-mobile-alt fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="mb-3">Application mobile</h5>
+                        <p class="card-text">Signalez encore plus facilement depuis votre smartphone !</p>
+                        <div class="d-grid gap-2">
+                            <a href="#" class="btn btn-dark btn-modern">
+                                <i class="fab fa-google-play me-1"></i> Google Play
+                            </a>
+                            <a href="#" class="btn btn-dark btn-modern">
+                                <i class="fab fa-app-store-ios me-1"></i> App Store
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-        {% else %}
-            <div class="alert alert-info">Aucun signalement pour le moment.</div>
-        {% endif %}
-    </div>
-    
-    <div class="col-md-4">
-        <h2 class="mb-4">Villes actives</h2>
-        
-        <div class="list-group mb-4">
-            {% for ville in villes %}
-                <a href="{{ path('app_ville_show', {'id': ville.id}) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    {{ ville.nom }}
-                    <span class="badge bg-primary rounded-pill">{{ ville.signalements|length }}</span>
-                </a>
-            {% endfor %}
         </div>
-        
-        <div class="card mt-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="card-title mb-0">Comment ça marche ?</h5>
-            </div>
-            <div class="card-body">
-                <ol class="mb-0">
-                    <li>Inscrivez-vous en indiquant votre ville de résidence</li>
-                    <li>Signalez un problème rencontré dans votre ville</li>
-                    <li>Le signalement est validé par un modérateur</li>
-                    <li>Les services compétents sont informés et interviennent</li>
-                    <li>Suivez l'avancement de la réparation</li>
-                </ol>
+    </div>
+
+    <!-- Modal toutes les communes -->
+    <div class="modal fade" id="allCommunesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="border-radius: var(--border-radius);">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-city me-2"></i>
+                        Toutes les communes du Bénin
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        {% for ville in villes %}
+                            <div class="col-md-4 col-6">
+                                {% if app.user and app.user.estValide %}
+                                    <a href="{{ path('app_ville_show', {'slug': ville.slug}) }}" class="ville-grid-item d-flex justify-content-between align-items-center">
+                                        <span>
+                                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                            {{ ville.nom }}
+                                        </span>
+                                        <span class="badge bg-primary rounded-pill">{{ ville.signalements|length }}</span>
+                                    </a>
+                                {% else %}
+                                    <div class="ville-grid-item d-flex justify-content-between align-items-center opacity-75">
+                                        <span>
+                                            <i class="fas fa-map-marker-alt text-secondary me-2"></i>
+                                            {{ ville.nom }}
+                                        </span>
+                                        <span class="badge bg-secondary rounded-pill">{{ ville.signalements|length }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if not app.user or not app.user.estValide %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Connectez-vous</strong> pour explorer les signalements par commune.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-modern" data-bs-dismiss="modal">Fermer</button>
+                    {% if app.user and app.user.estValide %}
+                        <a href="{{ path('app_carte') }}" class="btn btn-primary btn-modern">
+                            <i class="fas fa-map me-1"></i> Voir la carte
+                        </a>
+                    {% else %}
+                        <a href="{{ path('app_register') }}" class="btn btn-primary btn-modern">
+                            <i class="fas fa-user-plus me-1"></i> S'inscrire
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Section finale -->
+    <div class="section-divider mt-5 py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h3 class="fw-bold">Ensemble, améliorons nos villes</h3>
+                    <p class="lead">CityFlow Bénin permet de signaler facilement les problèmes urbains dans toutes les communes du pays.</p>
+                    {% if app.user and app.user.estValide %}
+                        <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-primary btn-modern">
+                            <i class="fas fa-plus-circle me-2"></i> Créer un signalement
+                        </a>
+                    {% else %}
+                        <a href="{{ path('app_register') }}" class="btn btn-primary btn-modern">
+                            <i class="fas fa-user-plus me-2"></i> Rejoindre la communauté
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <div class="ratio ratio-16x9" style="border-radius: var(--border-radius); overflow: hidden;">
+                        <iframe src="https://www.youtube.com/embed/a24tG9HZetQ"
+                                title="Hymne National du Bénin"
+                                allowfullscreen
+                                style="border-radius: var(--border-radius);"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation des cartes
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('fadeIn');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.animated-card').forEach(card => {
+                observer.observe(card);
+            });
+
+            // Animation des statistiques au scroll
+            const statCards = document.querySelectorAll('.stat-card');
+            const statsObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animationDelay = `${Array.from(statCards).indexOf(entry.target) * 0.1}s`;
+                        entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+                    }
+                });
+            });
+
+            statCards.forEach(card => statsObserver.observe(card));
+        });
+    </script>
 {% endblock %}

@@ -1,0 +1,55 @@
+/* Correction du problème de vibration des modals */
+.modal {
+  pointer-events: none;
+}
+
+.modal.show {
+  pointer-events: auto;
+}
+
+.modal-dialog {
+  pointer-events: auto;
+}
+
+/* Empêcher les effets de hover sur la backdrop */
+.modal-backdrop {
+  pointer-events: auto;
+}
+
+/* Stabilisation des modals de suppression */
+.modal-content {
+  transform: none !important;
+  transition: none;
+}
+
+/* Éviter les transitions qui causent des problèmes */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out;
+  transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+/* Fix spécifique pour les modals dans les tableaux */
+.table .modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1050;
+}
+
+/* Empêcher les hover effects qui interfèrent */
+.modal-dialog:hover {
+  transform: none !important;
+}
+
+/* Style stable pour les boutons dans les modals */
+.modal-footer .btn {
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.modal-footer .btn:hover {
+  transform: none !important;
+}

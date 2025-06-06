@@ -18,6 +18,18 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Service\EmailService:
+        arguments:
+            $emailSender: '%app.email_sender%'
+
+    # Ajoutez ces lignes si elles n'existent pas déjà
+    App\Service\TokenService:
+        public: false
+
+    App\Service\RegistrationService:
+        public: false
+
+
     # controllers are imported separately to make sure services can be injected
     # as action arguments even if you don't extend any base controller class
     App\Controller\:
@@ -33,3 +45,9 @@ services:
         arguments:
             $villeRepository: '@App\Repository\VilleRepository'
             $entityManager: '@doctrine.orm.entity_manager'
+
+    # Rendre les entités disponibles pour l'autowiring au besoin
+    App\Entity\Ville:
+        autowire: true
+
+
