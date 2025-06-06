@@ -3,10 +3,14 @@
 namespace App\Repository;
 
 use App\Entity\Ville;
-use App\Entity\Arrondissement;
+use App\Pagination\Paginator;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Tools\Pagination\Paginator as DoctrinePaginator;
 
+/**
+ * @extends ServiceEntityRepository<Ville>
+ */
 class VilleRepository extends ServiceEntityRepository
 {
   public function __construct(ManagerRegistry $registry)
@@ -15,85 +19,138 @@ class VilleRepository extends ServiceEntityRepository
   }
 
   /**
-   * Retourne une liste de villes sans doublons basée sur le nom et le département
-   *
-   * @return array<int, Ville>
+   * Trouve les villes avec pagination
    */
-  public function findVillesUniques(): array
+  public function findPaginated(int $page = 1, int $limit = 12): Paginator
   {
-    $entityManager = $this->getEntityManager();
+    $offset = ($page - 1) * $limit;
 
-    // Sous-requête pour obtenir les IDs uniques
-    $query = $entityManager->createQuery('
-            SELECT MIN(v.id) as id
-            FROM App\Entity\Ville v
-            GROUP BY v.nom, d.id
-        ');
-
-    $ids = array_column($query->getScalarResult(), 'id');
-
-    // Requête principale pour récupérer les entités complètes
-    if (empty($ids)) {
-      return [];
-    }
-
-    $queryBuilder = $this->createQueryBuilder('v')
-        ->where('v.id IN (:ids)')
-        ->setParameter('ids', $ids)
-        ->leftJoin('v.departement', 'd')
-        ->addSelect('d') // Fetch join pour éviter les requêtes N+1
+    $query = $this->createQueryBuilder('v')
+        ->leftJoin('v.signalements', 's')
+        ->addSelect('COUNT(s.id) as HIDDEN signalement_count')
+        ->groupBy('v.id')
         ->orderBy('v.nom', 'ASC')
-        ->addOrderBy('d.nom', 'ASC');
+        ->setFirstResult($offset)
+        ->setMaxResults($limit)
+        ->getQuery();
 
-    return $queryBuilder->getQuery()->getResult();
+    $doctrinePaginator = new DoctrinePaginator($query);
+
+    return new Paginator($doctrinePaginator, $page, $limit);
   }
 
   /**
-   * Retourne les villes du Bénin
-   *
-   * @return array<int, Ville>
+   * Trouve les villes avec le nombre de signalements
+   */
+  public function findWithSignalementCount(): array
+  {
+    return $this->createQueryBuilder('v')
+        ->leftJoin('v.signalements', 's')
+        ->addSelect('COUNT(s.id) as signalement_count')
+        ->groupBy('v.id')
+        ->orderBy('v.nom', 'ASC')
+        ->getQuery()
+        ->getResult();
+  }
+
+  /**
+   * Recherche des villes par nom
+   */
+  public function findByName(string $searchTerm): array
+  {
+    return $this->createQueryBuilder('v')
+        ->where('v.nom LIKE :term')
+        ->setParameter('term', '%' . $searchTerm . '%')
+        ->orderBy('v.nom', 'ASC')
+        ->getQuery()
+        ->getResult();
+  }
+
+  /**
+   * Compte le nombre total de villes
+   */
+  public function countTotal(): int
+  {
+    return $this->createQueryBuilder('v')
+        ->select('COUNT(v.id)')
+        ->getQuery()
+        ->getSingleScalarResult();
+  }
+
+  /**
+   * Trouve une ville par son slug
+   */
+  public function findOneBySlug(string $slug): ?Ville
+  {
+    return $this->createQueryBuilder('v')
+        ->where('v.slug = :slug')
+        ->setParameter('slug', $slug)
+        ->getQuery()
+        ->getOneOrNullResult();
+  }
+
+  /**
+   * Trouve les villes d'un département
+   */
+  public function findByDepartement(int $departementId): array
+  {
+    return $this->createQueryBuilder('v')
+        ->where('v.departement = :departement')
+        ->setParameter('departement', $departementId)
+        ->orderBy('v.nom', 'ASC')
+        ->getQuery()
+        ->getResult();
+  }
+
+  /**
+   * Trouve les villes avec leurs signalements actifs
+   */
+  public function findWithActiveSignalements(): array
+  {
+    return $this->createQueryBuilder('v')
+        ->leftJoin('v.signalements', 's')
+        ->where('s.etatValidation = :etat OR s.etatValidation IS NULL')
+        ->setParameter('etat', 'valide')
+        ->groupBy('v.id')
+        ->having('COUNT(s.id) > 0')
+        ->orderBy('v.nom', 'ASC')
+        ->getQuery()
+        ->getResult();
+  }
+
+  /**
+   * Trouve toutes les villes du Bénin
+   * Cette méthode est utilisée dans le formulaire de signalement
    */
   public function findVillesDuBenin(): array
   {
-    // Liste des principales villes du Bénin
-    $villesBeninNomsPartiels = [
-        'Cotonou', 'Porto-Novo', 'Parakou', 'Abomey', 'Djougou',
-        'Natitingou', 'Ouidah', 'Bohicon', 'Lokossa', 'Kandi',
-        'Abomey-Calavi', 'Dassa-Zoumé', 'Savè', 'Nikki', 'Pobè',
-        'Bembèrèkè', 'Savalou', 'Malanville', 'Comè', 'Dogbo'
-    ];
-
-    // Construction d'une requête LIKE pour trouver les villes correspondant à ces noms
-    $qb = $this->createQueryBuilder('v');
-
-    $orX = $qb->expr()->orX();
-    foreach ($villesBeninNomsPartiels as $index => $villeNom) {
-      $orX->add($qb->expr()->like('v.nom', ':ville' . $index));
-      $qb->setParameter('ville' . $index, '%' . $villeNom . '%');
-    }
-
-    $qb->where($orX)
-        ->orderBy('v.nom', 'ASC');
-
-    return $qb->getQuery()->getResult();
+    return $this->createQueryBuilder('v')
+        ->leftJoin('v.departement', 'd')
+        ->addSelect('d')
+        ->orderBy('v.nom', 'ASC')
+        ->getQuery()
+        ->getResult();
   }
 
   /**
-   * Retourne les arrondissements d'une ville
-   *
-   * @param int $villeId
-   * @return array<int, Arrondissement>
+   * Trouve les villes par département (alternative)
    */
-  public function findArrondissementsByVilleId(int $villeId): array
+  public function findByDepartementName(string $departementName): array
   {
-    // Optimisation : requête directe pour les arrondissements
-    $queryBuilder = $this->getEntityManager()->createQueryBuilder()
-        ->select('a')
-        ->from(Arrondissement::class, 'a')
-        ->where('a.ville = :villeId')
-        ->setParameter('villeId', $villeId)
-        ->orderBy('a.nom', 'ASC');
+    return $this->createQueryBuilder('v')
+        ->leftJoin('v.departement', 'd')
+        ->where('d.nom = :departement')
+        ->setParameter('departement', $departementName)
+        ->orderBy('v.nom', 'ASC')
+        ->getQuery()
+        ->getResult();
+  }
 
-    return $queryBuilder->getQuery()->getResult();
+  /**
+   * Trouve toutes les villes ordonnées par nom
+   */
+  public function findAllOrdered(): array
+  {
+    return $this->findBy([], ['nom' => 'ASC']);
   }
 }

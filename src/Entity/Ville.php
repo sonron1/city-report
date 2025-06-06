@@ -49,6 +49,8 @@ class Ville
   {
     $this->arrondissements = new ArrayCollection();
     $this->signalements = new ArrayCollection();
+    $this->utilisateurs = new ArrayCollection();  // ✅ Ajoutez cette ligne
+    $this->clusters = new ArrayCollection();      // ✅ Ajoutez cette ligne
   }
 
   // Getters et setters...
@@ -239,5 +241,10 @@ class Ville
       }
 
       return $this;
+  }
+  // Ajoutez également la méthode __toString() à la fin de la classe
+  public function __toString(): string
+  {
+    return $this->nom ?? '';
   }
 }
