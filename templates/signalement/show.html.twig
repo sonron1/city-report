@@ -1,3 +1,4 @@
+
 {% extends 'base.html.twig' %}
 
 {% block title %}Détails du signalement{% endblock %}
@@ -154,19 +155,26 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             height: 100%;
         }
+        .admin-actions {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+        }
     </style>
 {% endblock %}
 
 {% block body %}
     <div class="container-fluid mt-4 px-4">
         {# Affichage des messages flash #}
-    {% for label, messages in app.flashes %}
-        {% for message in messages %}
-            <div class="alert alert-{{ label }} alert-dismissible fade show mb-4" role="alert">
-                <i class="bi bi-info-circle me-2"></i>  {{ message }}
-            </div>
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} alert-dismissible fade show mb-4" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>{{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
         {% endfor %}
-    {% endfor %}
 
         <!-- Fil d'Ariane -->
         <nav aria-label="breadcrumb" class="mb-4">
@@ -210,8 +218,8 @@
                     <div>
                         <span class="status-badge
                             {% if signalement.etatValidation == 'en_attente' %}bg-warning
-                            {% elseif signalement.etatValidation == 'validé' %}bg-success
-                            {% elseif signalement.etatValidation == 'rejeté' %}bg-danger
+                            {% elseif signalement.etatValidation == 'valide' %}bg-success
+                            {% elseif signalement.etatValidation == 'rejete' %}bg-danger
                             {% endif %} text-white">
                             <i class="bi bi-check-circle me-1"></i> {{ signalement.etatValidation|replace({'_': ' '})|capitalize }}
                         </span>
@@ -301,7 +309,6 @@
                                                                 <i class="bi bi-trash"></i>
                                                             </a>
                                                         {% endif %}
-
                                                     </div>
                                                 </div>
                                                 <p class="card-text">{{ commentaire.contenu }}</p>
@@ -361,12 +368,10 @@
                                     <div class="col-md-6 mb-3">
                                         <div class="info-tile">
                                             <h5 class="mb-3">Date planifiée</h5>
-                                            {% if signalement.reparation.datePlanifiee %}
-                                                <p class="fs-5 mb-0">
-                                                    <i class="bi bi-calendar-date me-2"></i>{{ signalement.reparation.datePlanifiee|date('d/m/Y') }}
-                                                </p>
+                                            {% if signalement.reparation.dateDebut %}
+                                                {{ signalement.reparation.dateDebut|date('d/m/Y') }}
                                             {% else %}
-                                                <p class="text-muted fst-italic mb-0">Non planifiée</p>
+                                                <span class="text-muted">Non planifiée</span>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -414,56 +419,179 @@
                     </div>
                 </div>
 
-                <!-- Actions administratives -->
-                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_MODERATOR') %}
+                <!-- Bouton pour planifier une réparation -->
+                {% if is_granted('ROLE_MODERATOR') and not signalement.reparation %}
                     <div class="content-section">
-                        <h4><i class="bi bi-gear me-2"></i>Actions administratives</h4>
+                        <h4><i class="bi bi-tools me-2"></i>Réparation</h4>
                         <div class="d-grid gap-2">
-                            {% if not signalement.reparation %}
-                                <a href="{{ path('app_reparation_new', {'signalement_id': signalement.id}) }}"
-                                   class="btn btn-success">
-                                    <i class="bi bi-tools me-2"></i>Planifier une réparation
-                                </a>
-                            {% endif %}
-
-                            {% if signalement.etatValidation == 'en_attente' %}
-                                <a href="{{ path('app_validation_valider', {'id': signalement.id}) }}"
-                                   class="btn btn-primary">
-                                    <i class="bi bi-check-circle me-2"></i>Valider le signalement
-                                </a>
-                                <a href="{{ path('app_validation_rejeter', {'id': signalement.id}) }}"
-                                   class="btn btn-danger">
-                                    <i class="bi bi-x-circle me-2"></i>Rejeter le signalement
-                                </a>
-                            {% endif %}
-                            
-                            <a href="{{ path('app_signalement_delete', {'id': signalement.id}) }}"
-                               class="btn btn-outline-danger"
-                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer définitivement ce signalement ? Cette action est irréversible.')">
-                               <i class="bi bi-trash me-2"></i>Supprimer le signalement
+                            <a href="{{ path('app_reparation_new', {'signalement_id': signalement.id}) }}"
+                               class="btn btn-success">
+                                <i class="fas fa-tools me-1"></i>
+                                Planifier cette réparation
                             </a>
                         </div>
                     </div>
                 {% endif %}
 
-                <!-- Actions utilisateur -->
-                {% if app.user and app.user.id == signalement.utilisateur.id %}
-                    <div class="content-section">
-                        <h4><i class="bi bi-person-gear me-2"></i>Actions utilisateur</h4>
-                        <div class="d-grid gap-2">
-                            {% if not signalement.demandeSuppressionStatut %}
-                                <a href="{{ path('app_signalement_demande_suppression', {'id': signalement.id}) }}"
-                                   class="btn btn-outline-danger">
-                                    <i class="bi bi-trash me-2"></i>Demander la suppression
-                                </a>
-                            {% else %}
-                                <button class="btn btn-outline-secondary" disabled>
-                                    <i class="bi bi-hourglass-split me-2"></i>
-                                    Demande de suppression {{ signalement.demandeSuppressionStatut }}
+                <!-- Actions de modération/administration -->
+                {% if is_granted('ROLE_MODERATOR') %}
+                    <div class="admin-actions">
+                        <h5><i class="bi bi-shield-check me-2"></i>Actions modérateur</h5>
+
+                        {% if signalement.etatValidation == 'en_attente' %}
+                            <div class="d-grid gap-2 mb-3">
+                                <!-- ✅ ROUTES CORRIGÉES -->
+                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#validateModal{{ signalement.id }}">
+                                    <i class="bi bi-check-circle me-2"></i>Valider
                                 </button>
-                            {% endif %}
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ signalement.id }}">
+                                    <i class="bi bi-x-circle me-2"></i>Rejeter
+                                </button>
+                            </div>
+                        {% endif %}
+
+                        <!-- Modification du statut -->
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#statusModal{{ signalement.id }}">
+                                <i class="bi bi-gear me-2"></i>Modifier le statut
+                            </button>
+                        </div>
+
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <!-- Actions réservées aux admins -->
+                            <div class="border-top pt-3">
+                                <h6 class="text-muted">Actions administrateur</h6>
+                                <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal{{ signalement.id }}">
+                                    <i class="bi bi-trash me-2"></i>Supprimer définitivement
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- ✅ MODALS AVEC LES BONNES ROUTES DE MODÉRATION -->
+
+                    <!-- Modal de validation -->
+                    <div class="modal fade" id="validateModal{{ signalement.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-success text-white">
+                                    <h5 class="modal-title">Valider le signalement</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="{{ path('app_moderation_valider', {'id': signalement.id}) }}" method="post">
+                                    <div class="modal-body">
+                                        <p>Confirmer la validation de ce signalement ?</p>
+                                        <div class="mb-3">
+                                            <label for="validateComment" class="form-label">Commentaire (optionnel)</label>
+                                            <textarea name="commentaire" id="validateComment" class="form-control" rows="3" placeholder="Commentaire de validation..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="bi bi-check-circle me-2"></i>Valider
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="_token" value="{{ csrf_token('validate' ~ signalement.id) }}">
+                                </form>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Modal de rejet -->
+                    <div class="modal fade" id="rejectModal{{ signalement.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title">Rejeter le signalement</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="{{ path('app_moderation_rejeter', {'id': signalement.id}) }}" method="post">
+                                    <div class="modal-body">
+                                        <p>Confirmer le rejet de ce signalement ?</p>
+                                        <div class="mb-3">
+                                            <label for="rejectComment" class="form-label">Motif du rejet <span class="text-danger">*</span></label>
+                                            <textarea name="commentaire" id="rejectComment" class="form-control" rows="3" placeholder="Expliquez le motif du rejet..." required></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="bi bi-x-circle me-2"></i>Rejeter
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="_token" value="{{ csrf_token('reject' ~ signalement.id) }}">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal de modification du statut -->
+                    <div class="modal fade" id="statusModal{{ signalement.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-warning text-dark">
+                                    <h5 class="modal-title">Modifier le statut</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form action="{{ path('app_moderation_modifier_statut', {'id': signalement.id}) }}" method="post">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="newStatus" class="form-label">Nouveau statut</label>
+                                            <select name="statut" id="newStatus" class="form-select" required>
+                                                <option value="nouveau" {% if signalement.statut.value == 'nouveau' %}selected{% endif %}>Nouveau</option>
+                                                <option value="en_cours" {% if signalement.statut.value == 'en_cours' %}selected{% endif %}>En cours</option>
+                                                <option value="resolu" {% if signalement.statut.value == 'resolu' %}selected{% endif %}>Résolu</option>
+                                                <option value="annule" {% if signalement.statut.value == 'annule' %}selected{% endif %}>Annulé</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="statusComment" class="form-label">Commentaire</label>
+                                            <textarea name="commentaire" id="statusComment" class="form-control" rows="3" placeholder="Commentaire sur le changement de statut..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                        <button type="submit" class="btn btn-warning">
+                                            <i class="bi bi-gear me-2"></i>Modifier
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="_token" value="{{ csrf_token('status' ~ signalement.id) }}">
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <!-- Modal de suppression (admins seulement) -->
+                        <div class="modal fade" id="deleteModal{{ signalement.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">Confirmer la suppression</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form action="{{ path('app_signalement_delete', {'id': signalement.id}) }}" method="post">
+                                        <div class="modal-body">
+                                            <div class="alert alert-danger">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                <strong>Attention !</strong> Cette action est irréversible.
+                                            </div>
+                                            <p>Êtes-vous sûr de vouloir supprimer définitivement ce signalement ?</p>
+                                            <p><strong>{{ signalement.titre }}</strong></p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="bi bi-trash me-2"></i>Supprimer définitivement
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ signalement.id) }}">
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -549,6 +677,12 @@
                 tab.addEventListener('shown.bs.tab', function() {
                     map.invalidateSize();
                 });
+            });
+
+            // Initialiser les tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
             });
         });
     </script>
