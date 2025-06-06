@@ -46,9 +46,9 @@ security:
         - { path: ^/signalements, roles: ROLE_USER }
         
     role_hierarchy:
-        ROLE_AGENT: ROLE_USER
-        ROLE_SUPERVISOR: ROLE_AGENT
-        ROLE_ADMIN: ROLE_SUPERVISOR
+        #ROLE_AGENT: ROLE_USER
+        ROLE_ADMIN: ROLE_MODERATOR
+        ROLE_MODERATOR: ROLE_USER
 
 when@test:
     security:
