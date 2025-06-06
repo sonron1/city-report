@@ -21,37 +21,27 @@ class RegistrationFormTypeForm extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('nom', TextType::class, [
-                'label' => 'Nom',
-                'constraints' => [
-                    new NotBlank([
-                        'message' => 'Veuillez entrer votre nom',
-                    ]),
-                    new Length([
-                        'min' => 2,
-                        'minMessage' => 'Votre nom doit comporter au moins {{ limit }} caractères',
-                        'max' => 50,
-                    ]),
-                ],
-            ])
             ->add('prenom', TextType::class, [
                 'label' => 'Prénom',
                 'constraints' => [
                     new NotBlank([
                         'message' => 'Veuillez entrer votre prénom',
                     ]),
-                    new Length([
-                        'min' => 2,
-                        'minMessage' => 'Votre prénom doit comporter au moins {{ limit }} caractères',
-                        'max' => 50,
+                ],
+            ])
+            ->add('nom', TextType::class, [
+                'label' => 'Nom',
+                'constraints' => [
+                    new NotBlank([
+                        'message' => 'Veuillez entrer votre nom',
                     ]),
                 ],
             ])
             ->add('email', EmailType::class, [
-                'label' => 'Email',
+                'label' => 'Adresse email',
                 'constraints' => [
                     new NotBlank([
-                        'message' => 'Veuillez entrer votre email',
+                        'message' => 'Veuillez entrer une adresse email',
                     ]),
                 ],
             ])
@@ -71,7 +61,7 @@ class RegistrationFormTypeForm extends AbstractType
                 'label' => 'J\'accepte les conditions d\'utilisation',
                 'constraints' => [
                     new IsTrue([
-                        'message' => 'Vous devez accepter nos conditions.',
+                        'message' => 'Vous devez accepter nos conditions d\'utilisation.',
                     ]),
                 ],
             ])

@@ -1,3 +1,7 @@
+parameters:
+    photos_directory: '%kernel.project_dir%/public/uploads'
+    app.email_sender: 'noreply@cityflow.com'
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -14,8 +18,36 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Service\EmailService:
+        arguments:
+            $emailSender: '%app.email_sender%'
+
+    # Ajoutez ces lignes si elles n'existent pas déjà
+    App\Service\TokenService:
+        public: false
+
+    App\Service\RegistrationService:
+        public: false
+
+
     # controllers are imported separately to make sure services can be injected
     # as action arguments even if you don't extend any base controller class
     App\Controller\:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
+
+    App\EventListener\LoginListener:
+        tags:
+            - { name: kernel.event_listener, event: security.authentication.success, method: onLoginSuccess }
+
+    # Dans config/services.yaml
+    App\Form\SignalementTypeForm:
+        arguments:
+            $villeRepository: '@App\Repository\VilleRepository'
+            $entityManager: '@doctrine.orm.entity_manager'
+
+    # Rendre les entités disponibles pour l'autowiring au besoin
+    App\Entity\Ville:
+        autowire: true
+
+

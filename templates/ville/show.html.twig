@@ -1,118 +1,293 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ ville.nom }} - CityFlow{% endblock %}
+{% block title %}{{ ville.nom }} - Signalements{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-{% endblock %}
-
-{% block body %}
-<div class="mb-4">
-    <a href="{{ path('app_villes') }}" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-1"></i> Retour à la liste des villes
-    </a>
-</div>
-
-<div class="card shadow mb-4">
-    <div class="card-header bg-dark text-white">
-        <h1 class="h3 mb-0">{{ ville.nom }}</h1>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <p><strong>Nombre de signalements :</strong> {{ signalements|length }}</p>
-                <div id="map" class="map-container mb-3" style="height: 300px;"></div>
-            </div>
-            <div class="col-md-6">
-                <h2 class="h4 mb-3">Statistiques</h2>
-                <ul class="list-group mb-3">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Nouveaux signalements
-                        <span class="badge bg-danger rounded-pill">{{ signalements|filter(s => s.statut.value == 'nouveau')|length }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Signalements en cours
-                        <span class="badge bg-warning rounded-pill">{{ signalements|filter(s => s.statut.value == 'en_cours')|length }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Signalements résolus
-                        <span class="badge bg-success rounded-pill">{{ signalements|filter(s => s.statut.value == 'resolu')|length }}</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
-
-<h2 class="mb-4">Signalements à {{ ville.nom }}</h2>
-
-{% if signalements|length > 0 %}
-    <div class="row">
-        {% for signalement in signalements %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="card-img-top" alt="{{ signalement.titre }}">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ signalement.titre }}</h5>
-                        <p class="card-text">{{ signalement.description|u.truncate(100, '...') }}</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">{{ signalement.dateSignalement|date('d/m/Y') }}</small>
-                            <span class="badge status-{{ signalement.statut.value }}">{{ signalement.statut.value|replace({'_': ' '})|capitalize }}</span>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-transparent">
-                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary">Voir plus</a>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="alert alert-info">Aucun signalement n'a été trouvé dans cette ville.</div>
-{% endif %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #ville-map {
+            height: 500px;
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card {
+            transition: transform 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            height: 100%;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: calc(0.375rem - 1px);
+            border-top-right-radius: calc(0.375rem - 1px);
+        }
+        .category-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+        }
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+        }
+        .ville-header {
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .ville-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1;
+        }
+        .ville-header-content {
+            position: relative;
+            z-index: 2;
+        }
+        .filter-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .pagination {
+            justify-content: center;
+            margin-top: 30px;
+        }
+    </style>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const map = L.map('map').setView([{{ ville.latitude }}, {{ ville.longitude }}], 13);
-            
+            // Initialiser la carte
+            const map = L.map('ville-map').setView([
+                {{ ville.latitudeCentre }},
+                {{ ville.longitudeCentre }}
+            ], 13);
+
+            // Ajouter le fond de carte OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
-            
-            // Ajouter un marqueur pour la ville
-            L.marker([{{ ville.latitude }}, {{ ville.longitude }}])
+
+            // Ajouter les marqueurs pour chaque signalement
+            {% for signalement in all_signalements_for_map %}
+            L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}])
                 .addTo(map)
-                .bindPopup("{{ ville.nom }}");
-                
-            // Ajouter des marqueurs pour chaque signalement
-            {% for signalement in signalements %}
-                {% if signalement.latitude and signalement.longitude %}
-                    let markerColor;
-                    switch("{{ signalement.statut.value }}") {
-                        case 'nouveau': markerColor = '#f44336'; break;
-                        case 'en_cours': markerColor = '#ff9800'; break;
-                        case 'resolu': markerColor = '#4caf50'; break;
-                        default: markerColor = '#666666';
-                    }
-                    
-                    const markerIcon = L.divIcon({
-                        className: 'custom-marker',
-                        html: `<div style="background-color: ${markerColor}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
-                        iconSize: [16, 16],
-                        iconAnchor: [8, 8]
-                    });
-                    
-                    L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}], { icon: markerIcon })
-                        .addTo(map)
-                        .bindPopup("<strong>{{ signalement.titre }}</strong><br>{{ signalement.description|u.truncate(50, '...') }}<br><a href='{{ path('app_signalement_show', {'id': signalement.id}) }}'>Voir</a>");
-                {% endif %}
+                .bindPopup(`
+                        <strong>{{ signalement.titre }}</strong><br>
+                        <span class="text-muted">{{ signalement.categorie.nom }}</span><br>
+                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary mt-2">Voir détails</a>
+                    `);
             {% endfor %}
         });
     </script>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid mt-4 px-4">
+        {# Affichage des messages flash #}
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} alert-dismissible fade show mb-4" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>  {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <!-- Fil d'Ariane -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ ville.nom }}</li>
+            </ol>
+        </nav>
+
+        <!-- En-tête de la ville -->
+        <div class="ville-header mb-4" style="background-image: url('{{ asset('images/villes/default-city.jpg') }}')">
+            <div class="ville-header-content text-center">
+                <h1 class="display-4 fw-bold">{{ ville.nom }}</h1>
+                <p class="lead">
+                    Département: {{ ville.departement.nom }}
+                    {% if ville.arrondissements|length > 0 %}
+                        | {{ ville.arrondissements|length }} arrondissement(s)
+                    {% endif %}
+                </p>
+                <p>
+                    <i class="bi bi-geo-alt-fill"></i> Coordonnées: {{ ville.latitudeCentre }}, {{ ville.longitudeCentre }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Carte des signalements -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-map me-2"></i>Carte des signalements à {{ ville.nom }}</h4>
+            </div>
+            <div class="card-body p-0">
+                <div id="ville-map"></div>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="filter-container">
+            <h5 class="mb-3"><i class="bi bi-funnel me-2"></i>Filtrer les signalements</h5>
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select" name="statut">
+                        <option value="">Tous les statuts</option>
+                        <option value="nouveau" {% if app.request.query.get('statut') == 'nouveau' %}selected{% endif %}>Nouveau</option>
+                        <option value="en_cours" {% if app.request.query.get('statut') == 'en_cours' %}selected{% endif %}>En cours</option>
+                        <option value="resolu" {% if app.request.query.get('statut') == 'resolu' %}selected{% endif %}>Résolu</option>
+                        <option value="rejete" {% if app.request.query.get('statut') == 'rejete' %}selected{% endif %}>Rejeté</option>
+                    </select>
+                </div>
+                <!-- Dans ville/show.html.twig, modifions la partie des catégories -->
+                <div class="col-md-3">
+                    <label class="form-label">Catégorie</label>
+                    <select class="form-select" name="categorie">
+                        <option value="">Toutes les catégories</option>
+                        {% for categorie in categories|default([]) %}
+                            <option value="{{ categorie.id }}" {% if app.request.query.get('categorie') == categorie.id|number_format(0, '', '') %}selected{% endif %}>
+                                {{ categorie.nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date</label>
+                    <select class="form-select" name="date">
+                        <option value="">Toutes les dates</option>
+                        <option value="today" {% if app.request.query.get('date') == 'today' %}selected{% endif %}>Aujourd'hui</option>
+                        <option value="week" {% if app.request.query.get('date') == 'week' %}selected{% endif %}>Cette semaine</option>
+                        <option value="month" {% if app.request.query.get('date') == 'month' %}selected{% endif %}>Ce mois-ci</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-2"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Liste des signalements -->
+        <h2 class="mb-4">Signalements à {{ ville.nom }}</h2>
+
+        {% if signalements_paginator.items|length > 0 %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+                {% for signalement in signalements_paginator.items %}
+                    <div class="col">
+                        <div class="card h-100">
+                            <!-- Badges pour catégorie et statut -->
+                            <span class="category-badge" style="background-color: {{ signalement.categorie.couleur|default('black') }}">
+                                <i class="{{ signalement.categorie.icone }}"></i> {{ signalement.categorie.nom }}
+                            </span>
+                            <span class="status-badge
+                                {% if signalement.statut.value == 'nouveau' %}bg-primary
+                                {% elseif signalement.statut.value == 'en_cours' %}bg-warning
+                                {% elseif signalement.statut.value == 'resolu' %}bg-success
+                                {% elseif signalement.statut.value == 'rejete' %}bg-danger{% endif %}">
+                                {{ signalement.statut.value|replace({'_': ' '})|capitalize }}
+                            </span>
+
+                            <!-- Image du signalement -->
+                            <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="card-img-top" alt="Photo du signalement">
+
+                            <div class="card-body">
+                                <h5 class="card-title">{{ signalement.titre }}</h5>
+                                <p class="card-text">{{ signalement.description|length > 100 ? signalement.description|slice(0, 100) ~ '...' : signalement.description }}</p>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar3"></i> {{ signalement.dateSignalement|date('d/m/Y') }}
+                                    </small>
+                                    <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>Voir détails
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if signalements_paginator.totalPages > 1 %}
+                <nav aria-label="Pagination des signalements">
+                    <ul class="pagination">
+                        {% if signalements_paginator.hasPreviousPage %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ path('app_ville_show', {'slug': ville.slug, 'page': signalements_paginator.previousPage}) }}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                            </li>
+                        {% endif %}
+
+                        {% for page in signalements_paginator.pageRange %}
+                            <li class="page-item {% if page == signalements_paginator.currentPage %}active{% endif %}">
+                                <a class="page-link" href="{{ path('app_ville_show', {'slug': ville.slug, 'page': page}) }}">{{ page }}</a>
+                            </li>
+                        {% endfor %}
+
+                        {% if signalements_paginator.hasNextPage %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ path('app_ville_show', {'slug': ville.slug, 'page': signalements_paginator.nextPage}) }}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i> Aucun signalement n'a été trouvé pour cette ville.
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

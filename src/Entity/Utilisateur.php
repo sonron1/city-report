@@ -9,66 +9,112 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
-  #[ORM\Id]
-  #[ORM\GeneratedValue]
-  #[ORM\Column]
-  private ?int $id = null;
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
 
-  #[ORM\Column(length: 180, unique: true)]
-  private ?string $email = null;
+    #[ORM\Column(length: 180, unique: true)]
+    #[Assert\Email(message: "L'adresse email '{{ value }}' n'est pas valide.")]
+    #[Assert\NotBlank(message: "L'adresse email est obligatoire.")]
+    private ?string $email = null;
 
-  #[ORM\Column]
-  private array $roles = [];
+    #[ORM\Column]
+    private array $roles = [];
 
-  #[ORM\Column]
-  private ?string $password = null;
+    #[ORM\Column]
+    private ?string $password = null;
 
-  #[ORM\Column(length: 255)]
-  private ?string $nom = null;
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Le nom est obligatoire.")]
+    private ?string $nom = null;
 
-  #[ORM\Column(length: 255)]
-  private ?string $prenom = null;
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Le prénom est obligatoire.")]
+    private ?string $prenom = null;
 
-  #[ORM\ManyToOne(inversedBy: 'utilisateurs')]
-  #[ORM\JoinColumn(nullable: false)]
-  private ?Ville $villeResidence = null;
+    #[ORM\ManyToOne(inversedBy: 'utilisateurs')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Ville $villeResidence = null;
 
-  #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-  private ?\DateTimeInterface $dateInscription = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private ?\DateTimeInterface $dateInscription = null;
 
-  #[ORM\Column]
-  private ?bool $estValide = false;
+    #[ORM\Column]
+    private ?bool $estValide = false;
 
-  #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Signalement::class)]
-  private Collection $signalements;
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Signalement::class)]
+    private Collection $signalements;
 
-  #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Commentaire::class)]
-  private Collection $commentaires;
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Commentaire::class)]
+    private Collection $commentaires;
 
-  #[ORM\OneToMany(mappedBy: 'moderateur', targetEntity: JournalValidation::class)]
-  private Collection $journalValidations;
+    #[ORM\OneToMany(mappedBy: 'moderateur', targetEntity: JournalValidation::class)]
+    private Collection $journalValidations;
 
-  #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Reparation::class)]
-  private Collection $reparations;
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: Reparation::class)]
+    private Collection $reparations;
 
-  #[ORM\OneToMany(mappedBy: 'destinataire', targetEntity: Notification::class)]
-  private Collection $notifications;
+    #[ORM\OneToMany(mappedBy: 'destinataire', targetEntity: Notification::class)]
+    private Collection $notifications;
+    
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $confirmationToken = null;
+    
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $tokenExpiryDate = null;
 
-  public function __construct()
-  {
-    $this->signalements = new ArrayCollection();
-    $this->commentaires = new ArrayCollection();
-    $this->journalValidations = new ArrayCollection();
-    $this->reparations = new ArrayCollection();
-    $this->notifications = new ArrayCollection();
-    $this->dateInscription = new \DateTime();
-  }
+    public function __construct()
+    {
+        $this->signalements = new ArrayCollection();
+        $this->commentaires = new ArrayCollection();
+        $this->journalValidations = new ArrayCollection();
+        $this->reparations = new ArrayCollection();
+        $this->notifications = new ArrayCollection();
+        $this->dateInscription = new \DateTime();
+        $this->roles = ['ROLE_USER'];
+    }
 
+    // Méthodes existantes...
+    
+    public function getConfirmationToken(): ?string
+    {
+        return $this->confirmationToken;
+    }
+
+    public function setConfirmationToken(?string $confirmationToken): self
+    {
+        $this->confirmationToken = $confirmationToken;
+        return $this;
+    }
+
+    public function getTokenExpiryDate(): ?\DateTimeInterface
+    {
+        return $this->tokenExpiryDate;
+    }
+
+    public function setTokenExpiryDate(?\DateTimeInterface $tokenExpiryDate): self
+    {
+        $this->tokenExpiryDate = $tokenExpiryDate;
+        return $this;
+    }
+
+    public function isTokenExpired(): bool
+    {
+        if (!$this->tokenExpiryDate) {
+            return true;
+        }
+        
+        return $this->tokenExpiryDate < new \DateTime();
+    }
+    
+    // Reste du code...
   // Getters et setters...
   public function getPassword(): ?string
   {

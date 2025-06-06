@@ -40,4 +40,99 @@ class Cluster
   }
 
   // Getters et setters...
+
+  public function getId(): ?int
+  {
+      return $this->id;
+  }
+
+  public function getLatitude(): ?float
+  {
+      return $this->latitude;
+  }
+
+  public function setLatitude(float $latitude): static
+  {
+      $this->latitude = $latitude;
+
+      return $this;
+  }
+
+  public function getLongitude(): ?float
+  {
+      return $this->longitude;
+  }
+
+  public function setLongitude(float $longitude): static
+  {
+      $this->longitude = $longitude;
+
+      return $this;
+  }
+
+  public function getRayon(): ?float
+  {
+      return $this->rayon;
+  }
+
+  public function setRayon(float $rayon): static
+  {
+      $this->rayon = $rayon;
+
+      return $this;
+  }
+
+  public function getNombreSignalements(): ?int
+  {
+      return $this->nombreSignalements;
+  }
+
+  public function setNombreSignalements(int $nombreSignalements): static
+  {
+      $this->nombreSignalements = $nombreSignalements;
+
+      return $this;
+  }
+
+  public function getVille(): ?Ville
+  {
+      return $this->ville;
+  }
+
+  public function setVille(?Ville $ville): static
+  {
+      $this->ville = $ville;
+
+      return $this;
+  }
+
+  /**
+   * @return Collection<int, Signalement>
+   */
+  public function getSignalements(): Collection
+  {
+      return $this->signalements;
+  }
+
+  public function addSignalement(Signalement $signalement): static
+  {
+      if (!$this->signalements->contains($signalement)) {
+          $this->signalements->add($signalement);
+          $signalement->setCluster($this);
+      }
+
+      return $this;
+  }
+
+  public function removeSignalement(Signalement $signalement): static
+  {
+      if ($this->signalements->removeElement($signalement)) {
+          // set the owning side to null (unless already changed)
+          if ($signalement->getCluster() === $this) {
+              $signalement->setCluster(null);
+          }
+      }
+
+      return $this;
+  }
 }

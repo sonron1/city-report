@@ -1,0 +1,77 @@
+{# templates/admin/demandes_suppression.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Demandes de suppression - Administration{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Demandes de suppression en attente</h1>
+    
+    {% if demandes|length > 0 %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Titre</th>
+                    <th>Utilisateur</th>
+                    <th>Date de la demande</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for demande in demandes %}
+                <tr>
+                    <td>{{ demande.id }}</td>
+                    <td>{{ demande.titre }}</td>
+                    <td>{{ demande.utilisateur.email }}</td>
+                    <td>{{ demande.dateDemandeSuppressionStatut|date('d/m/Y H:i') }}</td>
+                    <td>
+                        <a href="{{ path('app_signalement_show', {'id': demande.id}) }}" class="btn btn-sm btn-info">
+                            <i class="fas fa-eye"></i> Voir
+                        </a>
+                        <a href="{{ path('app_admin_approve_suppression', {'id': demande.id}) }}" 
+                           class="btn btn-sm btn-success"
+                           onclick="return confirm('Êtes-vous sûr de vouloir approuver cette suppression ?')">
+                            <i class="fas fa-check"></i> Approuver
+                        </a>
+                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ demande.id }}">
+                            <i class="fas fa-times"></i> Rejeter
+                        </button>
+                    </td>
+                </tr>
+                
+                <!-- Modal pour le rejet -->
+                <div class="modal fade" id="rejectModal{{ demande.id }}" tabindex="-1" aria-labelledby="rejectModalLabel{{ demande.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form action="{{ path('app_admin_reject_suppression', {'id': demande.id}) }}" method="post">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="rejectModalLabel{{ demande.id }}">Rejeter la demande de suppression</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="commentaire" class="form-label">Motif du rejet</label>
+                                        <textarea class="form-control" name="commentaire" rows="3" required></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-danger">Rejeter</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        Aucune demande de suppression en attente.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
