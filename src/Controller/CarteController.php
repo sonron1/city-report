@@ -14,13 +14,21 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CarteController extends AbstractController
 {
     #[Route('/carte', name: 'app_carte')]
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function index(
         VilleRepository $villeRepository, 
         CategorieRepository $categorieRepository,
         ArrondissementRepository $arrondissementRepository
     ): Response
     {
+        $user = $this->getUser();
+        
+        // Vérifier que l'utilisateur est validé
+        if (!$user->isEstValide()) {
+            $this->addFlash('error', 'Votre compte doit être validé pour accéder à la carte.');
+            return $this->redirectToRoute('app_home');
+        }
+        
         return $this->render('carte/index.html.twig', [
             'villes' => $villeRepository->findAll(),
             'categories' => $categorieRepository->findAll(),
