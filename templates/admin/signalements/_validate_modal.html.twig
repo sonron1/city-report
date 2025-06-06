@@ -1,26 +1,146 @@
 {# templates/admin/signalements/_validate_modal.html.twig #}
-<div class="modal fade" id="validateModal{{ signalement.id }}" tabindex="-1" aria-labelledby="validateModalLabel{{ signalement.id }}" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal" id="validateModal{{ signalement.id }}" tabindex="-1" aria-labelledby="validateModalLabel{{ signalement.id }}" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="validateModalLabel{{ signalement.id }}">Valider le signalement</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="validateModalLabel{{ signalement.id }}">
+                    <i class="fas fa-check me-2"></i>Valider le signalement
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form action="{{ path('app_admin_signalements_valider', {'id': signalement.id}) }}" method="post">
+            <form action="{{ path('app_admin_signalements_valider', {'id': signalement.id}) }}" method="post" class="validate-form">
                 <div class="modal-body">
-                    <p>Êtes-vous sûr de vouloir valider ce signalement ?</p>
-                    <p><strong>Titre :</strong> {{ signalement.titre }}</p>
-                    
+                    <div class="alert alert-success d-flex align-items-center">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Confirmer la validation de ce signalement ?</strong>
+                    </div>
+
                     <div class="mb-3">
-                        <label for="commentaire{{ signalement.id }}" class="form-label">Commentaire (optionnel)</label>
-                        <textarea class="form-control" id="commentaire{{ signalement.id }}" name="commentaire" rows="3"></textarea>
+                        <h6><i class="fas fa-file-alt me-1"></i>Signalement #{{ signalement.id }}</h6>
+                        <p class="text-muted mb-1">{{ signalement.titre }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {% if signalement.ville %}{{ signalement.ville.nom }}{% else %}Localisation non définie{% endif %}
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="commentaire_validate_{{ signalement.id }}" class="form-label">
+                            <i class="fas fa-comment me-1"></i>Commentaire de validation
+                            <span class="text-muted">(optionnel)</span>
+                        </label>
+                        <textarea class="form-control stable-textarea"
+                                  id="commentaire_validate_{{ signalement.id }}"
+                                  name="commentaire"
+                                  rows="3"
+                                  placeholder="Ajoutez un commentaire pour expliquer la validation..."></textarea>
+                        <div class="form-text">Ce commentaire sera visible par l'utilisateur.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-success">Valider</button>
+                    <button type="button" class="btn btn-light stable-btn" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Annuler
+                    </button>
+                    <button type="submit" class="btn btn-success stable-btn">
+                        <i class="fas fa-check me-2"></i>Valider le signalement
+                    </button>
                 </div>
+                <input type="hidden" name="_token" value="{{ csrf_token('validate' ~ signalement.id) }}">
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const validateModal{{ signalement.id }} = document.getElementById('validateModal{{ signalement.id }}');
+
+        if (validateModal{{ signalement.id }}) {
+            // Désactiver toutes les animations Bootstrap
+            validateModal{{ signalement.id }}.classList.remove('fade');
+
+            // Stabiliser tous les éléments du modal
+            const allElements = validateModal{{ signalement.id }}.querySelectorAll('*');
+            allElements.forEach(element => {
+                element.style.transition = 'none';
+                element.style.animation = 'none';
+                element.style.transform = 'none';
+                element.style.willChange = 'auto';
+            });
+
+            // Fixer le modal en place
+            const modalDialog = validateModal{{ signalement.id }}.querySelector('.modal-dialog');
+            if (modalDialog) {
+                modalDialog.style.transform = 'none';
+                modalDialog.style.transition = 'none';
+                modalDialog.style.animation = 'none';
+            }
+
+            // Stabiliser le textarea
+            const textarea = validateModal{{ signalement.id }}.querySelector('textarea');
+            if (textarea) {
+                textarea.style.transition = 'none';
+                textarea.style.transform = 'none';
+                textarea.style.resize = 'vertical';
+
+                // Empêcher les tremblements au focus/blur
+                textarea.addEventListener('focus', function() {
+                    this.style.transition = 'none';
+                    this.style.transform = 'none';
+                });
+
+                textarea.addEventListener('blur', function() {
+                    this.style.transition = 'none';
+                    this.style.transform = 'none';
+                });
+
+                textarea.addEventListener('input', function() {
+                    this.style.transition = 'none';
+                    this.style.transform = 'none';
+                });
+            }
+
+            // Stabiliser les boutons
+            const buttons = validateModal{{ signalement.id }}.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.style.transition = 'none';
+                button.style.transform = 'none';
+
+                button.addEventListener('mouseenter', function() {
+                    this.style.transition = 'none';
+                    this.style.transform = 'none';
+                });
+
+                button.addEventListener('mouseleave', function() {
+                    this.style.transition = 'none';
+                    this.style.transform = 'none';
+                });
+            });
+
+            // Empêcher les tremblements lors de l'ouverture/fermeture
+            validateModal{{ signalement.id }}.addEventListener('show.bs.modal', function() {
+                this.style.transition = 'none';
+                this.style.animation = 'none';
+            });
+
+            validateModal{{ signalement.id }}.addEventListener('shown.bs.modal', function() {
+                this.style.transition = 'none';
+                this.style.animation = 'none';
+
+                // Focus sur le textarea sans animation
+                const textarea = this.querySelector('textarea');
+                if (textarea) {
+                    setTimeout(() => {
+                        textarea.focus();
+                        textarea.style.transition = 'none';
+                    }, 50);
+                }
+            });
+
+            validateModal{{ signalement.id }}.addEventListener('hide.bs.modal', function() {
+                this.style.transition = 'none';
+                this.style.animation = 'none';
+            });
+        }
+    });
+</script>

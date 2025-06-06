@@ -1,3 +1,4 @@
+
 {# templates/admin/index.html.twig #}
 {% extends 'base.html.twig' %}
 
@@ -6,369 +7,681 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        /* Variables CSS avec une palette moderne */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #4a6741 100%);
+            --secondary-gradient: linear-gradient(135deg, #8e44ad 0%, #3498db 100%);
+            --light-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            --shadow-soft: 0 8px 32px rgba(102, 126, 234, 0.1);
+            --shadow-hover: 0 16px 48px rgba(102, 126, 234, 0.15);
+            --border-radius: 15px;
+        }
+
+        /* Corps de la page */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* En-tête principal */
+        .main-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .main-header h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .main-header .subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Cartes de statistiques */
         .stats-card {
-            transition: all 0.3s;
-            border-radius: 10px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: var(--border-radius);
             overflow: hidden;
+            border: none;
+            position: relative;
+            height: 160px;
         }
+
         .stats-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-hover);
         }
+
         .stats-card .card-body {
             position: relative;
+            z-index: 2;
+            padding: 1.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stats-card .card-icon {
+            font-size: 3.5rem;
+            position: absolute;
+            bottom: -0.5rem;
+            right: 1rem;
+            opacity: 0.15;
             z-index: 1;
         }
-        .stats-card .card-icon {
-            font-size: 3rem;
-            position: absolute;
-            bottom: 1rem;
-            right: 1rem;
-            opacity: 0.2;
+
+        .stats-card .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin: 0.5rem 0;
         }
+
+        .stats-card .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Nouveaux dégradés avec palette moderne */
+        .bg-gradient-primary { background: var(--primary-gradient); }
+        .bg-gradient-success { background: var(--success-gradient); }
+        .bg-gradient-info { background: var(--info-gradient); }
+        .bg-gradient-warning { background: var(--warning-gradient); }
+        .bg-gradient-danger { background: var(--danger-gradient); }
+        .bg-gradient-dark { background: var(--dark-gradient); }
+        .bg-gradient-secondary { background: var(--secondary-gradient); }
+        .bg-gradient-light { background: var(--light-gradient); color: #6c757d !important; }
+
+        /* Cartes de modules */
         .admin-card {
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             height: 100%;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            border: none;
+            box-shadow: var(--shadow-soft);
+            background: white;
         }
+
         .admin-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-hover);
         }
+
         .admin-card .card-header {
-            height: 120px;
+            height: 100px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: none;
         }
+
+        .admin-card .card-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+
         .admin-card .card-header h4 {
             position: relative;
             color: white;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
             z-index: 1;
+            font-weight: 600;
+            margin: 0;
         }
+
         .admin-card .icon-large {
-            font-size: 3rem;
+            font-size: 2.5rem;
             margin-bottom: 1rem;
+            opacity: 0.8;
         }
-        
-        /* Dégradés de couleur pour les entêtes de cartes */
-        .bg-gradient-primary {
-            background: linear-gradient(135deg, #0d6efd, #0143a3);
+
+        .admin-card .card-body {
+            padding: 2rem 1.5rem;
+            text-align: center;
         }
-        .bg-gradient-success {
-            background: linear-gradient(135deg, #198754, #115c39);
+
+        .admin-card .card-footer {
+            background: #f8f9fa;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding: 1rem 1.5rem;
         }
-        .bg-gradient-info {
-            background: linear-gradient(135deg, #0dcaf0, #0995b2);
+
+        /* Boutons améliorés */
+        .btn {
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.75rem 1.5rem;
         }
-        .bg-gradient-danger {
-            background: linear-gradient(135deg, #dc3545, #a71d2a);
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        .bg-gradient-dark {
-            background: linear-gradient(135deg, #343a40, #121416);
+
+        /* Couleurs personnalisées pour les boutons */
+        .btn-emerald {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            border: none;
+            color: white;
         }
-        .bg-gradient-warning {
-            background: linear-gradient(135deg, #ffc107, #ba8b00);
+
+        .btn-purple {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            border: none;
+            color: white;
         }
+
+        .btn-teal {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-coral {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-slate {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-amber {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            border: none;
+            color: white;
+        }
+
+        /* Section derniers signalements */
+        .recent-reports-card {
+            border-radius: var(--border-radius);
+            border: none;
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+        }
+
+        .recent-reports-card .card-header {
+            background: var(--primary-gradient);
+            border: none;
+            padding: 1.5rem;
+        }
+
+        .table {
+            margin: 0;
+        }
+
+        .table th {
+            border-top: none;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+
+        /* Badges améliorés */
+        .badge {
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        .badge-coral { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); }
+        .badge-emerald { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
+        .badge-purple { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); }
+        .badge-teal { background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); }
+
+        /* Animations d'entrée */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        /* Responsive amélioré */
+        @media (max-width: 768px) {
+            .main-header h1 {
+                font-size: 2rem;
+            }
+
+            .stats-card .stat-number {
+                font-size: 2rem;
+            }
+
+            .admin-card .card-body {
+                padding: 1.5rem 1rem;
+            }
+        }
+
+        /* Indicateurs d'état */
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .status-indicator.active { background: #2ecc71; }
+        .status-indicator.pending { background: #f39c12; }
+        .status-indicator.inactive { background: #95a5a6; }
     </style>
 {% endblock %}
 
 {% block body %}
-    <div class="container-fluid py-4">
-        <h1 class="mb-4">Tableau de bord administrateur</h1>
-        
-        {# Statistiques en cartes #}
-        <div class="row mb-4">
-            <div class="col-md-3 mb-3">
-                <div class="card bg-primary text-white stats-card h-100">
+    <!-- En-tête principal -->
+    <div class="main-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-tachometer-alt me-3"></i>Tableau de bord</h1>
+                    <p class="subtitle mb-0">Interface d'administration - City Report</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="text-white">
+                        <i class="fas fa-user-shield me-2"></i>
+                        Bienvenue, {{ app.user.prenom }} {{ app.user.nom }}
+                    </div>
+                    <small class="text-white-50">Dernière connexion : {{ "now"|date("d/m/Y à H:i") }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <!-- Statistiques principales -->
+        <div class="row mb-5 g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="card bg-gradient-primary text-white stats-card animate-fade-in">
                     <div class="card-body">
-                        <h5 class="card-title">Signalements</h5>
-                        <h2 class="display-4">{{ stats.totalSignalements|default(0) }}</h2>
-                        <p class="card-text">Total des signalements</p>
+                        <h6 class="stat-label">Total Signalements</h6>
+                        <div class="stat-number">{{ stats.totalSignalements|default(0) }}</div>
+                        <small><i class="fas fa-arrow-up me-1"></i>Tous les signalements</small>
                         <i class="fas fa-map-marker-alt card-icon"></i>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="card bg-warning text-dark stats-card h-100">
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card bg-gradient-warning text-white stats-card animate-fade-in" style="animation-delay: 0.1s">
                     <div class="card-body">
-                        <h5 class="card-title">En attente</h5>
-                        <h2 class="display-4">{{ stats.signalementsEnAttente|default(0) }}</h2>
-                        <p class="card-text">Signalements à modérer</p>
-                        <i class="fas fa-clock card-icon"></i>
+                        <h6 class="stat-label">En attente</h6>
+                        <div class="stat-number">{{ stats.signalementsEnAttente|default(0) }}</div>
+                        <small><i class="fas fa-clock me-1"></i>À modérer</small>
+                        <i class="fas fa-hourglass-half card-icon"></i>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="card bg-success text-white stats-card h-100">
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card bg-gradient-success text-white stats-card animate-fade-in" style="animation-delay: 0.2s">
                     <div class="card-body">
-                        <h5 class="card-title">Résolus</h5>
-                        <h2 class="display-4">{{ stats.signalementsResolus|default(0) }}</h2>
-                        <p class="card-text">Signalements résolus</p>
+                        <h6 class="stat-label">Résolus</h6>
+                        <div class="stat-number">{{ stats.signalementsResolus|default(0) }}</div>
+                        <small><i class="fas fa-check me-1"></i>Traités avec succès</small>
                         <i class="fas fa-check-circle card-icon"></i>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="card bg-info text-white stats-card h-100">
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card bg-gradient-info text-white stats-card animate-fade-in" style="animation-delay: 0.3s">
                     <div class="card-body">
-                        <h5 class="card-title">Utilisateurs</h5>
-                        <h2 class="display-4">{{ stats.totalUtilisateurs|default(0) }}</h2>
-                        <p class="card-text">Total des utilisateurs</p>
+                        <h6 class="stat-label">Utilisateurs</h6>
+                        <div class="stat-number">{{ stats.totalUtilisateurs|default(0) }}</div>
+                        <small><i class="fas fa-users me-1"></i>Inscrits sur la plateforme</small>
                         <i class="fas fa-users card-icon"></i>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="row mb-4">
-            <div class="col-md-3 mb-3">
-                <div class="card bg-danger text-white stats-card h-100">
+
+        <!-- Statistiques secondaires -->
+        <div class="row mb-5 g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="card bg-gradient-danger text-white stats-card animate-fade-in" style="animation-delay: 0.4s">
                     <div class="card-body">
-                        <h5 class="card-title">Demandes de suppression</h5>
-                        <h2 class="display-4">{{ stats.demandesSuppressions|default(0) }}</h2>
-                        <p class="card-text">À traiter</p>
+                        <h6 class="stat-label">Demandes suppression</h6>
+                        <div class="stat-number">{{ stats.demandesSuppressions|default(0) }}</div>
+                        <small><i class="fas fa-exclamation-triangle me-1"></i>À traiter</small>
                         <i class="fas fa-trash-alt card-icon"></i>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="card bg-secondary text-white stats-card h-100">
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card bg-gradient-dark text-white stats-card animate-fade-in" style="animation-delay: 0.5s">
                     <div class="card-body">
-                        <h5 class="card-title">Utilisateurs non validés</h5>
-                        <h2 class="display-4">{{ stats.utilisateursNonValides|default(0) }}</h2>
-                        <p class="card-text">En attente</p>
+                        <h6 class="stat-label">Comptes non validés</h6>
+                        <div class="stat-number">{{ stats.utilisateursNonValides|default(0) }}</div>
+                        <small><i class="fas fa-user-clock me-1"></i>En attente</small>
                         <i class="fas fa-user-clock card-icon"></i>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="card bg-light stats-card h-100">
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card bg-gradient-light stats-card animate-fade-in" style="animation-delay: 0.6s">
                     <div class="card-body">
-                        <h5 class="card-title">Catégories</h5>
-                        <h2 class="display-4">{{ stats.totalCategories|default(0) }}</h2>
-                        <p class="card-text">Total des catégories</p>
+                        <h6 class="stat-label">Catégories</h6>
+                        <div class="stat-number">{{ stats.totalCategories|default(0) }}</div>
+                        <small><i class="fas fa-tags me-1"></i>Types de signalements</small>
                         <i class="fas fa-tag card-icon"></i>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="card text-white bg-dark stats-card h-100">
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card bg-gradient-secondary text-white stats-card animate-fade-in" style="animation-delay: 0.7s">
                     <div class="card-body">
-                        <h5 class="card-title">Villes</h5>
-                        <h2 class="display-4">{{ stats.totalVilles|default(0) }}</h2>
-                        <p class="card-text">Total des villes</p>
+                        <h6 class="stat-label">Villes</h6>
+                        <div class="stat-number">{{ stats.totalVilles|default(0) }}</div>
+                        <small><i class="fas fa-city me-1"></i>Zones couvertes</small>
                         <i class="fas fa-city card-icon"></i>
                     </div>
                 </div>
             </div>
         </div>
-        
-        {# Modules de gestion #}
-        <h2 class="mb-3">Modules de gestion</h2>
-        <div class="row mb-5">
-            {# Gestion des signalements #}
-            <div class="col-md-4 mb-4">
-                <div class="card admin-card shadow">
-                    <div class="card-header bg-gradient-primary text-white">
-                        <h4 class="m-0">Signalements</h4>
-                    </div>
-                    <div class="card-body text-center">
-                        <i class="fas fa-map-marker-alt icon-large text-primary"></i>
-                        <p class="card-text">Gérer tous les signalements de la plateforme. Validation, modération et traitement.</p>
-                        <div class="d-grid gap-2">
-                            <a href="{{ path('app_admin_signalements') }}" class="btn btn-primary">
+
+        <!-- Modules de gestion -->
+        <div class="mb-5">
+            <h2 class="mb-4 text-dark">
+                <i class="fas fa-cogs me-2"></i>Modules de gestion
+            </h2>
+
+            <div class="row g-4">
+                <!-- Gestion des signalements -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card admin-card">
+                        <div class="card-header bg-gradient-primary">
+                            <h4>Signalements</h4>
+                        </div>
+                        <div class="card-body">
+                            <i class="fas fa-map-marker-alt icon-large text-primary"></i>
+                            <p class="text-muted">Gérer tous les signalements de la plateforme. Validation, modération et traitement des incidents.</p>
+                            <a href="{{ path('app_admin_signalements') }}" class="btn btn-primary w-100">
                                 <i class="fas fa-tasks me-2"></i>Gérer les signalements
                             </a>
                         </div>
-                    </div>
-                    <div class="card-footer bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-info-circle me-1"></i> {{ stats.totalSignalements|default(0) }} signalements</span>
-                            <span class="badge bg-warning text-dark">{{ stats.signalementsEnAttente|default(0) }} en attente</span>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">
+                                    <span class="status-indicator active"></span>
+                                    {{ stats.totalSignalements|default(0) }} signalements
+                                </span>
+                                <span class="badge badge-coral text-white">{{ stats.signalementsEnAttente|default(0) }} en attente</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            {# Gestion des catégories #}
-            <div class="col-md-4 mb-4">
-                <div class="card admin-card shadow">
-                    <div class="card-header bg-gradient-success text-white">
-                        <h4 class="m-0">Catégories</h4>
-                    </div>
-                    <div class="card-body text-center">
-                        <i class="fas fa-tag icon-large text-success"></i>
-                        <p class="card-text">Gérer les catégories de signalements. Créer, modifier ou supprimer des catégories.</p>
-                        <div class="d-grid gap-2">
-                            <a href="{{ path('app_admin_categories') }}" class="btn btn-success">
-                                <i class="fas fa-tags me-2"></i>Gérer les catégories
-                            </a>
+
+                <!-- Gestion des utilisateurs -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card admin-card">
+                        <div class="card-header bg-gradient-dark">
+                            <h4>Utilisateurs</h4>
                         </div>
-                    </div>
-                    <div class="card-footer bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-info-circle me-1"></i> {{ stats.totalCategories|default(0) }} catégories</span>
-                            <a href="{{ path('app_admin_categories_new') }}" class="text-success">
-                                <i class="fas fa-plus-circle"></i> Ajouter
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            {# Gestion des villes #}
-            <div class="col-md-4 mb-4">
-                <div class="card admin-card shadow">
-                    <div class="card-header bg-gradient-info text-white">
-                        <h4 class="m-0">Villes</h4>
-                    </div>
-                    <div class="card-body text-center">
-                        <i class="fas fa-city icon-large text-info"></i>
-                        <p class="card-text">Gérer les villes couvertes par l'application. Ajouter de nouvelles zones géographiques.</p>
-                        <div class="d-grid gap-2">
-                            <a href="{{ path('app_admin_villes') }}" class="btn btn-info text-white">
-                                <i class="fas fa-map-marked-alt me-2"></i>Gérer les villes
-                            </a>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-info-circle me-1"></i> {{ stats.totalVilles|default(0) }} villes</span>
-                            <a href="{{ path('app_admin_villes_new') }}" class="text-info">
-                                <i class="fas fa-plus-circle"></i> Ajouter
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            {# Gestion des utilisateurs #}
-            <div class="col-md-4 mb-4">
-                <div class="card admin-card shadow">
-                    <div class="card-header bg-gradient-dark text-white">
-                        <h4 class="m-0">Utilisateurs</h4>
-                    </div>
-                    <div class="card-body text-center">
-                        <i class="fas fa-users icon-large text-dark"></i>
-                        <p class="card-text">Gérer les utilisateurs de la plateforme. Ajouter, modifier ou valider des comptes.</p>
-                        <div class="d-grid gap-2">
-                            <a href="{{ path('app_admin_users') }}" class="btn btn-dark">
+                        <div class="card-body">
+                            <i class="fas fa-users icon-large" style="color: #2c3e50;"></i>
+                            <p class="text-muted">Gérer les utilisateurs de la plateforme. Créer, modifier ou valider des comptes utilisateurs.</p>
+                            <a href="{{ path('app_admin_users') }}" class="btn btn-slate w-100">
                                 <i class="fas fa-user-cog me-2"></i>Gérer les utilisateurs
                             </a>
                         </div>
-                    </div>
-                    <div class="card-footer bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-info-circle me-1"></i> {{ stats.totalUtilisateurs|default(0) }} utilisateurs</span>
-                            <span class="badge bg-secondary">{{ stats.utilisateursNonValides|default(0) }} non validés</span>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">
+                                    <span class="status-indicator active"></span>
+                                    {{ stats.totalUtilisateurs|default(0) }} utilisateurs
+                                </span>
+                                <span class="badge badge-purple text-white">{{ stats.utilisateursNonValides|default(0) }} non validés</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            {# Demandes de suppression #}
-            <div class="col-md-4 mb-4">
-                <div class="card admin-card shadow">
-                    <div class="card-header bg-gradient-danger text-white">
-                        <h4 class="m-0">Demandes de suppression</h4>
+
+                <!-- Gestion des catégories -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card admin-card">
+                        <div class="card-header bg-gradient-success">
+                            <h4>Catégories</h4>
+                        </div>
+                        <div class="card-body">
+                            <i class="fas fa-tag icon-large" style="color: #2ecc71;"></i>
+                            <p class="text-muted">Gérer les catégories de signalements. Créer, modifier ou supprimer des types de signalements.</p>
+                            <a href="{{ path('app_admin_categories') }}" class="btn btn-emerald w-100">
+                                <i class="fas fa-tags me-2"></i>Gérer les catégories
+                            </a>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">
+                                    <span class="status-indicator active"></span>
+                                    {{ stats.totalCategories|default(0) }} catégories
+                                </span>
+                                <a href="{{ path('app_admin_categories_new') }}" class="text-decoration-none" style="color: #2ecc71;">
+                                    <i class="fas fa-plus-circle"></i> Ajouter
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body text-center">
-                        <i class="fas fa-trash-alt icon-large text-danger"></i>
-                        <p class="card-text">Gérer les demandes de suppression de signalements. Valider ou rejeter les demandes.</p>
-                        <div class="d-grid gap-2">
-                            <a href="{{ path('app_admin_demandes_suppression') }}" class="btn btn-danger">
+                </div>
+
+                <!-- Gestion des villes -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card admin-card">
+                        <div class="card-header bg-gradient-info">
+                            <h4>Villes</h4>
+                        </div>
+                        <div class="card-body">
+                            <i class="fas fa-city icon-large" style="color: #4facfe;"></i>
+                            <p class="text-muted">Gérer les villes couvertes par l'application. Ajouter de nouvelles zones géographiques.</p>
+                            <a href="{{ path('app_admin_villes') }}" class="btn btn-teal w-100">
+                                <i class="fas fa-map-marked-alt me-2"></i>Gérer les villes
+                            </a>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">
+                                    <span class="status-indicator active"></span>
+                                    {{ stats.totalVilles|default(0) }} villes
+                                </span>
+                                <a href="{{ path('app_admin_villes_new') }}" class="text-decoration-none" style="color: #1abc9c;">
+                                    <i class="fas fa-plus-circle"></i> Ajouter
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Demandes de suppression -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card admin-card">
+                        <div class="card-header bg-gradient-danger">
+                            <h4>Demandes de suppression</h4>
+                        </div>
+                        <div class="card-body">
+                            <i class="fas fa-trash-alt icon-large" style="color: #ff6b6b;"></i>
+                            <p class="text-muted">Gérer les demandes de suppression de signalements. Approuver ou rejeter les demandes utilisateurs.</p>
+                            <a href="{{ path('app_admin_demandes_suppression') }}" class="btn btn-coral w-100">
                                 <i class="fas fa-trash me-2"></i>Voir les demandes
                             </a>
                         </div>
-                    </div>
-                    <div class="card-footer bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-info-circle me-1"></i> Demandes en attente</span>
-                            <span class="badge bg-danger">{{ stats.demandesSuppressions|default(0) }}</span>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">
+                                    <span class="status-indicator {% if stats.demandesSuppressions > 0 %}pending{% else %}active{% endif %}"></span>
+                                    Demandes en attente
+                                </span>
+                                <span class="badge badge-coral text-white">{{ stats.demandesSuppressions|default(0) }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            {# Tableau de bord #}
-            <div class="col-md-4 mb-4">
-                <div class="card admin-card shadow">
-                    <div class="card-header bg-gradient-warning text-dark">
-                        <h4 class="m-0">Statistiques</h4>
-                    </div>
-                    <div class="card-body text-center">
-                        <i class="fas fa-chart-line icon-large text-warning"></i>
-                        <p class="card-text">Visualiser les statistiques et rapports. Analyser les tendances et l'activité.</p>
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-warning text-dark" disabled>
+
+                <!-- Statistiques avancées -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card admin-card">
+                        <div class="card-header bg-gradient-warning">
+                            <h4>Statistiques</h4>
+                        </div>
+                        <div class="card-body">
+                            <i class="fas fa-chart-line icon-large" style="color: #f39c12;"></i>
+                            <p class="text-muted">Visualiser les statistiques et rapports détaillés. Analyser les tendances et l'activité.</p>
+                            <button class="btn btn-amber w-100" disabled>
                                 <i class="fas fa-chart-bar me-2"></i>Voir les statistiques
                             </button>
-                            <small class="text-muted">Fonctionnalité à venir</small>
+                            <small class="text-muted d-block mt-2">Fonctionnalité à venir</small>
                         </div>
-                    </div>
-                    <div class="card-footer bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span><i class="fas fa-info-circle me-1"></i> Statistiques générales</span>
-                            <span class="badge bg-secondary">Bientôt</span>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">
+                                    <span class="status-indicator inactive"></span>
+                                    Statistiques avancées
+                                </span>
+                                <span class="badge bg-secondary">Bientôt</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        {# Derniers signalements #}
-        <h2 class="mb-3">Derniers signalements</h2>
-        <div class="card shadow mb-4">
-            <div class="card-header bg-primary text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Signalements récents</h5>
-                    <a href="{{ path('app_admin_signalements') }}" class="btn btn-sm btn-light">
-                        <i class="fas fa-external-link-alt me-1"></i>Voir tous
-                    </a>
+
+        <!-- Derniers signalements -->
+        <div class="mb-5">
+            <h2 class="mb-4 text-dark">
+                <i class="fas fa-clock me-2"></i>Activité récente
+            </h2>
+
+            <div class="card recent-reports-card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-white">
+                            <i class="fas fa-list me-2"></i>Derniers signalements
+                        </h5>
+                        <a href="{{ path('app_admin_signalements') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i>Voir tous
+                        </a>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Titre</th>
-                                <th>Date</th>
-                                <th>Utilisateur</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for signalement in derniersSignalements|default([]) %}
+                <div class="card-body p-0">
+                    {% if derniersSignalements|default([])|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
                                 <tr>
-                                    <td>{{ signalement.id }}</td>
-                                    <td>{{ signalement.titre }}</td>
-                                    <td>{{ signalement.dateSignalement|date('d/m/Y H:i') }}</td>
-                                    <td>{{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</td>
-                                    <td>
-                                        <span class="badge {% if signalement.statut.value == 'NOUVEAU' %}bg-info{% elseif signalement.statut.value == 'EN_COURS' %}bg-warning{% elseif signalement.statut.value == 'RESOLU' %}bg-success{% else %}bg-secondary{% endif %}">
-                                            {{ signalement.statut.value }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </td>
+                                    <th><i class="fas fa-hashtag me-1"></i>ID</th>
+                                    <th><i class="fas fa-file-alt me-1"></i>Titre</th>
+                                    <th><i class="fas fa-calendar me-1"></i>Date</th>
+                                    <th><i class="fas fa-user me-1"></i>Utilisateur</th>
+                                    <th><i class="fas fa-flag me-1"></i>Statut</th>
+                                    <th><i class="fas fa-cog me-1"></i>Actions</th>
                                 </tr>
-                            {% else %}
-                                <tr>
-                                    <td colspan="6" class="text-center py-3">Aucun signalement récent</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                </thead>
+                                <tbody>
+                                {% for signalement in derniersSignalements %}
+                                    <tr>
+                                        <td class="fw-bold" style="color: #667eea;">#{{ signalement.id }}</td>
+                                        <td>
+                                            <div class="text-truncate" style="max-width: 250px;" title="{{ signalement.titre }}">
+                                                {{ signalement.titre }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">{{ signalement.dateSignalement|date('d/m/Y') }}</span><br>
+                                            <small class="text-muted">{{ signalement.dateSignalement|date('H:i') }}</small>
+                                        </td>
+                                        <td>
+                                            {% if signalement.utilisateur %}
+                                                <span class="text-dark">{{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</span>
+                                            {% else %}
+                                                <span class="text-muted"><i class="fas fa-user-secret me-1"></i>Anonyme</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if signalement.statut.value == 'nouveau' %}
+                                                <span class="badge badge-teal text-white">Nouveau</span>
+                                            {% elseif signalement.statut.value == 'en_cours' %}
+                                                <span class="badge" style="background: #f39c12; color: white;">En cours</span>
+                                            {% elseif signalement.statut.value == 'resolu' %}
+                                                <span class="badge badge-emerald text-white">Résolu</span>
+                                            {% else %}
+                                                <span class="badge badge-purple text-white">{{ signalement.statut.value|title }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                                               class="btn btn-sm btn-outline-primary"
+                                               title="Voir le détail">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                 +
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox text-muted mb-3" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted">Aucun signalement récent</h5>
+                            <p class="text-muted">Les nouveaux signalements apparaîtront ici.</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Animation d'entrée en séquence pour les cartes
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.animate-fade-in');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
 {% endblock %}

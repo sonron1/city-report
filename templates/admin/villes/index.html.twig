@@ -46,7 +46,7 @@
             </a>
         </div>
     </div>
-    
+
     {# Carte des villes #}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
@@ -56,7 +56,7 @@
             <div id="map"></div>
         </div>
     </div>
-    
+
     {# Liste des villes #}
     <div class="row">
         {% for ville in villes %}
@@ -65,8 +65,8 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ ville.nom }}</h5>
                         <p class="card-text">
-                            <strong>Département:</strong> {{ ville.departement ?? 'Non défini' }}<br>
-                            <strong>Code postal:</strong> {{ ville.codePostal ?? 'Non défini' }}
+                            <strong>Département:</strong> {{ ville.departement ? ville.departement.nom : 'Non défini' }}<br>
+                            <strong>Slug:</strong> {{ ville.slug ?? 'Non défini' }}
                         </p>
                         <div class="d-flex justify-content-between">
                             <span class="text-muted">{{ ville.signalements|length }} signalement(s)</span>
@@ -84,7 +84,7 @@
                                 <i class="fas fa-trash-alt me-2"></i>Supprimer
                             </button>
                         </div>
-                        
+
                         {# Modal de suppression #}
                         <div class="modal fade" id="deleteModal{{ ville.id }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog">
@@ -103,7 +103,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                        <form action="{{ path('app_admin_villes_delete', {'id': ville.id}) }}" method="post">
+                                        <form action="{{ path('app_admin_villes_delete', {'id': ville.id}) }}" method="post" style="display: inline;">
                                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ ville.id) }}">
                                             <button type="submit" class="btn btn-danger" {% if ville.signalements|length > 0 %}disabled{% endif %}>Confirmer</button>
                                         </form>
@@ -113,21 +113,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        {% else %}
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>Aucune ville n'a encore été créée.
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-
-    {# Liste des villes #}
-    <div class="row">
-        {% for ville in villes %}
-            <div class="col-md-4 mb-4">
-                {# Contenu de la carte de ville (inchangé) #}
             </div>
         {% else %}
             <div class="col-12">
@@ -180,8 +165,6 @@
         </div>
     {% endif %}
 
-    {# Formulaire pour ajouter une nouvelle ville (inchangé) #}
-    
     {# Formulaire pour ajouter une nouvelle ville #}
     <div class="card mt-4 shadow-sm">
         <div class="card-header bg-primary text-white">
@@ -211,10 +194,7 @@
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i>Enregistrer
-                    </button>
-                    <button type="button" id="pick-on-map" class="btn btn-outline-secondary">
-                        <i class="fas fa-map-marker-alt me-2"></i>Sélectionner sur la carte
+                        <i class="fas fa-plus me-2"></i>Ajouter la ville
                     </button>
                 </div>
             </form>
@@ -226,54 +206,17 @@
     {{ parent() }}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialisation de la carte
-            var map = L.map('map').setView([6.3676953, 2.3912362], 7); // Coordonnées par défaut (Bénin)
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-            
-            // Ajouter les marqueurs pour chaque ville affichée sur la page courante
-            var markers = [];
-            {% for ville in villes %}
-                {% if ville.latitudeCentre is defined and ville.longitudeCentre is defined %}
-                    var marker = L.marker([{{ ville.latitudeCentre }}, {{ ville.longitudeCentre }}])
-                        .addTo(map)
-                        .bindPopup('<strong>{{ ville.nom }}</strong><br>{{ ville.signalements|length }} signalement(s)');
-                    markers.push(marker);
-                {% endif %}
-            {% endfor %}
-            
-            // Ajuster la vue pour montrer toutes les villes de la page courante
-            if (markers.length > 0) {
-                var group = new L.featureGroup(markers);
-                map.fitBounds(group.getBounds().pad(0.1));
-            }
-            
-            // Sélection de coordonnées sur la carte (inchangé)
-            var selectedMarker = null;
-            
-            document.getElementById('pick-on-map').addEventListener('click', function() {
-                alert('Cliquez sur la carte pour sélectionner les coordonnées de la nouvelle ville.');
-                
-                map.once('click', function(e) {
-                    // Supprimer le marqueur précédent s'il existe
-                    if (selectedMarker) {
-                        map.removeLayer(selectedMarker);
-                    }
-                    
-                    // Ajouter un nouveau marqueur
-                    selectedMarker = L.marker(e.latlng).addTo(map)
-                        .bindPopup('Nouvelle ville<br>Coordonnées: ' + e.latlng.lat.toFixed(6) + ', ' + e.latlng.lng.toFixed(6))
-                        .openPopup();
-                    
-                    // Mettre à jour les champs du formulaire
-                    document.getElementById('latitude').value = e.latlng.lat.toFixed(6);
-                    document.getElementById('longitude').value = e.latlng.lng.toFixed(6);
-                });
-            });
-        });
+        // Initialiser la carte
+        var map = L.map('map').setView([9.30769, 2.315834], 7); // Centre du Bénin
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Ajouter les marqueurs pour chaque ville
+        {% for ville in villes %}
+        var marker{{ ville.id }} = L.marker([{{ ville.latitudeCentre }}, {{ ville.longitudeCentre }}]).addTo(map);
+        marker{{ ville.id }}.bindPopup('<b>{{ ville.nom }}</b><br>{{ ville.signalements|length }} signalement(s)');
+        {% endfor %}
     </script>
 {% endblock %}

@@ -5,114 +5,270 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <style>
         .filters-container {
             background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #dee2e6;
+        }
+        .status-badge, .validation-badge {
+            width: 100%;
+            text-align: center;
+        }
+        .search-input {
+            border-radius: 20px;
+        }
+        .filter-section {
+            background: white;
+            border-radius: 8px;
             padding: 15px;
-            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .alert-info-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
             margin-bottom: 20px;
         }
-        .status-badge {
-            width: 100%;
-            text-align: center;
-        }
-        .validation-badge {
-            width: 100%;
-            text-align: center;
-        }
-        .photo-thumbnail {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .photo-modal-img {
-            max-width: 100%;
-            max-height: 80vh;
+        .moderation-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 15px;
         }
     </style>
 {% endblock %}
 
 {% block admin_content %}
-    <h1 class="mb-4">Gestion des signalements</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+            Gestion des signalements
+        </h1>
 
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Liste des signalements</h5>
-            <div>
-                <button class="btn btn-sm btn-light me-2" type="button" data-bs-toggle="collapse" data-bs-target="#filtresCollapse">
-                    <i class="fas fa-filter me-1"></i> Filtres
-                </button>
+        <!-- Liens rapides -->
+        <div class="btn-group" role="group">
+            {% if is_granted('ROLE_MODERATOR') %}
+                <a href="{{ path('app_signalements') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-eye me-1"></i>
+                    Vue publique
+                </a>
+            {% endif %}
+            <a href="{{ path('app_admin_statistiques') }}" class="btn btn-outline-info">
+                <i class="fas fa-chart-bar me-1"></i>
+                Statistiques
+            </a>
+        </div>
+    </div>
+
+    <!-- Notice d'information sur la modération -->
+    {% if is_granted('ROLE_MODERATOR') %}
+        <div class="moderation-notice">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle text-warning me-2"></i>
+                <div>
+                    <strong>Information :</strong>
+                    Les actions de validation/rejet sont effectuées via les détails du signalement.
+                    Cliquez sur <i class="fas fa-eye"></i> pour accéder aux outils de modération.
+                </div>
             </div>
         </div>
+    {% endif %}
 
-        <div class="collapse" id="filtresCollapse">
-            <div class="card-body bg-light">
-                <form id="filtreForm" class="row g-3">
-                    <div class="col-md-3">
-                        <label for="filtreStatut" class="form-label">Statut</label>
-                        <select class="form-select" id="filtreStatut" name="statut">
-                            <option value="">Tous</option>
-                            <option value="NOUVEAU">Nouveau</option>
-                            <option value="EN_COURS">En cours</option>
-                            <option value="RESOLU">Résolu</option>
-                            <option value="FERME">Fermé</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="filtreValidation" class="form-label">Validation</label>
-                        <select class="form-select" id="filtreValidation" name="validation">
-                            <option value="">Tous</option>
-                            <option value="en_attente">En attente</option>
-                            <option value="valide">Validé</option>
-                            <option value="rejete">Rejeté</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="filtreCategorie" class="form-label">Catégorie</label>
-                        <select class="form-select" id="filtreCategorie" name="categorie">
-                            <option value="">Toutes</option>
-                            {% for categorie in categories %}
-                                <option value="{{ categorie.id }}">{{ categorie.nom }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="filtreDateDebut" class="form-label">Date (début)</label>
-                        <input type="date" class="form-control" id="filtreDateDebut" name="dateDebut">
-                    </div>
-                    <div class="col-md-12 mt-3">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search me-1"></i> Filtrer
+    <!-- Filtres -->
+    <div class="filters-container">
+        <div class="filter-section">
+            <div class="row align-items-end">
+                <!-- Recherche générale -->
+                <div class="col-md-4 mb-3">
+                    <label for="searchInput" class="form-label">
+                        <i class="fas fa-search me-1"></i>Recherche
+                    </label>
+                    <input type="text" class="form-control search-input" id="searchInput"
+                           placeholder="Rechercher par titre, description, utilisateur..."
+                           value="{{ app.request.query.get('search', '') }}">
+                </div>
+
+                <!-- Filtre par état de validation -->
+                <div class="col-md-2 mb-3">
+                    <label for="filtreValidation" class="form-label">
+                        <i class="fas fa-check-circle me-1"></i>État
+                    </label>
+                    <select class="form-select" id="filtreValidation">
+                        <option value="">Tous les états</option>
+                        <option value="en_attente" {{ app.request.query.get('etat') == 'en_attente' ? 'selected' : '' }}>En attente</option>
+                        <option value="valide" {{ app.request.query.get('etat') == 'valide' ? 'selected' : '' }}>Validé</option>
+                        <option value="rejete" {{ app.request.query.get('etat') == 'rejete' ? 'selected' : '' }}>Rejeté</option>
+                    </select>
+                </div>
+
+                <!-- Filtre par statut -->
+                <div class="col-md-2 mb-3">
+                    <label for="filtreStatut" class="form-label">
+                        <i class="fas fa-flag me-1"></i>Statut
+                    </label>
+                    <select class="form-select" id="filtreStatut">
+                        <option value="">Tous</option>
+                        <option value="nouveau" {{ app.request.query.get('statut') == 'nouveau' ? 'selected' : '' }}>Nouveau</option>
+                        <option value="en_cours" {{ app.request.query.get('statut') == 'en_cours' ? 'selected' : '' }}>En cours</option>
+                        <option value="resolu" {{ app.request.query.get('statut') == 'resolu' ? 'selected' : '' }}>Résolu</option>
+                        <option value="annule" {{ app.request.query.get('statut') == 'annule' ? 'selected' : '' }}>Annulé</option>
+                    </select>
+                </div>
+
+                <!-- Filtre par catégorie -->
+                <div class="col-md-3 mb-3">
+                    <label for="filtreCategorie" class="form-label">
+                        <i class="fas fa-tags me-1"></i>Catégorie
+                    </label>
+                    <select class="form-select" id="filtreCategorie">
+                        <option value="">Toutes</option>
+                        {% for categorie in categories %}
+                            <option value="{{ categorie.id }}" {{ app.request.query.get('categorie') == (categorie.id ~ '') ? 'selected' : '' }}>
+                                {{ categorie.nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Bouton d'application des filtres -->
+                <div class="col-md-1 mb-3">
+                    <button type="button" class="btn btn-primary w-100" id="applyFilters" title="Appliquer les filtres">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtres secondaires -->
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="filtreVille" class="form-label">
+                        <i class="fas fa-map-marker-alt me-1"></i>Ville
+                    </label>
+                    <select class="form-select" id="filtreVille">
+                        <option value="">Toutes les villes</option>
+                        {% set villes = [] %}
+                        {% for signalement in signalements %}
+                            {% if signalement.ville and signalement.ville.nom not in villes %}
+                                {% set villes = villes|merge([signalement.ville.nom]) %}
+                            {% endif %}
+                        {% endfor %}
+                        {% for ville in villes|sort %}
+                            <option value="{{ ville }}">{{ ville }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filtreDateDebut" class="form-label">
+                        <i class="fas fa-calendar me-1"></i>Date (depuis)
+                    </label>
+                    <input type="date" class="form-control" id="filtreDateDebut">
+                </div>
+                <div class="col-md-3">
+                    <label for="filtreDateFin" class="form-label">
+                        <i class="fas fa-calendar me-1"></i>Date (jusqu'au)
+                    </label>
+                    <input type="date" class="form-control" id="filtreDateFin">
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" id="resetFilters" title="Réinitialiser">
+                            <i class="fas fa-undo me-1"></i>Reset
                         </button>
-                        <button type="reset" class="btn btn-outline-secondary">Réinitialiser</button>
+                        <span class="badge bg-info align-self-center" id="resultsCount">
+                            {{ signalements|length }} signalement(s)
+                        </span>
                     </div>
-                </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres actifs -->
+    {% if currentFilters is defined and currentFilters|length > 0 %}
+        <div class="alert alert-info">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-filter me-2"></i>
+                <div class="me-auto">
+                    <strong>Filtres actifs :</strong>
+                    {% for key, value in currentFilters %}
+                        <span class="badge bg-primary me-1">
+                            {{ key|title }} : {{ value }}
+                        </span>
+                    {% endfor %}
+                </div>
+                <a href="{{ path('app_admin_signalements') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i>Effacer
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Table des signalements -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-1"></i>
+                    Liste des signalements
+                </h5>
+                <small>{{ signalements|length }} résultat(s)</small>
             </div>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
+            <table class="table table-hover align-middle mb-0" id="signalementsTable">
+                <thead class="table-light">
                 <tr>
                     <th>ID</th>
                     <th>Titre</th>
                     <th>Date</th>
+                    <th>Ville</th>
                     <th>Catégorie</th>
                     <th>Utilisateur</th>
                     <th>Statut</th>
-                    <th>Validation</th>
-                    <th>Actions</th>
+                    <th>État</th>
+                    <th width="150">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for signalement in signalements %}
-                    <tr>
-                        <td>{{ signalement.id }}</td>
-                        <td>{{ signalement.titre }}</td>
-                        <td>{{ signalement.dateSignalement|date('d/m/Y H:i') }}</td>
+                    <tr data-signalement-id="{{ signalement.id }}"
+                        data-titre="{{ signalement.titre|lower }}"
+                        data-ville="{{ signalement.ville ? signalement.ville.nom : '' }}"
+                        data-categorie="{{ signalement.categorie ? signalement.categorie.nom : '' }}"
+                        data-utilisateur="{{ signalement.utilisateur ? (signalement.utilisateur.prenom ~ ' ' ~ signalement.utilisateur.nom)|lower : 'anonyme' }}"
+                        data-statut="{{ signalement.statut ? signalement.statut.value : '' }}"
+                        data-validation="{{ signalement.etatValidation }}"
+                        data-date="{{ signalement.dateSignalement|date('Y-m-d') }}"
+                        data-description="{{ signalement.description|lower }}">
+
+                        <td class="fw-bold">#{{ signalement.id }}</td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 200px;" title="{{ signalement.titre }}">
+                                {{ signalement.titre }}
+                            </div>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {{ signalement.dateSignalement|date('d/m/Y') }}<br>
+                                <span class="text-primary">{{ signalement.dateSignalement|date('H:i') }}</span>
+                            </small>
+                        </td>
+                        <td>
+                            {% if signalement.ville %}
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    {{ signalement.ville.nom }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">Non définie</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if signalement.categorie %}
                                 <span class="badge bg-secondary">{{ signalement.categorie.nom }}</span>
@@ -122,83 +278,288 @@
                         </td>
                         <td>
                             {% if signalement.utilisateur %}
-                                {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}
+                                <small>
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}
+                                </small>
                             {% else %}
-                                <span class="text-muted">Anonyme</span>
+                                <span class="text-muted">
+                                    <i class="fas fa-user-secret me-1"></i>Anonyme
+                                </span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if signalement.statut.value == 'NOUVEAU' %}
-                                <span class="badge bg-info">Nouveau</span>
-                            {% elseif signalement.statut.value == 'EN_COURS' %}
-                                <span class="badge bg-warning text-dark">En cours</span>
-                            {% elseif signalement.statut.value == 'RESOLU' %}
-                                <span class="badge bg-success">Résolu</span>
-                            {% elseif signalement.statut.value == 'FERME' %}
-                                <span class="badge bg-secondary">Fermé</span>
+                            {% if signalement.statut %}
+                                {% set statut_color = {
+                                    'nouveau': 'primary',
+                                    'en_cours': 'warning',
+                                    'resolu': 'success',
+                                    'annule': 'secondary'
+                                } %}
+                                <span class="badge bg-{{ statut_color[signalement.statut.value] ?? 'secondary' }}">
+                                    {{ signalement.statut.value|replace({'_': ' '})|title }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">Non défini</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if signalement.etatValidation == 'en_attente' %}
-                                <span class="badge bg-warning text-dark">En attente</span>
-                            {% elseif signalement.etatValidation == 'valide' %}
-                                <span class="badge bg-success">Validé</span>
-                            {% elseif signalement.etatValidation == 'rejete' %}
-                                <span class="badge bg-danger">Rejeté</span>
-                            {% endif %}
+                            {% set validation_class = {
+                                'en_attente': 'warning',
+                                'valide': 'success',
+                                'rejete': 'danger'
+                            } %}
+                            {% set validation_icon = {
+                                'en_attente': 'clock',
+                                'valide': 'check-circle',
+                                'rejete': 'times-circle'
+                            } %}
+                            {% set validation_label = {
+                                'en_attente': 'En attente',
+                                'valide': 'Validé',
+                                'rejete': 'Rejeté'
+                            } %}
+
+                            <span class="badge bg-{{ validation_class[signalement.etatValidation] ?? 'secondary' }} validation-badge">
+                                <i class="fas fa-{{ validation_icon[signalement.etatValidation] ?? 'question' }} me-1"></i>
+                                {{ validation_label[signalement.etatValidation] ?? 'Inconnu' }}
+                            </span>
                         </td>
                         <td>
-                            <div class="btn-group">
-                                <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary" title="Voir">
+                            <div class="btn-group" role="group">
+                                <!-- Bouton de consultation (toujours disponible) -->
+                                <a href="{{ path('app_admin_signalements_show', {'id': signalement.id}) }}"
+                                   class="btn btn-sm btn-info"
+                                   title="Voir les détails">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-success" title="Valider"
-                                        {% if signalement.etatValidation == 'valide' %}disabled{% endif %}
-                                        data-bs-toggle="modal" data-bs-target="#validateModal{{ signalement.id }}">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-danger" title="Rejeter"
-                                        {% if signalement.etatValidation == 'rejete' %}disabled{% endif %}
-                                        data-bs-toggle="modal" data-bs-target="#rejectModal{{ signalement.id }}">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-warning" title="Changer statut"
-                                        data-bs-toggle="modal" data-bs-target="#statusModal{{ signalement.id }}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                            </div>
 
-                            {# Modals #}
-                            {% include 'admin/signalements/_validate_modal.html.twig' with {'signalement': signalement} %}
-                            {% include 'admin/signalements/_reject_modal.html.twig' with {'signalement': signalement} %}
-                            {% include 'admin/signalements/_status_modal.html.twig' with {'signalement': signalement} %}
+                                <!-- Bouton de suppression forcée (admins uniquement) -->
+                                {% if is_granted('ROLE_ADMIN') %}
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal{{ signalement.id }}"
+                                            title="Supprimer définitivement">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                 {% else %}
-                    <tr>
-                        <td colspan="8" class="text-center py-4">Aucun signalement trouvé</td>
+                    <tr id="noResultsRow">
+                        <td colspan="9" class="text-center py-4">
+                            <i class="fas fa-search text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-0">Aucun signalement trouvé</p>
+                            {% if currentFilters is defined and currentFilters|length > 0 %}
+                                <a href="{{ path('app_admin_signalements') }}" class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="fas fa-undo me-1"></i>Voir tous les signalements
+                                </a>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+
+    <!-- Modales de suppression (admins uniquement) -->
+    {% if is_granted('ROLE_ADMIN') %}
+        {% for signalement in signalements %}
+            <div class="modal fade" id="deleteModal{{ signalement.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-trash me-2"></i>Suppression définitive
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Attention !</strong> Cette action est irréversible.
+                            </div>
+
+                            <p>Êtes-vous sûr de vouloir supprimer définitivement ce signalement ?</p>
+
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ signalement.titre }}</h6>
+                                    <p class="card-text text-muted">
+                                        <small>
+                                            <i class="fas fa-user me-1"></i>
+                                            {% if signalement.utilisateur %}
+                                                {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}
+                                            {% else %}
+                                                Utilisateur inconnu
+                                            {% endif %}
+                                            <br>
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ signalement.dateSignalement|date('d/m/Y H:i') }}
+                                        </small>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Cette action sera enregistrée dans le journal d'activité.
+                                </small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </button>
+                            <form method="post" action="{{ path('app_admin_signalements_delete_force', {'id': signalement.id}) }}" style="display: inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_force' ~ signalement.id) }}">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash me-2"></i>Supprimer définitivement
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
     <script>
-        $(document).ready(function() {
-            $('#signalements-table').DataTable({
-                language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json'
-                },
-                responsive: true,
-                order: [[3, 'desc']], // Trier par date (descendant)
-                pageLength: 25
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const filtreVille = document.getElementById('filtreVille');
+            const filtreStatut = document.getElementById('filtreStatut');
+            const filtreValidation = document.getElementById('filtreValidation');
+            const filtreCategorie = document.getElementById('filtreCategorie');
+            const filtreDateDebut = document.getElementById('filtreDateDebut');
+            const filtreDateFin = document.getElementById('filtreDateFin');
+            const resetButton = document.getElementById('resetFilters');
+            const applyButton = document.getElementById('applyFilters');
+            const resultsCount = document.getElementById('resultsCount');
+            const tableBody = document.querySelector('#signalementsTable tbody');
+            const allRows = Array.from(tableBody.querySelectorAll('tr[data-signalement-id]'));
+            const noResultsRow = document.getElementById('noResultsRow');
+
+            function filterTable() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const villeFilter = filtreVille.value;
+                const statutFilter = filtreStatut.value;
+                const validationFilter = filtreValidation.value;
+                const categorieFilter = filtreCategorie.value;
+                const dateDebutFilter = filtreDateDebut.value;
+                const dateFinFilter = filtreDateFin.value;
+
+                let visibleCount = 0;
+
+                allRows.forEach(row => {
+                    let isVisible = true;
+
+                    // Recherche générale
+                    if (searchTerm) {
+                        const titre = row.dataset.titre || '';
+                        const description = row.dataset.description || '';
+                        const utilisateur = row.dataset.utilisateur || '';
+
+                        if (!titre.includes(searchTerm) &&
+                            !description.includes(searchTerm) &&
+                            !utilisateur.includes(searchTerm)) {
+                            isVisible = false;
+                        }
+                    }
+
+                    // Filtre par ville
+                    if (villeFilter && row.dataset.ville !== villeFilter) {
+                        isVisible = false;
+                    }
+
+                    // Filtre par statut
+                    if (statutFilter && row.dataset.statut !== statutFilter) {
+                        isVisible = false;
+                    }
+
+                    // Filtre par validation
+                    if (validationFilter && row.dataset.validation !== validationFilter) {
+                        isVisible = false;
+                    }
+
+                    // Filtre par catégorie
+                    if (categorieFilter && row.dataset.categorie !== categorieFilter) {
+                        isVisible = false;
+                    }
+
+                    // Filtre par date de début
+                    if (dateDebutFilter && row.dataset.date < dateDebutFilter) {
+                        isVisible = false;
+                    }
+
+                    // Filtre par date de fin
+                    if (dateFinFilter && row.dataset.date > dateFinFilter) {
+                        isVisible = false;
+                    }
+
+                    // Afficher/masquer la ligne
+                    row.style.display = isVisible ? '' : 'none';
+                    if (isVisible) visibleCount++;
+                });
+
+                // Afficher/masquer la ligne "Aucun résultat"
+                if (noResultsRow) {
+                    noResultsRow.style.display = visibleCount === 0 ? '' : 'none';
+                }
+
+                // Mettre à jour le compteur
+                resultsCount.textContent = `${visibleCount} signalement(s)`;
+                resultsCount.className = `badge ${visibleCount === 0 ? 'bg-warning' : 'bg-info'} align-self-center`;
+            }
+
+            function resetFilters() {
+                searchInput.value = '';
+                filtreVille.selectedIndex = 0;
+                filtreStatut.selectedIndex = 0;
+                filtreValidation.selectedIndex = 0;
+                filtreCategorie.selectedIndex = 0;
+                filtreDateDebut.value = '';
+                filtreDateFin.value = '';
+                filterTable();
+            }
+
+            function applyFilters() {
+                // Construire l'URL avec les paramètres de filtrage
+                const params = new URLSearchParams();
+
+                if (filtreValidation.value) params.set('etat', filtreValidation.value);
+                if (filtreStatut.value) params.set('statut', filtreStatut.value);
+                if (filtreCategorie.value) params.set('categorie', filtreCategorie.value);
+                if (searchInput.value) params.set('search', searchInput.value);
+
+                const url = '{{ path("app_admin_signalements") }}' + (params.toString() ? '?' + params.toString() : '');
+                window.location.href = url;
+            }
+
+            // Événements pour le filtrage en temps réel
+            searchInput.addEventListener('input', filterTable);
+            filtreVille.addEventListener('change', filterTable);
+            filtreDateDebut.addEventListener('change', filterTable);
+            filtreDateFin.addEventListener('change', filterTable);
+
+            // Événements pour l'application des filtres via URL
+            applyButton.addEventListener('click', applyFilters);
+            filtreValidation.addEventListener('change', applyFilters);
+            filtreStatut.addEventListener('change', applyFilters);
+            filtreCategorie.addEventListener('change', applyFilters);
+
+            resetButton.addEventListener('click', function() {
+                window.location.href = '{{ path("app_admin_signalements") }}';
             });
+
+            // Initialiser le compteur
+            filterTable();
         });
     </script>
 {% endblock %}
