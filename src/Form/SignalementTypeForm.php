@@ -152,7 +152,7 @@ class SignalementTypeForm extends AbstractType
                 'label_attr' => [
                     'class' => 'form-label fw-semibold'
                 ],
-                'choices' => $this->villeRepository->findVillesDuBenin(),
+                'choices' => $this->villeRepository->findAllOrdered(), // ✅ Utiliser une méthode existante
                 'required' => true,
                 'attr' => [
                     'class' => 'form-select ville-select',
@@ -168,10 +168,8 @@ class SignalementTypeForm extends AbstractType
                 'help_attr' => [
                     'class' => 'form-text text-muted'
                 ]
-            ]);
-
-        // Ajouter le champ arrondissement avec des options par défaut
-        $builder->add('arrondissement', EntityType::class, [
+            ])
+            ->add('arrondissement', EntityType::class, [
             'class' => Arrondissement::class,
             'choice_label' => 'nom',
             'placeholder' => 'Choisissez un arrondissement (optionnel)',

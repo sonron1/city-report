@@ -37,13 +37,13 @@ class AdminUserEditTypeForm extends AbstractType
             ->add('roles', ChoiceType::class, [
                 'label' => 'Rôles',
                 'choices' => [
-                    'Citoyen' => 'ROLE_USER',
-                    'Agent municipal' => 'ROLE_AGENT',
-                    'Superviseur' => 'ROLE_SUPERVISOR',
+                    'Utilisateur' => 'ROLE_USER',
+                    'Modérateur' => 'ROLE_MODERATOR', 
                     'Administrateur' => 'ROLE_ADMIN',
                 ],
                 'multiple' => true,
                 'expanded' => true,
+                'data' => $options['data']->getRoles(),
             ])
             ->add('estValide', CheckboxType::class, [
                 'label' => 'Compte validé',
