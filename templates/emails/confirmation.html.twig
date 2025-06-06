@@ -1,68 +1,156 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de compte - CityFlow Bénin</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
             line-height: 1.6;
-            color: #333;
+        }
+        .container {
             max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .header {
-            background-color: #4b6cb7;
+            background: linear-gradient(135deg, #1e4b8c 0%, #2980b9 100%);
             color: white;
-            padding: 15px;
+            padding: 30px 20px;
             text-align: center;
-            border-radius: 5px 5px 0 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .logo {
+            font-size: 32px;
+            margin-bottom: 10px;
         }
         .content {
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-top: none;
-            border-radius: 0 0 5px 5px;
+            padding: 40px 30px;
+            color: #333333;
         }
-        .button {
+        .welcome-text {
+            font-size: 18px;
+            color: #2980b9;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .btn-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn-confirm {
             display: inline-block;
-            padding: 10px 20px;
-            background-color: #4b6cb7;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #2980b9, #1e4b8c);
             color: white;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(41, 128, 185, 0.3);
+        }
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(41, 128, 185, 0.4);
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #2980b9;
+            padding: 15px;
             margin: 20px 0;
+            border-radius: 0 8px 8px 0;
         }
         .footer {
-            margin-top: 20px;
-            font-size: 12px;
+            background-color: #f8f9fa;
+            padding: 20px;
             text-align: center;
-            color: #888;
+            border-top: 1px solid #e9ecef;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .expiry-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 8px;
+            }
+            .content {
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="header">
-    <h1>Confirmation de votre compte</h1>
-</div>
-<div class="content">
-    <p>Bonjour {{ user.prenom }} {{ user.nom }},</p>
+<div class="container">
+    <div class="header">
+        <div class="logo">🏙️</div>
+        <h1>CityFlow Bénin</h1>
+        <p style="margin: 5px 0 0 0; opacity: 0.9;">Confirmation de votre compte</p>
+    </div>
 
-    <p>Merci de vous être inscrit sur CityFlow. Pour finaliser votre inscription et accéder à toutes les fonctionnalités, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous :</p>
+    <div class="content">
+        <div class="welcome-text">
+            Bonjour {{ user.prenom }} {{ user.nom }} ! 👋
+        </div>
 
-    <p style="text-align: center;">
-        <a href="{{ url('app_verify_email', {'token': token}) }}" class="button">Confirmer mon adresse email</a>
-    </p>
+        <p>Merci de rejoindre <strong>CityFlow Bénin</strong>, la plateforme citoyenne pour améliorer nos villes ensemble !</p>
 
-    <p>Ce lien expirera le {{ expiry|date('d/m/Y à H:i') }}.</p>
+        <p>Pour finaliser votre inscription et commencer à signaler les problèmes urbains dans votre commune, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous :</p>
 
-    <p>Si vous n'avez pas demandé cette inscription, veuillez ignorer cet email.</p>
+        <div class="btn-container">
+            <a href="{{ url('app_verify_email', {'token': token}) }}" class="btn-confirm">
+                ✅ Confirmer mon compte
+            </a>
+        </div>
 
-    <p>Cordialement,<br>L'équipe CityFlow</p>
-</div>
-<div class="footer">
-    <p>Ce message a été envoyé automatiquement, merci de ne pas y répondre.</p>
+        <div class="info-box">
+            <h4 style="margin-top: 0; color: #2980b9;">🚀 Une fois votre compte confirmé, vous pourrez :</h4>
+            <ul style="margin-bottom: 0;">
+                <li>Signaler des problèmes urbains avec géolocalisation</li>
+                <li>Suivre l'évolution de vos signalements</li>
+                <li>Consulter la carte interactive des problèmes</li>
+                <li>Échanger avec d'autres citoyens engagés</li>
+            </ul>
+        </div>
+
+        <div class="expiry-warning">
+            ⏰ <strong>Attention :</strong> Ce lien expirera le <strong>{{ expiry|date('d/m/Y à H:i') }}</strong>
+        </div>
+
+        <p><small>Si vous n'avez pas demandé cette inscription, vous pouvez ignorer cet email en toute sécurité.</small></p>
+
+        <hr style="border: none; border-top: 1px solid #e9ecef; margin: 30px 0;">
+
+        <p style="color: #6c757d; font-size: 14px;">
+            <strong>Besoin d'aide ?</strong><br>
+            Contactez-nous à support@cityflow-benin.com
+        </p>
+    </div>
+
+    <div class="footer">
+        <p><strong>CityFlow Bénin</strong> - Ensemble, améliorons nos villes</p>
+        <p>Ce message a été envoyé automatiquement, merci de ne pas y répondre directement.</p>
+    </div>
 </div>
 </body>
 </html>
