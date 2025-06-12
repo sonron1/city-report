@@ -70,6 +70,12 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $tokenExpiryDate = null;
 
+    #[ORM\OneToMany(mappedBy: 'expediteur', targetEntity: Message::class)]
+    private Collection $messagesEnvoyes;
+
+    #[ORM\OneToMany(mappedBy: 'destinataire', targetEntity: Message::class)]
+    private Collection $messagesRecus;
+
     public function __construct()
     {
         $this->signalements = new ArrayCollection();
@@ -79,6 +85,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->notifications = new ArrayCollection();
         $this->dateInscription = new \DateTime();
         $this->roles = ['ROLE_USER'];
+          // ... autres initialisations
+    $this->messagesEnvoyes = new ArrayCollection();
+    $this->messagesRecus = new ArrayCollection();
     }
 
     // Méthodes existantes...
@@ -372,6 +381,60 @@ public function removeNotification(Notification $notification): static
         }
     }
 
+    return $this;
+}
+
+/**
+ * @return Collection<int, Message>
+ */
+public function getMessagesEnvoyes(): Collection
+{
+    return $this->messagesEnvoyes;
+}
+
+public function addMessageEnvoye(Message $message): static
+{
+    if (!$this->messagesEnvoyes->contains($message)) {
+        $this->messagesEnvoyes->add($message);
+        $message->setExpediteur($this);
+    }
+    return $this;
+}
+
+public function removeMessageEnvoye(Message $message): static
+{
+    if ($this->messagesEnvoyes->removeElement($message)) {
+        if ($message->getExpediteur() === $this) {
+            $message->setExpediteur(null);
+        }
+    }
+    return $this;
+}
+
+/**
+ * @return Collection<int, Message>
+ */
+public function getMessagesRecus(): Collection
+{
+    return $this->messagesRecus;
+}
+
+public function addMessageRecu(Message $message): static
+{
+    if (!$this->messagesRecus->contains($message)) {
+        $this->messagesRecus->add($message);
+        $message->setDestinataire($this);
+    }
+    return $this;
+}
+
+public function removeMessageRecu(Message $message): static
+{
+    if ($this->messagesRecus->removeElement($message)) {
+        if ($message->getDestinataire() === $this) {
+            $message->setDestinataire(null);
+        }
+    }
     return $this;
 }
 }

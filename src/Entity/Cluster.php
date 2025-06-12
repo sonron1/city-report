@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ClusterRepository::class)]
+#[ORM\Table(name: 'cluster')]
 class Cluster
 {
   #[ORM\Id]
@@ -15,20 +16,22 @@ class Cluster
   #[ORM\Column]
   private ?int $id = null;
 
-  #[ORM\Column]
+  // ✅ CORRECTION : double precision comme en BD
+  #[ORM\Column(type: 'float')]
   private ?float $latitude = null;
 
-  #[ORM\Column]
+  #[ORM\Column(type: 'float')]
   private ?float $longitude = null;
 
-  #[ORM\Column]
+  #[ORM\Column(type: 'float')]
   private ?float $rayon = null;
 
-  #[ORM\Column]
-  private ?int $nombreSignalements = 0;
+  #[ORM\Column(name: 'nombre_signalements')]
+  private ?int $nombreSignalements = null;
 
+  // Relations
   #[ORM\ManyToOne(inversedBy: 'clusters')]
-  #[ORM\JoinColumn(nullable: false)]
+  #[ORM\JoinColumn(name: 'ville_id', nullable: false)]
   private ?Ville $ville = null;
 
   #[ORM\OneToMany(mappedBy: 'cluster', targetEntity: Signalement::class)]
@@ -39,71 +42,64 @@ class Cluster
     $this->signalements = new ArrayCollection();
   }
 
-  // Getters et setters...
-
   public function getId(): ?int
   {
-      return $this->id;
+    return $this->id;
   }
 
   public function getLatitude(): ?float
   {
-      return $this->latitude;
+    return $this->latitude;
   }
 
   public function setLatitude(float $latitude): static
   {
-      $this->latitude = $latitude;
-
-      return $this;
+    $this->latitude = $latitude;
+    return $this;
   }
 
   public function getLongitude(): ?float
   {
-      return $this->longitude;
+    return $this->longitude;
   }
 
   public function setLongitude(float $longitude): static
   {
-      $this->longitude = $longitude;
-
-      return $this;
+    $this->longitude = $longitude;
+    return $this;
   }
 
   public function getRayon(): ?float
   {
-      return $this->rayon;
+    return $this->rayon;
   }
 
   public function setRayon(float $rayon): static
   {
-      $this->rayon = $rayon;
-
-      return $this;
+    $this->rayon = $rayon;
+    return $this;
   }
 
   public function getNombreSignalements(): ?int
   {
-      return $this->nombreSignalements;
+    return $this->nombreSignalements;
   }
 
   public function setNombreSignalements(int $nombreSignalements): static
   {
-      $this->nombreSignalements = $nombreSignalements;
-
-      return $this;
+    $this->nombreSignalements = $nombreSignalements;
+    return $this;
   }
 
   public function getVille(): ?Ville
   {
-      return $this->ville;
+    return $this->ville;
   }
 
   public function setVille(?Ville $ville): static
   {
-      $this->ville = $ville;
-
-      return $this;
+    $this->ville = $ville;
+    return $this;
   }
 
   /**
@@ -111,28 +107,25 @@ class Cluster
    */
   public function getSignalements(): Collection
   {
-      return $this->signalements;
+    return $this->signalements;
   }
 
   public function addSignalement(Signalement $signalement): static
   {
-      if (!$this->signalements->contains($signalement)) {
-          $this->signalements->add($signalement);
-          $signalement->setCluster($this);
-      }
-
-      return $this;
+    if (!$this->signalements->contains($signalement)) {
+      $this->signalements->add($signalement);
+      $signalement->setCluster($this);
+    }
+    return $this;
   }
 
   public function removeSignalement(Signalement $signalement): static
   {
-      if ($this->signalements->removeElement($signalement)) {
-          // set the owning side to null (unless already changed)
-          if ($signalement->getCluster() === $this) {
-              $signalement->setCluster(null);
-          }
+    if ($this->signalements->removeElement($signalement)) {
+      if ($signalement->getCluster() === $this) {
+        $signalement->setCluster(null);
       }
-
-      return $this;
+    }
+    return $this;
   }
 }

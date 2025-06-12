@@ -8,20 +8,13 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: MessageRepository::class)]
+#[ORM\Table(name: 'message')]
 class Message
 {
   #[ORM\Id]
   #[ORM\GeneratedValue]
   #[ORM\Column]
   private ?int $id = null;
-
-  #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
-  #[ORM\JoinColumn(nullable: false)]
-  private ?Utilisateur $expediteur = null;
-
-  #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
-  #[ORM\JoinColumn(nullable: false)]
-  private ?Utilisateur $destinataire = null;
 
   #[ORM\Column(length: 255)]
   #[Assert\NotBlank(message: "Le sujet est obligatoire.")]
@@ -31,17 +24,27 @@ class Message
   #[Assert\NotBlank(message: "Le contenu est obligatoire.")]
   private ?string $contenu = null;
 
-  #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+  #[ORM\Column(name: 'date_envoi', type: Types::DATETIME_MUTABLE)]
   private ?\DateTimeInterface $dateEnvoi = null;
 
-  #[ORM\Column]
+  #[ORM\Column(name: 'est_lu')]
   private ?bool $estLu = false;
 
-  #[ORM\Column]
+  #[ORM\Column(name: 'est_archive')]
   private ?bool $estArchive = false;
 
-  #[ORM\ManyToOne(targetEntity: Signalement::class)]
-  #[ORM\JoinColumn(nullable: true)]
+  // Relations
+  #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'messagesEnvoyes')]
+  #[ORM\JoinColumn(name: 'expediteur_id', nullable: false)]
+  private ?Utilisateur $expediteur = null;
+
+  #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'messagesRecus')]
+  #[ORM\JoinColumn(name: 'destinataire_id', nullable: false)]
+  private ?Utilisateur $destinataire = null;
+
+  // ✅ CORRECTION : Ajout de inversedBy="messages"
+  #[ORM\ManyToOne(targetEntity: Signalement::class, inversedBy: 'messages')]
+  #[ORM\JoinColumn(name: 'signalement_concerne_id', nullable: true)]
   private ?Signalement $signalementConcerne = null;
 
   public function __construct()
@@ -54,28 +57,6 @@ class Message
   public function getId(): ?int
   {
     return $this->id;
-  }
-
-  public function getExpediteur(): ?Utilisateur
-  {
-    return $this->expediteur;
-  }
-
-  public function setExpediteur(?Utilisateur $expediteur): static
-  {
-    $this->expediteur = $expediteur;
-    return $this;
-  }
-
-  public function getDestinataire(): ?Utilisateur
-  {
-    return $this->destinataire;
-  }
-
-  public function setDestinataire(?Utilisateur $destinataire): static
-  {
-    $this->destinataire = $destinataire;
-    return $this;
   }
 
   public function getSujet(): ?string
@@ -133,6 +114,28 @@ class Message
     return $this;
   }
 
+  public function getExpediteur(): ?Utilisateur
+  {
+    return $this->expediteur;
+  }
+
+  public function setExpediteur(?Utilisateur $expediteur): static
+  {
+    $this->expediteur = $expediteur;
+    return $this;
+  }
+
+  public function getDestinataire(): ?Utilisateur
+  {
+    return $this->destinataire;
+  }
+
+  public function setDestinataire(?Utilisateur $destinataire): static
+  {
+    $this->destinataire = $destinataire;
+    return $this;
+  }
+
   public function getSignalementConcerne(): ?Signalement
   {
     return $this->signalementConcerne;
@@ -142,5 +145,16 @@ class Message
   {
     $this->signalementConcerne = $signalementConcerne;
     return $this;
+  }
+
+  public function __toString(): string
+  {
+    return sprintf(
+        'Message #%d - %s (de %s à %s)',
+        $this->id,
+        $this->sujet,
+        $this->expediteur?->getEmail() ?? 'Inconnu',
+        $this->destinataire?->getEmail() ?? 'Inconnu'
+    );
   }
 }

@@ -12,6 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SignalementRepository::class)]
+#[ORM\Table(name: 'signalement')]
 class Signalement
 {
   #[ORM\Id]
@@ -22,81 +23,311 @@ class Signalement
   #[ORM\Column(length: 255)]
   #[Assert\NotBlank(message: "Le titre ne peut pas être vide")]
   #[Assert\Length(
-    min: 5,
-    max: 255,
-    minMessage: "Le titre doit contenir au moins {{ limit }} caractères",
-    maxMessage: "Le titre ne peut pas dépasser {{ limit }} caractères"
+      min: 5,
+      max: 255,
+      minMessage: "Le titre doit contenir au moins {{ limit }} caractères",
+      maxMessage: "Le titre ne peut pas dépasser {{ limit }} caractères"
   )]
   private ?string $titre = null;
 
-  #[ORM\Column(type: 'text')]
+  #[ORM\Column(type: Types::TEXT)]
+  #[Assert\NotBlank(message: "La description ne peut pas être vide")]
+  #[Assert\Length(
+      min: 10,
+      max: 5000,
+      minMessage: "La description doit contenir au moins {{ limit }} caractères",
+      maxMessage: "La description ne peut pas dépasser {{ limit }} caractères"
+  )]
   private ?string $description = null;
 
-  #[ORM\Column(length: 255)]
+  #[ORM\Column(name: 'photo_url', length: 255)]
   private ?string $photoUrl = null;
 
-  #[ORM\Column]
+  #[ORM\Column(type: 'float')]
+  #[Assert\NotBlank(message: "La latitude est obligatoire")]
+  #[Assert\Range(
+      min: -90,
+      max: 90,
+      notInRangeMessage: "La latitude doit être comprise entre {{ min }} et {{ max }}"
+  )]
   private ?float $latitude = null;
 
-  #[ORM\Column]
+  #[ORM\Column(type: 'float')]
+  #[Assert\NotBlank(message: "La longitude est obligatoire")]
+  #[Assert\Range(
+      min: -180,
+      max: 180,
+      notInRangeMessage: "La longitude doit être comprise entre {{ min }} et {{ max }}"
+  )]
   private ?float $longitude = null;
 
-  #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+  #[ORM\Column(name: 'date_signalement', type: Types::DATETIME_MUTABLE)]
   private ?\DateTimeInterface $dateSignalement = null;
 
   #[ORM\Column(length: 50, enumType: StatutSignalement::class)]
   private ?StatutSignalement $statut = StatutSignalement::NOUVEAU;
 
   #[ORM\Column]
+  #[Assert\Range(
+      min: 1,
+      max: 5,
+      notInRangeMessage: "La priorité doit être comprise entre {{ min }} et {{ max }}"
+  )]
   private ?int $priorite = 1;
 
-  /**
-   * État de validation du signalement
-   * Valeurs possibles : en_attente, validé, rejeté
-   */
-  #[ORM\Column(length: 50)]
-  private ?string $etatValidation = EtatValidation::EN_ATTENTE->value;
+  #[ORM\Column(enumType: EtatValidation::class)]
+  private EtatValidation $etatValidation = EtatValidation::EN_ATTENTE; // ✅ Valeur par défaut
 
+  #[ORM\Column(name: 'demande_suppression_statut', length: 20, nullable: true)]
+  private ?string $demandeSuppressionStatut = null;
+
+  #[ORM\Column(name: 'date_demande_suppression_statut', type: Types::DATETIME_MUTABLE, nullable: true)]
+  private ?\DateTimeInterface $dateDemandeSuppressionStatut = null;
+
+  // Ajoutez ces propriétés dans votre entité Signalement après les autres propriétés de demande de suppression
+
+  #[ORM\Column(name: 'commentaire_suppression_statut', type: Types::TEXT, nullable: true)]
+  private ?string $commentaireSuppressionStatut = null;
+
+  #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
+  #[ORM\JoinColumn(name: 'moderateur_suppression_statut_id', nullable: true)]
+  private ?Utilisateur $moderateurSuppressionStatut = null;
+
+// Ajoutez ces méthodes getter/setter
+
+  public function getCommentaireSuppressionStatut(): ?string
+  {
+    return $this->commentaireSuppressionStatut;
+  }
+
+  public function setCommentaireSuppressionStatut(?string $commentaire): static
+  {
+    $this->commentaireSuppressionStatut = $commentaire;
+    return $this;
+  }
+
+  public function getModerateurSuppressionStatut(): ?Utilisateur
+  {
+    return $this->moderateurSuppressionStatut;
+  }
+
+  public function setModerateurSuppressionStatut(?Utilisateur $moderateur): static
+  {
+    $this->moderateurSuppressionStatut = $moderateur;
+    return $this;
+  }
+
+  // Relations
   #[ORM\ManyToOne(inversedBy: 'signalements')]
-  #[ORM\JoinColumn(nullable: false)]
+  #[ORM\JoinColumn(name: 'utilisateur_id', nullable: false)]
   private ?Utilisateur $utilisateur = null;
 
   #[ORM\ManyToOne(inversedBy: 'signalements')]
-  #[ORM\JoinColumn(nullable: false)]
+  #[ORM\JoinColumn(name: 'categorie_id', nullable: false)]
   private ?Categorie $categorie = null;
 
   #[ORM\ManyToOne(inversedBy: 'signalements')]
-  #[ORM\JoinColumn(nullable: false)]
+  #[ORM\JoinColumn(name: 'ville_id', nullable: false)]
   private ?Ville $ville = null;
 
-  #[ORM\OneToMany(mappedBy: 'signalement', targetEntity: Commentaire::class)]
+  #[ORM\ManyToOne(inversedBy: 'signalements')]
+  #[ORM\JoinColumn(name: 'arrondissement_id', nullable: true)]
+  private ?Arrondissement $arrondissement = null;
+
+  #[ORM\ManyToOne(inversedBy: 'signalements')]
+  #[ORM\JoinColumn(name: 'cluster_id', nullable: true)]
+  private ?Cluster $cluster = null;
+
+  #[ORM\OneToMany(mappedBy: 'signalement', targetEntity: Commentaire::class, cascade: ['remove'])]
   private Collection $commentaires;
 
-  #[ORM\OneToMany(mappedBy: 'signalement', targetEntity: JournalValidation::class)]
+  #[ORM\OneToMany(mappedBy: 'signalement', targetEntity: JournalValidation::class, cascade: ['remove'])]
   private Collection $journalValidations;
 
-  #[ORM\OneToMany(mappedBy: 'signalement', targetEntity: Notification::class)]
+  #[ORM\OneToMany(mappedBy: 'signalement', targetEntity: Notification::class, cascade: ['remove'])]
   private Collection $notifications;
+
+  #[ORM\OneToMany(mappedBy: 'signalementConcerne', targetEntity: Message::class)]
+  private Collection $messages;
 
   #[ORM\OneToOne(mappedBy: 'signalement', cascade: ['persist', 'remove'])]
   private ?Reparation $reparation = null;
 
-  #[ORM\ManyToOne(inversedBy: 'signalements')]
-  private ?Cluster $cluster = null;
+  public function __construct()
+  {
+    $this->commentaires = new ArrayCollection();
+    $this->journalValidations = new ArrayCollection();
+    $this->notifications = new ArrayCollection();
+    $this->messages = new ArrayCollection();
+    $this->etatValidation = EtatValidation::EN_ATTENTE;
+    $this->dateSignalement = new \DateTime();
+    $this->statut = StatutSignalement::NOUVEAU;
+    $this->priorite = 1;
+  }
 
-  // Dans src/Entity/Signalement.php
-  // Ajoutez une propriété pour suivre les demandes de suppression
-  #[ORM\Column(length: 20, nullable: true)]
-  private ?string $demandeSuppressionStatut = null;
+  public function getId(): ?int
+  {
+    return $this->id;
+  }
 
-  #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-  private ?\DateTimeInterface $dateDemandeSuppressionStatut = null;
+  public function getTitre(): ?string
+  {
+    return $this->titre;
+  }
 
-  // Dans Signalement.php, ajoutez cette relation
-  #[ORM\ManyToOne(inversedBy: 'signalements')]
-  private ?Arrondissement $arrondissement = null;
+  public function setTitre(string $titre): static
+  {
+    $this->titre = $titre;
+    return $this;
+  }
 
-  // Et ces méthodes
+  public function getDescription(): ?string
+  {
+    return $this->description;
+  }
+
+  public function setDescription(string $description): static
+  {
+    $this->description = $description;
+    return $this;
+  }
+
+  public function getPhotoUrl(): ?string
+  {
+    return $this->photoUrl;
+  }
+
+  public function setPhotoUrl(?string $photoUrl): static
+  {
+    $this->photoUrl = $photoUrl;
+    return $this;
+  }
+
+  public function getLatitude(): ?float
+  {
+    return $this->latitude;
+  }
+
+  public function setLatitude(float $latitude): static
+  {
+    $this->latitude = $latitude;
+    return $this;
+  }
+
+  public function getLongitude(): ?float
+  {
+    return $this->longitude;
+  }
+
+  public function setLongitude(float $longitude): static
+  {
+    $this->longitude = $longitude;
+    return $this;
+  }
+
+  public function getDateSignalement(): ?\DateTimeInterface
+  {
+    return $this->dateSignalement;
+  }
+
+  public function setDateSignalement(\DateTimeInterface $dateSignalement): static
+  {
+    $this->dateSignalement = $dateSignalement;
+    return $this;
+  }
+
+  public function getStatut(): ?StatutSignalement
+  {
+    return $this->statut;
+  }
+
+  public function setStatut(StatutSignalement $statut): static
+  {
+    $this->statut = $statut;
+    return $this;
+  }
+
+  public function getPriorite(): ?int
+  {
+    return $this->priorite;
+  }
+
+  public function setPriorite(int $priorite): static
+  {
+    $this->priorite = $priorite;
+    return $this;
+  }
+
+  public function getEtatValidation(): ?EtatValidation
+  {
+    return $this->etatValidation;
+  }
+
+  public function setEtatValidation(EtatValidation $etatValidation): static
+  {
+    $this->etatValidation = $etatValidation;
+    return $this;
+  }
+
+  public function getDemandeSuppressionStatut(): ?string
+  {
+    return $this->demandeSuppressionStatut;
+  }
+
+  public function setDemandeSuppressionStatut(?string $statut): static
+  {
+    $this->demandeSuppressionStatut = $statut;
+    if ($statut) {
+      $this->dateDemandeSuppressionStatut = new \DateTime();
+    }
+    return $this;
+  }
+
+  public function getDateDemandeSuppressionStatut(): ?\DateTimeInterface
+  {
+    return $this->dateDemandeSuppressionStatut;
+  }
+
+  public function setDateDemandeSuppressionStatut(?\DateTimeInterface $date): static
+  {
+    $this->dateDemandeSuppressionStatut = $date;
+    return $this;
+  }
+
+  // Relations getters/setters
+  public function getUtilisateur(): ?Utilisateur
+  {
+    return $this->utilisateur;
+  }
+
+  public function setUtilisateur(?Utilisateur $utilisateur): static
+  {
+    $this->utilisateur = $utilisateur;
+    return $this;
+  }
+
+  public function getCategorie(): ?Categorie
+  {
+    return $this->categorie;
+  }
+
+  public function setCategorie(?Categorie $categorie): static
+  {
+    $this->categorie = $categorie;
+    return $this;
+  }
+
+  public function getVille(): ?Ville
+  {
+    return $this->ville;
+  }
+
+  public function setVille(?Ville $ville): static
+  {
+    $this->ville = $ville;
+    return $this;
+  }
+
   public function getArrondissement(): ?Arrondissement
   {
     return $this->arrondissement;
@@ -108,179 +339,15 @@ class Signalement
     return $this;
   }
 
-  public function __construct()
+  public function getCluster(): ?Cluster
   {
-    $this->commentaires = new ArrayCollection();
-    $this->journalValidations = new ArrayCollection();
-    $this->notifications = new ArrayCollection();
-    $this->dateSignalement = new \DateTime();
+    return $this->cluster;
   }
 
-  // Getters et setters...
-
-  public function getId(): ?int
+  public function setCluster(?Cluster $cluster): static
   {
-      return $this->id;
-  }
-
-  public function getTitre(): ?string
-  {
-      return $this->titre;
-  }
-
-  public function setTitre(string $titre): static
-  {
-      $this->titre = $titre;
-
-      return $this;
-  }
-
-  public function getDescription(): ?string
-  {
-      return $this->description;
-  }
-
-  public function setDescription(string $description): static
-  {
-      $this->description = $description;
-
-      return $this;
-  }
-
-  public function getPhotoUrl(): ?string
-  {
-      return $this->photoUrl;
-  }
-
-  public function setPhotoUrl(string $photoUrl): static
-  {
-      $this->photoUrl = $photoUrl;
-
-      return $this;
-  }
-
-  public function getLatitude(): ?float
-  {
-      return $this->latitude;
-  }
-
-  public function setLatitude(float $latitude): static
-  {
-      $this->latitude = $latitude;
-
-      return $this;
-  }
-
-  public function getLongitude(): ?float
-  {
-      return $this->longitude;
-  }
-
-  public function setLongitude(float $longitude): static
-  {
-      $this->longitude = $longitude;
-
-      return $this;
-  }
-
-  public function getDateSignalement(): ?\DateTime
-  {
-      return $this->dateSignalement;
-  }
-
-  public function setDateSignalement(\DateTime $dateSignalement): static
-  {
-      $this->dateSignalement = $dateSignalement;
-
-      return $this;
-  }
-
-  public function getStatut(): ?StatutSignalement
-  {
-      return $this->statut;
-  }
-
-  public function setStatut(StatutSignalement $statut): static
-  {
-      $this->statut = $statut;
-
-      return $this;
-  }
-
-  public function getPriorite(): ?int
-  {
-      return $this->priorite;
-  }
-
-  public function setPriorite(int $priorite): static
-  {
-      $this->priorite = $priorite;
-
-      return $this;
-  }
-
-  public function getEtatValidation(): ?string
-  {
-      return $this->etatValidation;
-  }
-
-  public function setEtatValidation(string $etatValidation): static
-  {
-      $this->etatValidation = $etatValidation;
-
-      return $this;
-  }
-
-  /**
-   * Récupère l'état de validation sous forme d'enum
-   */
-  public function getEtatValidationEnum(): EtatValidation
-  {
-    return EtatValidation::from($this->etatValidation);
-  }
-
-  public function setEtatValidationEnum(EtatValidation $etat): static
-  {
-    $this->etatValidation = $etat->value;
+    $this->cluster = $cluster;
     return $this;
-  }
-
-
-
-  public function getUtilisateur(): ?Utilisateur
-  {
-      return $this->utilisateur;
-  }
-
-  public function setUtilisateur(?Utilisateur $utilisateur): static
-  {
-      $this->utilisateur = $utilisateur;
-
-      return $this;
-  }
-
-  public function getCategorie(): ?Categorie
-  {
-      return $this->categorie;
-  }
-
-  public function setCategorie(?Categorie $categorie): static
-  {
-      $this->categorie = $categorie;
-
-      return $this;
-  }
-
-  public function getVille(): ?Ville
-  {
-      return $this->ville;
-  }
-
-  public function setVille(?Ville $ville): static
-  {
-      $this->ville = $ville;
-
-      return $this;
   }
 
   /**
@@ -288,29 +355,26 @@ class Signalement
    */
   public function getCommentaires(): Collection
   {
-      return $this->commentaires;
+    return $this->commentaires;
   }
 
   public function addCommentaire(Commentaire $commentaire): static
   {
-      if (!$this->commentaires->contains($commentaire)) {
-          $this->commentaires->add($commentaire);
-          $commentaire->setSignalement($this);
-      }
-
-      return $this;
+    if (!$this->commentaires->contains($commentaire)) {
+      $this->commentaires->add($commentaire);
+      $commentaire->setSignalement($this);
+    }
+    return $this;
   }
 
   public function removeCommentaire(Commentaire $commentaire): static
   {
-      if ($this->commentaires->removeElement($commentaire)) {
-          // set the owning side to null (unless already changed)
-          if ($commentaire->getSignalement() === $this) {
-              $commentaire->setSignalement(null);
-          }
+    if ($this->commentaires->removeElement($commentaire)) {
+      if ($commentaire->getSignalement() === $this) {
+        $commentaire->setSignalement(null);
       }
-
-      return $this;
+    }
+    return $this;
   }
 
   /**
@@ -318,29 +382,26 @@ class Signalement
    */
   public function getJournalValidations(): Collection
   {
-      return $this->journalValidations;
+    return $this->journalValidations;
   }
 
   public function addJournalValidation(JournalValidation $journalValidation): static
   {
-      if (!$this->journalValidations->contains($journalValidation)) {
-          $this->journalValidations->add($journalValidation);
-          $journalValidation->setSignalement($this);
-      }
-
-      return $this;
+    if (!$this->journalValidations->contains($journalValidation)) {
+      $this->journalValidations->add($journalValidation);
+      $journalValidation->setSignalement($this);
+    }
+    return $this;
   }
 
   public function removeJournalValidation(JournalValidation $journalValidation): static
   {
-      if ($this->journalValidations->removeElement($journalValidation)) {
-          // set the owning side to null (unless already changed)
-          if ($journalValidation->getSignalement() === $this) {
-              $journalValidation->setSignalement(null);
-          }
+    if ($this->journalValidations->removeElement($journalValidation)) {
+      if ($journalValidation->getSignalement() === $this) {
+        $journalValidation->setSignalement(null);
       }
-
-      return $this;
+    }
+    return $this;
   }
 
   /**
@@ -348,82 +409,112 @@ class Signalement
    */
   public function getNotifications(): Collection
   {
-      return $this->notifications;
+    return $this->notifications;
   }
 
   public function addNotification(Notification $notification): static
   {
-      if (!$this->notifications->contains($notification)) {
-          $this->notifications->add($notification);
-          $notification->setSignalement($this);
-      }
-
-      return $this;
+    if (!$this->notifications->contains($notification)) {
+      $this->notifications->add($notification);
+      $notification->setSignalement($this);
+    }
+    return $this;
   }
 
   public function removeNotification(Notification $notification): static
   {
-      if ($this->notifications->removeElement($notification)) {
-          // set the owning side to null (unless already changed)
-          if ($notification->getSignalement() === $this) {
-              $notification->setSignalement(null);
-          }
+    if ($this->notifications->removeElement($notification)) {
+      if ($notification->getSignalement() === $this) {
+        $notification->setSignalement(null);
       }
+    }
+    return $this;
+  }
 
-      return $this;
+  /**
+   * @return Collection<int, Message>
+   */
+  public function getMessages(): Collection
+  {
+    return $this->messages;
+  }
+
+  public function addMessage(Message $message): static
+  {
+    if (!$this->messages->contains($message)) {
+      $this->messages->add($message);
+      $message->setSignalementConcerne($this);
+    }
+    return $this;
+  }
+
+  public function removeMessage(Message $message): static
+  {
+    if ($this->messages->removeElement($message)) {
+      if ($message->getSignalementConcerne() === $this) {
+        $message->setSignalementConcerne(null);
+      }
+    }
+    return $this;
   }
 
   public function getReparation(): ?Reparation
   {
-      return $this->reparation;
+    return $this->reparation;
   }
 
   public function setReparation(?Reparation $reparation): static
   {
-      // unset the owning side of the relation if necessary
-      if ($reparation === null && $this->reparation !== null) {
-          $this->reparation->setSignalement(null);
-      }
+    if ($reparation === null && $this->reparation !== null) {
+      $this->reparation->setSignalement(null);
+    }
 
-      // set the owning side of the relation if necessary
-      if ($reparation !== null && $reparation->getSignalement() !== $this) {
-          $reparation->setSignalement($this);
-      }
+    if ($reparation !== null && $reparation->getSignalement() !== $this) {
+      $reparation->setSignalement($this);
+    }
 
-      $this->reparation = $reparation;
-
-      return $this;
+    $this->reparation = $reparation;
+    return $this;
   }
 
-  public function getCluster(): ?Cluster
+  // Méthodes utilitaires
+  public function getCoordonnees(): array
   {
-      return $this->cluster;
+    return [
+        'latitude' => $this->latitude,
+        'longitude' => $this->longitude
+    ];
   }
 
-  public function setCluster(?Cluster $cluster): static
+  public function setCoordonnees(float $latitude, float $longitude): static
   {
-      $this->cluster = $cluster;
-
-      return $this;
+    $this->latitude = $latitude;
+    $this->longitude = $longitude;
+    return $this;
   }
 
-  // Ajoutez les getters et setters correspondants
-  public function getDemandeSuppressionStatut(): ?string
+  public function isValide(): bool
   {
-      return $this->demandeSuppressionStatut;
+    return $this->etatValidation === EtatValidation::VALIDE;
   }
 
-  public function setDemandeSuppressionStatut(?string $statut): static
+  public function isRejete(): bool
   {
-      $this->demandeSuppressionStatut = $statut;
-      if ($statut) {
-          $this->dateDemandeSuppressionStatut = new \DateTime();
-      }
-      return $this;
+    return $this->etatValidation === EtatValidation::REJETE;
   }
 
-  public function getDateDemandeSuppressionStatut(): ?\DateTimeInterface
+  public function isEnAttente(): bool
   {
-      return $this->dateDemandeSuppressionStatut;
+    return $this->etatValidation === EtatValidation::EN_ATTENTE;
+  }
+
+  public function __toString(): string
+  {
+    return sprintf(
+        'Signalement #%d - %s (%s)',
+        $this->id,
+        $this->titre,
+        $this->statut?->value ?? 'Statut inconnu'
+    );
   }
 }
