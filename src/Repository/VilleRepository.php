@@ -28,7 +28,7 @@ class VilleRepository extends ServiceEntityRepository
     $query = $this->createQueryBuilder('v')
         ->leftJoin('v.signalements', 's')
         ->addSelect('COUNT(s.id) as HIDDEN signalement_count')
-        ->groupBy('v.id')
+        ->groupBy('v.id, v.nom') // ✅ CORRECTION : Ajouter v.nom dans le GROUP BY
         ->orderBy('v.nom', 'ASC')
         ->setFirstResult($offset)
         ->setMaxResults($limit)
@@ -47,7 +47,25 @@ class VilleRepository extends ServiceEntityRepository
     return $this->createQueryBuilder('v')
         ->leftJoin('v.signalements', 's')
         ->addSelect('COUNT(s.id) as signalement_count')
-        ->groupBy('v.id')
+        ->groupBy('v.id, v.nom')
+        ->orderBy('v.nom', 'ASC')
+        ->getQuery()
+        ->getResult();
+  }
+
+  /**
+   * Trouve les villes avec le nombre de signalements et informations du département
+   * Corrige l'erreur de GROUP BY pour PostgreSQL
+   */
+  public function findWithSignalementAndDepartementCount(): array
+  {
+    return $this->createQueryBuilder('v')
+        ->leftJoin('v.departement', 'd')
+        ->leftJoin('v.signalements', 's')
+        ->addSelect('COUNT(s.id) as nb_signalements')
+        ->addSelect('d.nom as departement_nom')
+        ->addSelect('d.id as departement_id')
+        ->groupBy('v.id, v.nom, d.id, d.nom') // Inclure toutes les colonnes non-agrégées
         ->orderBy('v.nom', 'ASC')
         ->getQuery()
         ->getResult();
@@ -120,7 +138,7 @@ class VilleRepository extends ServiceEntityRepository
 
   /**
    * Trouve toutes les villes du Bénin
-   * Cette méthode est utilisée dans le formulaire de signalement
+   * Cette méthode est utilisée dans le formulaire de signalements
    */
   public function findVillesDuBenin(): array
   {
