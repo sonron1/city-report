@@ -1,6 +1,6 @@
 parameters:
     photos_directory: '%kernel.project_dir%/public/uploads'
-    app.email_sender: 'noreply@cityflow.com'
+    app.email_sender: '%env(EMAIL_FROM)%'
 
 services:
     # default configuration for services in *this* file
@@ -19,8 +19,9 @@ services:
             - '../src/Kernel.php'
 
     App\Service\EmailService:
+        autowire: true
         arguments:
-            $emailSender: '%app.email_sender%'
+            $emailSender: '%env(EMAIL_FROM)%'
 
     # Ajoutez ces lignes si elles n'existent pas déjà
     App\Service\TokenService:
@@ -29,25 +30,40 @@ services:
     App\Service\RegistrationService:
         public: false
 
+    App\Form\:
+        resource: '../src/Form'
+        tags: [ 'form.type' ]
+        autowire: true
+        autoconfigure: true
+
 
     # controllers are imported separately to make sure services can be injected
     # as action arguments even if you don't extend any base controller class
     App\Controller\:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
-
+    #
     App\EventListener\LoginListener:
         tags:
-            - { name: kernel.event_listener, event: security.authentication.success, method: onLoginSuccess }
+            - { name: kernel.event_listener,
+                event: security.authentication.success,
+                method: onLoginSuccess }
 
-    # Dans config/services.yaml
-    App\Form\SignalementTypeForm:
-        arguments:
-            $villeRepository: '@App\Repository\VilleRepository'
-            $entityManager: '@doctrine.orm.entity_manager'
-
-    # Rendre les entités disponibles pour l'autowiring au besoin
     App\Entity\Ville:
         autowire: true
+    #
+    App\Service\NotificationService:
+        arguments:
+            $emailService: '@App\Service\EmailService'
+
+    # Ajoutez cette section à la fin de votre services.yaml
+    App\Command\TestEmailCommand:
+        tags: ['console.command']
+        arguments:
+            $emailSender: '%env(EMAIL_FROM)%'
+
+
+
+
 
 

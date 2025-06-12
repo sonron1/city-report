@@ -30,17 +30,17 @@ security:
     
     access_control:
         # Permettre l'accès aux signalements validés pour tous les utilisateurs connectés
-        - { path: ^/signalement/\d+, roles: ROLE_USER}
+        - { path: ^/signalements/\d+, roles: ROLE_USER}
         # ... le reste de vos règles reste inchangé
         # Permettre l'accès aux routes de vérification sans être connecté
         - { path: ^/verify, roles: PUBLIC_ACCESS}
         
         # Routes accessibles uniquement aux utilisateurs vérifiés (à ajouter selon vos besoins)
-        # - { path: ^/signalement, roles: ROLE_USER }
+        # - { path: ^/signalements, roles: ROLE_USER }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/agent, roles: ROLE_AGENT }
         - { path: ^/supervisor, roles: ROLE_SUPERVISOR }
-        - { path: ^/signalement/nouveau, roles: ROLE_USER }
+        - { path: ^/signalements/nouveau, roles: ROLE_USER }
         - { path: ^/mes-signalements, roles: ROLE_USER }
         - { path: ^/carte, roles: ROLE_USER }
         - { path: ^/signalements, roles: ROLE_USER }

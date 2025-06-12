@@ -3,4 +3,4 @@ framework:
         dsn: '%env(MAILER_DSN)%'
 
 parameters:
-    app.email_sender: '%env(EMAIL_SENDER)%'
+    app.email_sender: '%env(EMAIL_FROM)%'
