@@ -1,3 +1,4 @@
+
 {% extends 'base.html.twig' %}
 
 {% block title %}Dashboard Modérateur - CityFlow{% endblock %}
@@ -177,11 +178,11 @@
                     <div class="card-body">
                         <div class="row text-center">
                             <div class="col-4">
-                                <h4 class="text-primary mb-0">{{ ma_performance.validations_semaine }}</h4>
+                                <h4 class="text-primary mb-0">{{ ma_performance.validations_this_week }}</h4>
                                 <small class="text-muted">Cette semaine</small>
                             </div>
                             <div class="col-4">
-                                <h4 class="text-success mb-0">{{ ma_performance.valides_aujourdhui }}</h4>
+                                <h4 class="text-success mb-0">{{ ma_performance.validations_today }}</h4>
                                 <small class="text-muted">Aujourd'hui</small>
                             </div>
                             <div class="col-4">
@@ -206,7 +207,9 @@
                                 <div class="border-bottom p-2 {% if loop.last %}border-0{% endif %}">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <small class="fw-bold text-{% if activite.action == 'valide' %}success{% else %}danger{% endif %}">
+                                            <small class="fw-bold text-{% if activite.action == 'validé' %}success
+                                            {% elseif activite.action == 'rejeté' %}danger
+                                            {% else %}warning{% endif %}">
                                                 {{ activite.action|title }}
                                             </small>
                                             <br>
