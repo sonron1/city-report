@@ -1,4 +1,4 @@
-{# templates/admin/categories/index.html.twig #}
+{# templates/admin/categories/dashboard.html.twig #}
 {% extends 'admin/layout.html.twig' %}
 
 {% block title %}Gestion des catégories{% endblock %}
@@ -133,41 +133,7 @@
         {% endfor %}
     </div>
     
-    {# Formulaire pour ajouter une nouvelle catégorie #}
-    <div class="card mt-4 shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Ajouter rapidement une catégorie</h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ path('app_admin_categories_new') }}" method="post" class="row g-3">
-                <div class="col-md-4">
-                    <label for="nom" class="form-label">Nom de la catégorie</label>
-                    <input type="text" class="form-control" id="nom" name="nom" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="icone" class="form-label">Icône (FontAwesome)</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-icons"></i></span>
-                        <input type="text" class="form-control" id="icone" name="icone" placeholder="ex: trash-alt">
-                    </div>
-                    <div class="form-text">Entrez le nom de l'icône sans "fa-"</div>
-                </div>
-                <div class="col-md-4">
-                    <label for="couleur" class="form-label">Couleur</label>
-                    <input type="color" class="form-control form-control-color w-100" id="couleur" name="couleur" value="#0d6efd">
-                </div>
-                <div class="col-12">
-                    <label for="description" class="form-label">Description</label>
-                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i>Enregistrer
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+
     
     {# Section d'aide #}
     <div class="card mt-4">

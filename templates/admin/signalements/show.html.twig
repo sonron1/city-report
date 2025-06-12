@@ -82,7 +82,7 @@
     </div>
 
     <!-- Alerte d'information sur les outils de modération -->
-    {% if is_granted('ROLE_MODERATOR') and signalement.etatValidation == 'en_attente' %}
+    {% if is_granted('ROLE_MODERATOR') and signalement.etatValidation.value == 'en_attente' %}
         <div class="alert alert-info alert-dismissible fade show">
             <div class="d-flex align-items-center">
                 <i class="fas fa-info-circle me-2"></i>
@@ -98,7 +98,7 @@
     <div class="row">
         <!-- Informations principales -->
         <div class="col-lg-8">
-            <!-- Détails du signalement -->
+            <!-- Détails du signalements -->
             <div class="card shadow-sm info-card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
@@ -211,17 +211,10 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="timeline-item {{ signalement.etatValidation == 'valide' ? 'success' : (signalement.etatValidation == 'rejete' ? 'danger' : 'warning') }}">
+                    <div class="timeline-item {{ signalement.etatValidation.value == 'valide' ? 'success' : (signalement.etatValidation.value == 'rejete' ? 'danger' : 'warning') }}">
                         <h6 class="text-muted mb-1">État de validation</h6>
-                        {% set validation_config = {
-                            'valide': { 'class': 'success', 'icon': 'check-circle', 'text': 'Validé' },
-                            'rejete': { 'class': 'danger', 'icon': 'times-circle', 'text': 'Rejeté' },
-                            'en_attente': { 'class': 'warning', 'icon': 'clock', 'text': 'En attente' }
-                        } %}
-                        {% set config = validation_config[signalement.etatValidation] ?? validation_config['en_attente'] %}
-
-                        <span class="badge bg-{{ config.class }} status-badge">
-                            <i class="fas fa-{{ config.icon }} me-1"></i>{{ config.text }}
+                        <span class="badge bg-{{ signalement.etatValidation.badgeClass }} status-badge">
+                            <i class="fas fa-{{ signalement.etatValidation.icon }} me-1"></i>{{ signalement.etatValidation.label }}
                         </span>
                     </div>
 
@@ -253,15 +246,16 @@
                         </p>
                     </div>
 
-                    {% if signalement.dateResolution is defined and signalement.dateResolution %}
+                    {% if signalement.reparation and signalement.reparation.dateFin %}
                         <div class="timeline-item success">
                             <h6 class="text-muted mb-1">Date de résolution</h6>
                             <p class="mb-0">
                                 <i class="fas fa-check me-1 text-success"></i>
-                                <small>{{ signalement.dateResolution|date('d/m/Y à H:i') }}</small>
+                                <small>{{ signalement.reparation.dateFin|date('d/m/Y à H:i') }}</small>
                             </p>
                         </div>
                     {% endif %}
+
                 </div>
             </div>
 
@@ -314,7 +308,7 @@
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            {% if signalement.etatValidation == 'en_attente' %}
+                            {% if signalement.etatValidation.value == 'en_attente' %}
                                 <button type="button" class="btn btn-success"
                                         data-bs-toggle="modal"
                                         data-bs-target="#validateModal">
@@ -329,7 +323,7 @@
                             {% else %}
                                 <div class="alert alert-info mb-3">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    <small>Ce signalement a déjà été {{ signalement.etatValidation == 'valide' ? 'validé' : 'rejeté' }}.</small>
+                                    <small>Ce signalement a déjà été {{ signalement.etatValidation.value == 'valide' ? 'validé' : 'rejeté' }}.</small>
                                 </div>
                             {% endif %}
 
@@ -373,7 +367,7 @@
     {% endif %}
 
     <!-- Modales de modération (uniquement pour les modérateurs) -->
-    {% if is_granted('ROLE_MODERATOR') and signalement.etatValidation == 'en_attente' %}
+    {% if is_granted('ROLE_MODERATOR') and signalement.etatValidation.value == 'en_attente' %}
         <!-- Modal de validation -->
         <div class="modal fade" id="validateModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
@@ -384,7 +378,7 @@
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <form action="{{ path('app_moderation_validate', {'id': signalement.id}) }}" method="post">
+                    <form action="{{ path('app_moderateur_valider', {'id': signalement.id}) }}" method="post">
                         <div class="modal-body">
                             <div class="alert alert-success">
                                 <i class="fas fa-check-circle me-2"></i>
@@ -432,7 +426,7 @@
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <form action="{{ path('app_moderation_reject', {'id': signalement.id}) }}" method="post">
+                    <form action="{{ path('app_moderateur_rejeter', {'id': signalement.id}) }}" method="post">
                         <div class="modal-body">
                             <div class="alert alert-danger">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -483,16 +477,21 @@
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <form action="{{ path('app_moderation_modifier_statut', {'id': signalement.id}) }}" method="post">
+                    <form action="{{ path('app_moderateur_modifier_statut', {'id': signalement.id}) }}" method="post">
                         <div class="modal-body">
+                            {% for message in app.flashes('error') %}
+                                <div class="alert alert-danger">{{ message }}</div>
+                            {% endfor %}
+
                             <div class="mb-3">
                                 <label for="statut" class="form-label">Nouveau statut</label>
-                                <select class="form-select" id="statut" name="statut" required>
-                                    <option value="nouveau" {{ signalement.statut and signalement.statut.value == 'nouveau' ? 'selected' : '' }}>Nouveau</option>
-                                    <option value="en_cours" {{ signalement.statut and signalement.statut.value == 'en_cours' ? 'selected' : '' }}>En cours</option>
-                                    <option value="resolu" {{ signalement.statut and signalement.statut.value == 'resolu' ? 'selected' : '' }}>Résolu</option>
-                                    <option value="annule" {{ signalement.statut and signalement.statut.value == 'annule' ? 'selected' : '' }}>Annulé</option>
+                                <select class="form-select" id="statut" name="statut" required aria-describedby="statut-help">
+                                    <option value="nouveau" {{ signalement.statut.value == 'nouveau' ? 'selected' : '' }}>Nouveau</option>
+                                    <option value="en_cours" {{ signalement.statut.value == 'en_cours' ? 'selected' : '' }}>En cours</option>
+                                    <option value="resolu" {{ signalement.statut.value == 'resolu' ? 'selected' : '' }}>Résolu</option>
+                                    <option value="annule" {{ signalement.statut.value == 'annule' ? 'selected' : '' }}>Annulé</option>
                                 </select>
+                                <div id="statut-help" class="form-text">Sélectionnez le nouveau statut du signalement</div>
                             </div>
                             <div class="mb-3">
                                 <label for="commentaire_statut" class="form-label">Commentaire (optionnel)</label>
@@ -563,7 +562,8 @@
                             <i class="fas fa-times me-2"></i>Annuler
                         </button>
                         <form method="post" action="{{ path('app_admin_signalements_delete_force', {'id': signalement.id}) }}" style="display: inline;">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete_force' ~ signalement.id) }}">
+                            <!-- Nouveau (correct) -->
+                            <input type="hidden" name="_token" value="{{ csrf_token('force_delete' ~ signalement.id) }}">
                             <button type="submit" class="btn btn-danger">
                                 <i class="fas fa-trash me-2"></i>Supprimer définitivement
                             </button>

@@ -1,0 +1,203 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Signalements - Modération{% endblock %}
+
+{% block body %}
+    <div class="container-fluid py-4">
+        <!-- En-tête -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h2 mb-1">
+                            <i class="fas fa-list me-2 text-primary"></i>
+                            Gestion des signalements
+                        </h1>
+                        <p class="text-muted mb-0">Consultation et modération des signalements</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ path('app_moderateur_validation') }}" class="btn btn-warning">
+                            <i class="fas fa-clock me-1"></i>
+                            En attente ({{ stats.signalementsEnAttente }})
+                        </a>
+                        <a href="{{ path('app_moderateur_dashboard') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques rapides -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ stats.signalementsEnAttente }}</h3>
+                        <small>En attente</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ stats.signalementsEnCours }}</h3>
+                        <small>En cours</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ stats.signalementsResolus }}</h3>
+                        <small>Résolus</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ stats.signalementsRejetes }}</h3>
+                        <small>Rejetés</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtres</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="etat" class="form-label">État de validation</label>
+                        <select name="etat" id="etat" class="form-select">
+                            <option value="">Tous les états</option>
+                            <option value="en_attente" {{ currentFilters.etat == 'en_attente' ? 'selected' : '' }}>En attente</option>
+                            <option value="valide" {{ currentFilters.etat == 'valide' ? 'selected' : '' }}>Validé</option>
+                            <option value="rejete" {{ currentFilters.etat == 'rejete' ? 'selected' : '' }}>Rejeté</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="statut" class="form-label">Statut</label>
+                        <select name="statut" id="statut" class="form-select">
+                            <option value="">Tous les statuts</option>
+                            <option value="EN_COURS" {{ currentFilters.statut == 'EN_COURS' ? 'selected' : '' }}>En cours</option>
+                            <option value="RESOLU" {{ currentFilters.statut == 'RESOLU' ? 'selected' : '' }}>Résolu</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="categorie" class="form-label">Catégorie</label>
+                        <select name="categorie" id="categorie" class="form-select">
+                            <option value="">Toutes les catégories</option>
+                            {% for categorie in categories %}
+                                <option value="{{ categorie.id }}" {{ currentFilters.categorie == categorie.id ? 'selected' : '' }}>
+                                    {{ categorie.nom }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Filtrer
+                        </button>
+                        <a href="{{ path('app_moderateur_signalements') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Reset
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Liste des signalements -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Liste des signalements ({{ signalements|length }})
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if signalements|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Titre</th>
+                                <th>Utilisateur</th>
+                                <th>Ville</th>
+                                <th>Catégorie</th>
+                                <th>Date</th>
+                                <th>État</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for signalement in signalements %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ signalement.titre }}</strong>
+                                        {% if signalement.description|length > 50 %}
+                                            <br><small class="text-muted">{{ signalement.description|u.truncate(50, '...') }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}
+                                    </td>
+                                    <td>{{ signalement.ville.nom }}</td>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ signalement.categorie.couleur }}">
+                                            {{ signalement.categorie.nom }}
+                                        </span>
+                                    </td>
+                                    <td>{{ signalement.dateSignalement|date('d/m/Y H:i') }}</td>
+                                    <td>
+                                        {% if signalement.etatValidation == 'en_attente' %}
+                                            <span class="badge bg-warning">En attente</span>
+                                        {% elseif signalement.etatValidation == 'valide' %}
+                                            <span class="badge bg-success">Validé</span>
+                                        {% elseif signalement.etatValidation == 'rejete' %}
+                                            <span class="badge bg-danger">Rejeté</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if signalement.statut.value == 'EN_COURS' %}
+                                            <span class="badge bg-info">En cours</span>
+                                        {% elseif signalement.statut.value == 'RESOLU' %}
+                                            <span class="badge bg-success">Résolu</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ path('app_moderateur_signalements_show', {'id': signalement.id}) }}"
+                                               class="btn btn-outline-primary" title="Voir les détails">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if signalement.etatValidation == 'en_attente' %}
+                                                <a href="{{ path('app_moderateur_validation') }}#signalement-{{ signalement.id }}"
+                                                   class="btn btn-outline-warning" title="Modérer">
+                                                    <i class="fas fa-gavel"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Aucun signalement trouvé</h4>
+                        <p class="text-muted">Aucun signalement ne correspond aux critères sélectionnés.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

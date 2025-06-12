@@ -1,0 +1,220 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ signalement.titre }} - Modération{% endblock %}
+
+{% block body %}
+    <div class="container py-4">
+        <!-- En-tête -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h2 mb-1">Détails du signalement</h1>
+                        <p class="text-muted mb-0">Consultation en mode modérateur</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if signalement.etatValidation == 'en_attente' %}
+                            <a href="{{ path('app_moderateur_validation') }}" class="btn btn-warning">
+                                <i class="fas fa-gavel me-1"></i>Modérer
+                            </a>
+                        {% endif %}
+                        <a href="{{ path('app_moderateur_signalements') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-1"></i>Retour à la liste
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenu du signalements -->
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Informations principales -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Informations du signalement
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <h3>{{ signalement.titre }}</h3>
+                        <p class="text-muted mb-3">{{ signalement.description }}</p>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Adresse :</strong> {{ signalement.adresse }}</p>
+                                <p><strong>Ville :</strong> {{ signalement.ville.nom }}</p>
+                                <p><strong>Catégorie :</strong>
+                                    <span class="badge" style="background-color: {{ signalement.categorie.couleur }}">
+                                    {{ signalement.categorie.nom }}
+                                </span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Date de signalement :</strong> {{ signalement.dateSignalement|date('d/m/Y à H:i') }}</p>
+                                <p><strong>Signalé par :</strong> {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</p>
+                                <p><strong>Email :</strong> {{ signalement.utilisateur.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Photos du signalements -->
+                {% if signalement.photos|length > 0 %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-images me-2"></i>
+                                Photos ({{ signalement.photos|length }})
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for photo in signalement.photos %}
+                                    <div class="col-md-4 mb-3">
+                                        <img src="{{ asset('uploads/signalements/' ~ photo.nomFichier) }}"
+                                             alt="Photo du signalement"
+                                             class="img-fluid rounded shadow-sm"
+                                             data-bs-toggle="modal"
+                                             data-bs-target="#photoModal{{ loop.index }}"
+                                             style="cursor: pointer;">
+                                    </div>
+
+                                    <!-- Modal pour agrandir la photo -->
+                                    <div class="modal fade" id="photoModal{{ loop.index }}" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Photo {{ loop.index }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <img src="{{ asset('uploads/signalements/' ~ photo.nomFichier) }}"
+                                                         alt="Photo du signalement"
+                                                         class="img-fluid">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-lg-4">
+                <!-- État et statut -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-flag me-2"></i>
+                            État du signalement
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label"><strong>État de validation :</strong></label>
+                            <div>
+                                {% if signalement.etatValidation == 'en_attente' %}
+                                    <span class="badge bg-warning fs-6">En attente de validation</span>
+                                {% elseif signalement.etatValidation == 'valide' %}
+                                    <span class="badge bg-success fs-6">Validé</span>
+                                {% elseif signalement.etatValidation == 'rejete' %}
+                                    <span class="badge bg-danger fs-6">Rejeté</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Statut de traitement :</strong></label>
+                            <div>
+                                {% if signalement.statut.value == 'EN_COURS' %}
+                                    <span class="badge bg-info fs-6">En cours de traitement</span>
+                                {% elseif signalement.statut.value == 'RESOLU' %}
+                                    <span class="badge bg-success fs-6">Résolu</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if signalement.etatValidation == 'en_attente' %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-clock me-2"></i>
+                                Ce signalement est en attente de validation par un modérateur.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Localisation -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            Localisation
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Coordonnées :</strong></p>
+                        <p class="text-muted">
+                            Latitude: {{ signalement.latitude }}<br>
+                            Longitude: {{ signalement.longitude }}
+                        </p>
+                        {% if signalement.latitude and signalement.longitude %}
+                            <a href="https://www.google.com/maps?q={{ signalement.latitude }},{{ signalement.longitude }}"
+                               target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-external-link-alt me-1"></i>
+                                Voir sur Google Maps
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Actions de modération -->
+                {% if signalement.etatValidation == 'en_attente' %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-gavel me-2"></i>
+                                Actions de modération
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <!-- Validation -->
+                                <form method="post" action="{{ path('app_moderateur_valider', {'id': signalement.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('validate' ~ signalement.id) }}">
+                                    <div class="mb-2">
+                                    <textarea name="commentaire" class="form-control" rows="2"
+                                              placeholder="Commentaire de validation (optionnel)"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-success w-100"
+                                            onclick="return confirm('Valider ce signalements ?')">
+                                        <i class="fas fa-check me-1"></i>Valider
+                                    </button>
+                                </form>
+
+                                <hr>
+
+                                <!-- Rejet -->
+                                <form method="post" action="{{ path('app_moderateur_rejeter', {'id': signalement.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('reject' ~ signalement.id) }}">
+                                    <div class="mb-2">
+                                    <textarea name="commentaire" class="form-control" rows="3"
+                                              placeholder="Motif du rejet (obligatoire)" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger w-100"
+                                            onclick="return confirm('Rejeter ce signalements ?')">
+                                        <i class="fas fa-times me-1"></i>Rejeter
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
