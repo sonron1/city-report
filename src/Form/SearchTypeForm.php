@@ -21,7 +21,7 @@ class SearchTypeForm extends AbstractType
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
-                    'placeholder' => 'Rechercher un signalement...'
+                    'placeholder' => 'Rechercher un signalements...'
                 ],
             ])
             ->add('ville', EntityType::class, [

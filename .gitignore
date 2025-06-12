@@ -1,6 +1,8 @@
 ###> symfony/framework-bundle ###
 /.env
+/zfile/.env.BACKUPlocal
 /.env.local
+/zfile/.env.example
 /.env.local.php
 /.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
@@ -22,6 +24,7 @@
 ###> symfony/asset-mapper ###
 /public/assets/
 /assets/vendor/
+public/uploads
 ###< symfony/asset-mapper ###
 
 # Fichiers IDE et éditeurs
@@ -47,7 +50,7 @@ Thumbs.db
 
 # Fichiers d'environnement
 .env.*
-!.env.example
+!zfile/.env.example
 
 # Dossiers node
 /node_modules/

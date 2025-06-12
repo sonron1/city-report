@@ -2,19 +2,17 @@
 
 namespace App\Controller;
 
+// En haut du fichier, ajoutez ces importations si elles ne sont pas déjà présentes
 use App\Entity\Utilisateur;
-use App\Form\RegistrationFormTypeForm as RegistrationFormType;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\HttpFoundation\Request;
 
 class SecurityController extends AbstractController
 {
-    #[Route('/login', name: 'app_login')]
+    #[Route(path: '/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser()) {
@@ -29,42 +27,47 @@ class SecurityController extends AbstractController
         return $this->render('security/login.html.twig', ['last_username' => $lastUsername, 'error' => $error]);
     }
 
-    #[Route('/logout', name: 'app_logout')]
+    #[Route(path: '/logout', name: 'app_logout')]
     public function logout(): void
     {
-        throw new \LogicException('Cette méthode peut être vide - elle sera interceptée par la clé de déconnexion sur votre pare-feu.');
+        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
     
-    #[Route('/register', name: 'app_register')]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
+    #[Route(path: '/compte-non-verifie', name: 'app_not_verified')]
+    public function notVerified(): Response
     {
-        $user = new Utilisateur();
-        $form = $this->createForm(RegistrationFormType::class, $user);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            // encode the plain password
-            $user->setPassword(
-                $userPasswordHasher->hashPassword(
-                    $user,
-                    $form->get('plainPassword')->getData()
-                )
-            );
-            
-            $user->setRoles(['ROLE_USER']);
-            $user->setDateInscription(new \DateTime());
-            $user->setEstValide(false);
-
-            $entityManager->persist($user);
-            $entityManager->flush();
-            
-            $this->addFlash('success', 'Votre inscription a bien été prise en compte. Un administrateur va valider votre compte.');
-
+        if (!$this->getUser()) {
             return $this->redirectToRoute('app_login');
         }
-
-        return $this->render('security/register.html.twig', [
-            'registrationForm' => $form->createView(),
-        ]);
+        
+        if ($this->getUser()->isEstValide()) {
+            return $this->redirectToRoute('app_home');
+        }
+        
+        return $this->render('security/not_verified.html.twig');
     }
+// Ajouter cette méthode à votre SecurityController
+
+/**
+ * @Route("/check-verification", name="app_check_verification")
+ */
+#[Route('/check-verification', name: 'app_check_verification')]
+public function checkVerification(Request $request): Response
+{
+    $session = $request->getSession();
+    
+    if ($session->has('_security_verification_needed')) {
+        $session->remove('_security_verification_needed');
+        return $this->redirectToRoute('app_not_verified');
+    }
+    
+    // Si l'utilisateur est connecté mais pas vérifié, rediriger également
+    $user = $this->getUser();
+    if ($user instanceof Utilisateur && !$user->isEstValide()) {
+        return $this->redirectToRoute('app_not_verified');
+    }
+    
+    // Sinon, rediriger vers la page d'accueil
+    return $this->redirectToRoute('app_home');
+}
 }

@@ -15,10 +15,10 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
                         </div>
                     {% endfor %}
-                    
+
                     {{ form_start(registrationForm, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
                         {{ form_errors(registrationForm) }}
-                        
+
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 {{ form_label(registrationForm.prenom, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
@@ -35,7 +35,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             {{ form_label(registrationForm.email, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
                             {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control form-control-lg', 'placeholder': 'exemple@email.com'}}) }}
@@ -43,7 +43,7 @@
                                 {{ form_errors(registrationForm.email) }}
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             {{ form_label(registrationForm.villeResidence, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
                             {{ form_widget(registrationForm.villeResidence, {'attr': {'class': 'form-select form-select-lg'}}) }}
@@ -51,7 +51,7 @@
                                 {{ form_errors(registrationForm.villeResidence) }}
                             </div>
                         </div>
-                        
+
                         <div class="mb-4">
                             {{ form_label(registrationForm.plainPassword, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
                             {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'form-control form-control-lg', 'placeholder': 'Minimum 6 caractères'}}) }}
@@ -59,7 +59,7 @@
                                 {{ form_errors(registrationForm.plainPassword) }}
                             </div>
                         </div>
-                        
+
                         <div class="mb-4 form-check">
                             {{ form_widget(registrationForm.agreeTerms, {'attr': {'class': 'form-check-input'}}) }}
                             {{ form_label(registrationForm.agreeTerms, null, {'label_attr': {'class': 'form-check-label'}}) }}
@@ -67,14 +67,14 @@
                                 {{ form_errors(registrationForm.agreeTerms) }}
                             </div>
                         </div>
-                        
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="fas fa-user-plus me-2"></i> Créer mon compte
                             </button>
                         </div>
                     {{ form_end(registrationForm) }}
-                    
+
                     <div class="mt-4 text-center">
                         <p class="mb-0">Vous avez déjà un compte ? <a href="{{ path('app_login') }}" class="text-decoration-none fw-bold">Connectez-vous</a></p>
                     </div>
