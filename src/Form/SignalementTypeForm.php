@@ -27,13 +27,13 @@ class SignalementTypeForm extends AbstractType
 {
     private VilleRepository $villeRepository;
     private EntityManagerInterface $entityManager;
-    
+
     public function __construct(VilleRepository $villeRepository, EntityManagerInterface $entityManager)
     {
         $this->villeRepository = $villeRepository;
         $this->entityManager = $entityManager;
     }
-    
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -43,7 +43,7 @@ class SignalementTypeForm extends AbstractType
                     'class' => 'form-label fw-semibold'
                 ],
                 'attr' => [
-                    'placeholder' => 'Donnez un titre à votre signalement',
+                    'placeholder' => 'Donnez un titre à votre signalements',
                     'class' => 'form-control form-control-lg',
                     'autocomplete' => 'off'
                 ],
@@ -192,12 +192,12 @@ class SignalementTypeForm extends AbstractType
 $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {
     $data = $event->getData();
     $form = $event->getForm();
-    
+
     // Si une ville est sélectionnée, mettre à jour les arrondissements
     if (!empty($data['ville'])) {
         $villeId = $data['ville'];
         $ville = $this->entityManager->getRepository(Ville::class)->find($villeId);
-        
+
         if ($ville) {
             $form->add('arrondissement', EntityType::class, [
                 'class' => Arrondissement::class,
@@ -238,7 +238,7 @@ $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {
                     $arrondissement = $this->entityManager
                         ->getRepository(Arrondissement::class)
                         ->find($arrondissementId);
-                    
+
                     if ($arrondissement) {
                         // Définir la ville associée à l'arrondissement
                         $data['ville'] = $arrondissement->getVille()->getId();
@@ -251,8 +251,8 @@ $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {
 $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
     $signalement = $event->getData();
     $form = $event->getForm();
-    
-    // Si un signalement avec une ville existe, filtrer les arrondissements
+
+    // Si un signalements avec une ville existe, filtrer les arrondissements
     if ($signalement && $signalement->getVille()) {
         $ville = $signalement->getVille();
         $form->add('arrondissement', EntityType::class, [
@@ -295,7 +295,7 @@ $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event)
             'csrf_token_id' => 'signalement_form',
             'arrondissement_url' => null
         ]);
-        
+
         $resolver->setAllowedTypes('arrondissement_url', ['string', 'null']);
     }
 }

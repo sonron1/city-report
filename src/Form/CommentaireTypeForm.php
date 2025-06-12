@@ -18,7 +18,7 @@ class CommentaireTypeForm extends AbstractType
                 'label' => 'Votre commentaire',
                 'attr' => [
                     'rows' => 4,
-                    'placeholder' => 'Partagez votre avis ou vos informations concernant ce signalement...'
+                    'placeholder' => 'Partagez votre avis ou vos informations concernant ce signalements...'
                 ],
                 'constraints' => [
                     new NotBlank([

@@ -72,7 +72,7 @@ class MessageTypeForm extends AbstractType
             'choice_label' => function (Signalement $signalement) {
               return $signalement->getTitre() . ' - ' . $signalement->getVille()->getNom();
             },
-            'placeholder' => 'Aucun signalement lié (optionnel)',
+            'placeholder' => 'Aucun signalements lié (optionnel)',
             'label' => 'Signalement concerné',
             'attr' => [
                 'class' => 'form-select',
@@ -98,7 +98,7 @@ class MessageTypeForm extends AbstractType
               return $qb;
             },
             'required' => false,
-            'help' => 'Sélectionnez un signalement si votre message s\'y rapporte',
+            'help' => 'Sélectionnez un signalements si votre message s\'y rapporte',
         ]);
   }
 
