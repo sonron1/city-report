@@ -2,221 +2,173 @@
 
 namespace App\Command;
 
-use App\Entity\Signalement;
-use App\Entity\Utilisateur;
-use App\Entity\Ville;
-use App\Entity\Categorie;
-use App\Entity\Departement;
-use App\Service\EmailService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Mime\Address;
 
 #[AsCommand(
     name: 'app:test-email',
-    description: 'Test l\'envoi d\'emails de notification'
+    description: 'Test simple d\'envoi d\'email via Brevo avec Symfony Mailer',
 )]
 class TestEmailCommand extends Command
 {
   public function __construct(
-      private EmailService $emailService,
-      private EntityManagerInterface $entityManager
+      private MailerInterface $mailer,
+      private string $emailSender
   ) {
     parent::__construct();
-  }
-
-  protected function configure(): void
-  {
-    $this
-        ->addArgument('type', InputArgument::REQUIRED, 'Type d\'email à tester (validation, rejet, bienvenue, etc.)')
-        ->addArgument('email', InputArgument::OPTIONAL, 'Email de test (optionnel)')
-    ;
   }
 
   protected function execute(InputInterface $input, OutputInterface $output): int
   {
     $io = new SymfonyStyle($input, $output);
-    $type = $input->getArgument('type');
-    $testEmail = $input->getArgument('email') ?: 'test@example.com';
 
-    try {
-      switch ($type) {
-        case 'validation':
-          $signalement = $this->createTestSignalement($testEmail);
-          $this->emailService->sendSignalementValidatedEmail($signalement);
-          $io->success('Email de validation envoyé !');
-          break;
+    $io->title('📧 Test d\'envoi d\'email via Brevo');
 
-        case 'rejet':
-          $signalement = $this->createTestSignalement($testEmail);
-          $this->emailService->sendSignalementRejectedEmail($signalement, 'Informations insuffisantes pour traiter le signalement.');
-          $io->success('Email de rejet envoyé !');
-          break;
+    // Configuration des tests
+    $tests = [
+        [
+            'to' => 'koutikaangemarie@gmail.com',
+            'description' => 'Test 1: Email principal'
+        ],
+        [
+            'to' => 'angepop1998@gmail.com',
+            'description' => 'Test 2: Email secondaire'
+        ]
+    ];
 
-        case 'bienvenue':
-          $utilisateur = $this->createTestUtilisateur($testEmail);
-          $this->emailService->sendWelcomeEmail($utilisateur);
-          $io->success('Email de bienvenue envoyé !');
-          break;
+    $successCount = 0;
+    $totalTests = count($tests);
 
-        case 'resolu':
-          $signalement = $this->createTestSignalement($testEmail);
-          $this->emailService->sendSignalementResolvedEmail($signalement);
-          $io->success('Email de résolution envoyé !');
-          break;
+    foreach ($tests as $index => $test) {
+      $testNumber = $index + 1;
 
-        case 'commentaire':
-          $signalement = $this->createTestSignalement($testEmail);
-          $this->emailService->sendSignalementCommentEmail($signalement, 'Nous travaillons actuellement sur votre signalement.', 'Équipe technique');
-          $io->success('Email de commentaire envoyé !');
-          break;
+      $io->section($test['description']);
+      $io->text("📤 Expéditeur: {$this->emailSender}");
+      $io->text("📬 Destinataire: {$test['to']}");
+      $io->text('🔄 Envoi en cours...');
 
-        case 'statut':
-          $signalement = $this->createTestSignalement($testEmail);
-          $this->emailService->sendSignalementStatusUpdateEmail($signalement, 'en_attente', 'en_cours');
-          $io->success('Email de changement de statut envoyé !');
-          break;
+      try {
+        $email = (new Email())
+            ->from(new Address($this->emailSender, 'CityFlow Bénin'))
+            ->to($test['to'])
+            ->subject('🧪 Test CityFlow Bénin #' . $testNumber)
+            ->html($this->createEmailTemplate($testNumber, $test));
 
-        case 'compte-valide':
-          $utilisateur = $this->createTestUtilisateur($testEmail);
-          $this->emailService->sendAccountValidatedEmail($utilisateur);
-          $io->success('Email de validation de compte envoyé !');
-          break;
+        $this->mailer->send($email);
 
-        case 'reset-password':
-          $utilisateur = $this->createTestUtilisateur($testEmail);
-          $this->emailService->sendPasswordResetEmail($utilisateur, 'token-test-123456');
-          $io->success('Email de réinitialisation envoyé !');
-          break;
+        $io->success("✅ Test #{$testNumber} : Email envoyé avec succès !");
+        $successCount++;
 
-        case 'supprime':
-          $utilisateur = $this->createTestUtilisateur($testEmail);
-          $this->emailService->sendSignalementDeletedEmail($utilisateur, 'Nid de poule sur la route principale', 'Contenu inapproprié');
-          $io->success('Email de suppression envoyé !');
-          break;
+      } catch (\Exception $e) {
+        $io->error("❌ Test #{$testNumber} échoué : " . $e->getMessage());
 
-        default:
-          $io->error('Type d\'email non reconnu. Types disponibles : validation, rejet, bienvenue, resolu, commentaire, statut, compte-valide, reset-password, supprime');
-          return Command::FAILURE;
+        // Détails de l'erreur pour le debug
+        $io->text("🔍 Type d'erreur : " . get_class($e));
+        if (method_exists($e, 'getCode') && $e->getCode()) {
+          $io->text("📋 Code erreur : " . $e->getCode());
+        }
       }
 
-      $io->note("Email envoyé à : $testEmail");
-      $io->note('Vérifiez votre boîte Mailtrap : https://mailtrap.io/inboxes');
-
-    } catch (\Exception $e) {
-      $io->error('Erreur lors de l\'envoi : ' . $e->getMessage());
-      return Command::FAILURE;
+      $io->newLine();
     }
 
-    return Command::SUCCESS;
+    // Résumé final
+    $this->displaySummary($io, $successCount, $totalTests);
+
+    return $successCount > 0 ? Command::SUCCESS : Command::FAILURE;
   }
 
-  private function createTestUtilisateur(string $testEmail): Utilisateur
+  private function createEmailTemplate(int $testNumber, array $test): string
   {
-    // Récupérer ou créer les entités nécessaires
-    $ville = $this->getOrCreateTestVille();
-
-    // Créer l'utilisateur de test
-    $utilisateur = new Utilisateur();
-    $utilisateur->setEmail($testEmail);
-    $utilisateur->setPrenom('Jean');
-    $utilisateur->setNom('Dupont');
-    $utilisateur->setPassword('test'); // Password sera hashé normalement
-    $utilisateur->setVilleResidence($ville);
-    $utilisateur->setDateInscription(new \DateTime());
-    $utilisateur->setEstValide(true);
-
-    return $utilisateur;
+    return "
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 600px; margin: 0 auto; }
+                .header { background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 30px; text-align: center; }
+                .content { padding: 30px; background: #f9f9f9; }
+                .footer { background: #333; color: white; padding: 20px; text-align: center; font-size: 14px; }
+                .badge { background: #4CAF50; color: white; padding: 5px 10px; border-radius: 5px; display: inline-block; }
+                .info-box { background: white; padding: 20px; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                .success { color: #4CAF50; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h1>🏢 CityFlow Bénin</h1>
+                    <p>Test d'email #{$testNumber} - Configuration Brevo</p>
+                </div>
+                
+                <div class='content'>
+                    <div class='info-box'>
+                        <h2>🎉 Test réussi !</h2>
+                        <p>Votre configuration email <strong>CityFlow Bénin</strong> via <strong>Brevo</strong> fonctionne parfaitement !</p>
+                        
+                        <h3>📋 Détails de ce test :</h3>
+                        <ul>
+                            <li><strong>Test :</strong> {$test['description']}</li>
+                            <li><strong>Expéditeur :</strong> {$this->emailSender}</li>
+                            <li><strong>Destinataire :</strong> {$test['to']}</li>
+                            <li><strong>Statut :</strong> <span class='badge success'>✅ SUCCÈS</span></li>
+                            <li><strong>Date/Heure :</strong> " . date('d/m/Y H:i:s') . "</li>
+                        </ul>
+                    </div>
+                    
+                    <div class='info-box'>
+                        <h3>🚀 Votre plateforme est prête pour :</h3>
+                        <ul>
+                            <li>✅ Emails de bienvenue aux nouveaux utilisateurs</li>
+                            <li>✅ Confirmations d'inscription</li>
+                            <li>✅ Notifications de signalements</li>
+                            <li>✅ Réinitialisation de mots de passe</li>
+                            <li>✅ Mises à jour de statuts</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class='footer'>
+                    <p><strong>CityFlow Bénin</strong> - Plateforme de signalement citoyen</p>
+                    <p>Email envoyé via Brevo SMTP • Test #{$testNumber}</p>
+                </div>
+            </div>
+        </body>
+        </html>";
   }
 
-  private function createTestSignalement(string $testEmail): Signalement
+  private function displaySummary(SymfonyStyle $io, int $successCount, int $totalTests): void
   {
-    // Créer l'utilisateur avec tous les champs requis
-    $utilisateur = $this->createTestUtilisateur($testEmail);
+    $io->section('📊 Résumé des tests Brevo');
 
-    // Récupérer ou créer les entités nécessaires
-    $ville = $this->getOrCreateTestVille();
-    $categorie = $this->getOrCreateTestCategorie();
+    $io->text("✅ Tests réussis: {$successCount}/{$totalTests}");
 
-    // Créer le signalement de test
-    $signalement = new Signalement();
-    $signalement->setTitre('Test - Nid de poule sur la route principale');
-    $signalement->setDescription('Signalement de test pour vérifier les emails. Ce signalement sera supprimé automatiquement.');
-    $signalement->setLatitude(48.8566);  // Coordonnées de Paris
-    $signalement->setLongitude(2.3522);
-    $signalement->setUtilisateur($utilisateur);
-    $signalement->setVille($ville);
-    $signalement->setCategorie($categorie);
-    $signalement->setDateSignalement(new \DateTime());
-    $signalement->setEtatValidation('en_attente');
-    $signalement->setStatut(\App\Enum\StatutSignalement::NOUVEAU);
-    $signalement->setPriorite(1);
-    $signalement->setPhotoUrl('test-image.jpg');
+    if ($successCount === $totalTests) {
+      $io->success('🎉 Parfait ! Brevo est entièrement configuré et opérationnel !');
+      $io->text('🚀 Votre plateforme peut maintenant envoyer des emails.');
+      $io->note('📬 Vérifiez vos boîtes mail (et dossiers spam) pour voir les emails reçus.');
 
-    // Persister temporairement le signalement pour avoir un ID
-    $this->entityManager->persist($utilisateur);
-    $this->entityManager->persist($signalement);
-    $this->entityManager->flush();
+    } elseif ($successCount > 0) {
+      $io->warning("⚠️ {$successCount} test(s) sur {$totalTests} ont réussi.");
+      $io->text('🔧 Vérifiez la configuration pour les échecs.');
 
-    return $signalement;
-  }
-
-  private function getOrCreateTestDepartement(): Departement
-  {
-    $departement = $this->entityManager->getRepository(Departement::class)
-        ->findOneBy(['nom' => 'Test Département']);
-
-    if (!$departement) {
-      $departement = new Departement();
-      $departement->setNom('Test Département');
-      $departement->setDescription('Département de test pour les emails');
-      $departement->setPays('Bénin');
-      $this->entityManager->persist($departement);
-      $this->entityManager->flush(); // Flush pour avoir l'ID
+    } else {
+      $io->error('❌ Aucun test n\'a réussi.');
+      $io->text('🔍 Points à vérifier :');
+      $io->listing([
+          'Vérifiez MAILER_DSN dans votre .env',
+          'Vérifiez que EMAIL_FROM est une adresse validée dans Brevo',
+          'Vérifiez vos identifiants SMTP Brevo',
+          'Consultez les logs Brevo pour plus de détails'
+      ]);
     }
 
-    return $departement;
-  }
-
-  private function getOrCreateTestVille(): Ville
-  {
-    $ville = $this->entityManager->getRepository(Ville::class)
-        ->findOneBy(['nom' => 'Test Ville']);
-
-    if (!$ville) {
-      $departement = $this->getOrCreateTestDepartement();
-
-      $ville = new Ville();
-      $ville->setNom('Test Ville');
-      $ville->setDepartement($departement);
-      $ville->setLatitudeCentre(48.8566);
-      $ville->setLongitudeCentre(2.3522);
-      $this->entityManager->persist($ville);
-      $this->entityManager->flush(); // Flush pour avoir l'ID
-    }
-
-    return $ville;
-  }
-
-  private function getOrCreateTestCategorie(): Categorie
-  {
-    $categorie = $this->entityManager->getRepository(Categorie::class)
-        ->findOneBy(['nom' => 'Test Catégorie']);
-
-    if (!$categorie) {
-      $categorie = new Categorie();
-      $categorie->setNom('Test Catégorie');
-      $categorie->setDescription('Catégorie de test pour les emails');
-      $categorie->setIcone('fas fa-tools');
-      $categorie->setCouleur('#007bff');
-      $this->entityManager->persist($categorie);
-      $this->entityManager->flush(); // Flush pour avoir l'ID
-    }
-
-    return $categorie;
+    $io->note('💡 Consultez les logs Brevo : https://app.brevo.com/log/sms-email');
   }
 }
