@@ -79,7 +79,7 @@ class MessageController extends AbstractController
             $message->setSujet($sujet);
           }
 
-          // Associer le même signalement si il existe
+          // Associer le même signalements si il existe
           if ($originalMessage->getSignalementConcerne()) {
             $message->setSignalementConcerne($originalMessage->getSignalementConcerne());
           }

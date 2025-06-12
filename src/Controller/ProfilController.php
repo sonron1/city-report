@@ -186,7 +186,7 @@ class ProfilController extends AbstractController
 
         foreach ($signalements as $signalement) {
             $activites[] = [
-                'type' => 'signalement',
+                'type' => 'signalements',
                 'icon' => 'fa-exclamation-triangle',
                 'title' => 'Signalement créé',
                 'description' => $signalement->getTitre(),

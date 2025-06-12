@@ -61,9 +61,9 @@ class ValidationController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
 
-        // Vérifier que le signalement est en attente
+        // Vérifier que le signalements est en attente
         if ($signalement->getEtatValidation() !== EtatValidation::EN_ATTENTE->value) {
-            $this->addFlash('warning', 'Ce signalement a déjà été traité.');
+            $this->addFlash('warning', 'Ce signalements a déjà été traité.');
             return $this->redirectToRoute('app_signalement_show', ['id' => $signalement->getId()]);
         }
 
@@ -76,12 +76,12 @@ class ValidationController extends AbstractController
         $journal->setModerateur($user); // Utiliser setModerateur au lieu de setUtilisateur
         $journal->setDateValidation(new \DateTime()); // Utiliser setDateValidation
         $journal->setAction('Validation');
-        $journal->setCommentaire('Le signalement a été validé');
+        $journal->setCommentaire('Le signalements a été validé');
 
         $entityManager->persist($journal);
         $entityManager->flush();
 
-        $this->addFlash('success', 'Le signalement a été validé avec succès.');
+        $this->addFlash('success', 'Le signalements a été validé avec succès.');
 
         // Rediriger selon la provenance
         $referer = $request->headers->get('referer');
@@ -104,9 +104,9 @@ class ValidationController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
 
-        // Vérifier que le signalement est en attente
+        // Vérifier que le signalements est en attente
         if ($signalement->getEtatValidation() !== EtatValidation::EN_ATTENTE->value) {
-            $this->addFlash('warning', 'Ce signalement a déjà été traité.');
+            $this->addFlash('warning', 'Ce signalements a déjà été traité.');
             return $this->redirectToRoute('app_signalement_show', ['id' => $signalement->getId()]);
         }
 
@@ -122,12 +122,12 @@ class ValidationController extends AbstractController
         $journal->setModerateur($user); // Utiliser setModerateur au lieu de setUtilisateur
         $journal->setDateValidation(new \DateTime()); // Utiliser setDateValidation
         $journal->setAction('Rejet');
-        $journal->setCommentaire('Le signalement a été rejeté. Raison: ' . $raisonRejet);
+        $journal->setCommentaire('Le signalements a été rejeté. Raison: ' . $raisonRejet);
 
         $entityManager->persist($journal);
         $entityManager->flush();
 
-        $this->addFlash('success', 'Le signalement a été rejeté.');
+        $this->addFlash('success', 'Le signalements a été rejeté.');
 
         // Rediriger selon la provenance
         $referer = $request->headers->get('referer');
