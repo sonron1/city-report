@@ -9,57 +9,112 @@ use Doctrine\Persistence\ObjectManager;
 
 class DepartementFixtures extends Fixture implements FixtureGroupInterface
 {
-    public static function getGroups(): array
-    {
-        return ['departements', 'geo'];
+  public function load(ObjectManager $manager): void
+  {
+    $departements = [
+        [
+            'nom' => 'Alibori',
+            'description' => 'Département du nord du Bénin, chef-lieu: Kandi',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Atakora',
+            'description' => 'Département du nord-ouest du Bénin, chef-lieu: Natitingou',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Atlantique',
+            'description' => 'Département du sud du Bénin, chef-lieu: Allada',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Borgou',
+            'description' => 'Département du nord-est du Bénin, chef-lieu: Parakou',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Collines',
+            'description' => 'Département du centre du Bénin, chef-lieu: Savalou',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Couffo',
+            'description' => 'Département du sud-ouest du Bénin, chef-lieu: Aplahoué',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Donga',
+            'description' => 'Département du nord-ouest du Bénin, chef-lieu: Djougou',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Littoral',
+            'description' => 'Département du sud du Bénin, chef-lieu: Cotonou',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Mono',
+            'description' => 'Département du sud-ouest du Bénin, chef-lieu: Lokossa',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Ouémé',
+            'description' => 'Département du sud-est du Bénin, chef-lieu: Porto-Novo',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Plateau',
+            'description' => 'Département du sud-est du Bénin, chef-lieu: Pobé',
+            'pays' => 'Bénin'
+        ],
+        [
+            'nom' => 'Zou',
+            'description' => 'Département du centre du Bénin, chef-lieu: Abomey',
+            'pays' => 'Bénin'
+        ],
+    ];
+
+    foreach ($departements as $data) {
+      $departement = new Departement();
+      $departement->setNom($data['nom']);
+      $departement->setDescription($data['description']);
+      $departement->setPays($data['pays']);
+
+      // Générer le slug manuellement
+      $slug = $this->slugify($data['nom']);
+      $departement->setSlug($slug);
+
+      $manager->persist($departement);
+
+      // ✅ Créer une référence pour chaque département
+      $this->addReference('departement_' . $slug, $departement);
     }
 
-    public function load(ObjectManager $manager): void
-    {
-        $departements = [
-            ['nom' => 'Alibori', 'description' => 'Département du nord du Bénin, chef-lieu: Kandi'],
-            ['nom' => 'Atacora', 'description' => 'Département du nord-ouest du Bénin, chef-lieu: Natitingou'],
-            ['nom' => 'Atlantique', 'description' => 'Département du sud du Bénin, chef-lieu: Allada'],
-            ['nom' => 'Borgou', 'description' => 'Département du nord-est du Bénin, chef-lieu: Parakou'],
-            ['nom' => 'Collines', 'description' => 'Département du centre du Bénin, chef-lieu: Dassa-Zoumè'],
-            ['nom' => 'Couffo', 'description' => 'Département du sud-ouest du Bénin, chef-lieu: Aplahoué'],
-            ['nom' => 'Donga', 'description' => 'Département du nord-ouest du Bénin, chef-lieu: Djougou'],
-            ['nom' => 'Littoral', 'description' => 'Département du sud du Bénin, composé uniquement de la ville de Cotonou'],
-            ['nom' => 'Mono', 'description' => 'Département du sud-ouest du Bénin, chef-lieu: Lokossa'],
-            ['nom' => 'Ouémé', 'description' => 'Département du sud-est du Bénin, chef-lieu: Porto-Novo'],
-            ['nom' => 'Plateau', 'description' => 'Département du sud-est du Bénin, chef-lieu: Pobè'],
-            ['nom' => 'Zou', 'description' => 'Département du centre-sud du Bénin, chef-lieu: Abomey']
-        ];
+    $manager->flush();
 
-        foreach ($departements as $data) {
-            $departement = new Departement();
-            $departement->setNom($data['nom']);
-            $departement->setDescription($data['description']);
-            
-            $manager->persist($departement);
-            
-            // Ajouter une référence pour utilisation future
-            $this->addReference('departement_' . $this->slugify($data['nom']), $departement);
-        }
+    echo "✅ " . count($departements) . " départements créés\n";
+  }
 
-        $manager->flush();
-    }
-    
-    private function slugify(string $text): string
-    {
-        // Remplacer les caractères non alphanumériques par un tiret
-        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-        // Translitérer
-        $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-        // Supprimer les caractères indésirables
-        $text = preg_replace('~[^-\w]+~', '', $text);
-        // Trimmer
-        $text = trim($text, '-');
-        // Supprimer les tirets dupliqués
-        $text = preg_replace('~-+~', '-', $text);
-        // Mettre en minuscules
-        $text = strtolower($text);
+  public static function getGroups(): array
+  {
+    return ['departements'];
+  }
 
-        return $text;
-    }
+  private function slugify(string $text): string
+  {
+    // Remplacer les caractères non alphanumériques par un tiret
+    $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+    // Translitérer
+    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+    // Supprimer les caractères indésirables
+    $text = preg_replace('~[^-\w]+~', '', $text);
+    // Trimmer
+    $text = trim($text, '-');
+    // Supprimer les tirets dupliqués
+    $text = preg_replace('~-+~', '-', $text);
+    // Mettre en minuscules
+    $text = strtolower($text);
+
+    return $text;
+  }
 }

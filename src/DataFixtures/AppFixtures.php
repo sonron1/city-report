@@ -26,6 +26,7 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
   public function getDependencies(): array
   {
     return [
+        DepartementFixtures::class,
         VilleFixtures::class,
         ArrondissementFixtures::class,
     ];
@@ -38,41 +39,47 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
 
   public function load(ObjectManager $manager): void
   {
+    echo "🚀 Début du chargement d'AppFixtures...\n";
+
     // Vérifier que les fixtures dépendantes ont été chargées correctement
     if (!$this->hasReference('ville_cotonou', Ville::class)) {
       throw new \RuntimeException('Les fixtures de villes doivent être chargées avant AppFixtures');
     }
 
-    // Récupérer les villes à partir des références plutôt que par requête
+    // Récupérer les villes à partir des références
     $villes = [];
     $villeRefs = ['cotonou', 'porto-novo', 'abomey-calavi', 'parakou', 'lokossa'];
     foreach ($villeRefs as $ref) {
-        if ($this->hasReference('ville_' . $ref, Ville::class)) {
-            $villes[] = $this->getReference('ville_' . $ref, Ville::class);
-        }
+      if ($this->hasReference('ville_' . $ref, Ville::class)) {
+        $villes[] = $this->getReference('ville_' . $ref, Ville::class);
+      }
     }
 
     if (empty($villes)) {
-        throw new \RuntimeException('Aucune ville n\'a été trouvée dans les références');
+      throw new \RuntimeException('Aucune ville n\'a été trouvée dans les références');
     }
 
-    // Récupération des arrondissements (on garde la requête pour l'exemple)
+    echo "✅ " . count($villes) . " villes récupérées des références\n";
+
+    // Récupération des arrondissements par requête directe
     $arrondissementRepository = $manager->getRepository(Arrondissement::class);
     $arrondissements = $arrondissementRepository->findAll();
+
+    echo "✅ " . count($arrondissements) . " arrondissements trouvés en base\n";
 
     // Préparation d'un tableau d'arrondissements par ville
     $arrondissementsParVille = [];
     foreach ($arrondissements as $arrondissement) {
-        $ville = $arrondissement->getVille();
-        if ($ville !== null) {
-            $villeId = $ville->getId();
-            if ($villeId !== null) {
-                if (!isset($arrondissementsParVille[$villeId])) {
-                    $arrondissementsParVille[$villeId] = [];
-                }
-                $arrondissementsParVille[$villeId][] = $arrondissement;
-            }
+      $ville = $arrondissement->getVille();
+      if ($ville !== null) {
+        $villeId = $ville->getId();
+        if ($villeId !== null) {
+          if (!isset($arrondissementsParVille[$villeId])) {
+            $arrondissementsParVille[$villeId] = [];
+          }
+          $arrondissementsParVille[$villeId][] = $arrondissement;
         }
+      }
     }
 
     // Création de catégories avec icônes et couleurs
@@ -88,16 +95,17 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
     ];
 
     foreach ($categoriesData as $categorieData) {
-        $categorie = new Categorie();
-        $categorie->setNom($categorieData['nom']);
-        $categorie->setDescription($categorieData['description']);
-        $categorie->setIcone($categorieData['icone']);
-        $categorie->setCouleur($categorieData['couleur']);
-        $manager->persist($categorie);
-        $categories[] = $categorie;
+      $categorie = new Categorie();
+      $categorie->setNom($categorieData['nom']);
+      $categorie->setDescription($categorieData['description']);
+      $categorie->setIcone($categorieData['icone']);
+      $categorie->setCouleur($categorieData['couleur']);
+      $manager->persist($categorie);
+      $categories[] = $categorie;
     }
 
-    // Le reste du code reste similaire...
+    echo "✅ " . count($categories) . " catégories créées\n";
+
     // Création d'utilisateurs
     $utilisateurs = [];
 
@@ -121,7 +129,7 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
     $moderateur->setPrenom('Super');
     $moderateur->setRoles(['ROLE_MODERATOR']);
     $moderateur->setPassword($this->passwordHasher->hashPassword($moderateur, 'modo123'));
-    $moderateur->setVilleResidence($villes[1]); // Porto-Novo
+    $moderateur->setVilleResidence($villes[1 % count($villes)]); // Protection contre l'index manquant
     $moderateur->setDateInscription(new \DateTime());
     $moderateur->setEstValide(true);
     $manager->persist($moderateur);
@@ -144,6 +152,8 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
       $manager->persist($utilisateur);
       $utilisateurs[] = $utilisateur;
     }
+
+    echo "✅ " . count($utilisateurs) . " utilisateurs créés\n";
 
     // Création de signalements
     $statuts = [
@@ -189,16 +199,6 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
         'Les eaux usées sont déversées directement dans la rue, causant des odeurs nauséabondes et un risque sanitaire.'
     ];
 
-    // Préparation d'un tableau d'arrondissements par ville
-    $arrondissementsParVille = [];
-    foreach ($arrondissements as $arrondissement) {
-      $villeId = $arrondissement->getVille()->getId();
-      if (!isset($arrondissementsParVille[$villeId])) {
-        $arrondissementsParVille[$villeId] = [];
-      }
-      $arrondissementsParVille[$villeId][] = $arrondissement;
-    }
-
     // Créer 30 signalements
     for ($i = 0; $i < 30; $i++) {
       $signalement = new Signalement();
@@ -234,6 +234,10 @@ class AppFixtures extends Fixture implements DependentFixtureInterface, FixtureG
       $manager->persist($signalement);
     }
 
+    echo "✅ 30 signalements créés\n";
+
     $manager->flush();
+
+    echo "🎉 AppFixtures terminé avec succès !\n";
   }
 }

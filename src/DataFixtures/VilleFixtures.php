@@ -28,7 +28,7 @@ class VilleFixtures extends Fixture implements DependentFixtureInterface, Fixtur
             ['nom' => 'Malanville', 'lat' => 11.8665, 'lng' => 3.3800],
             ['nom' => 'Segbana', 'lat' => 10.9304, 'lng' => 3.6946]
         ],
-        'atacora' => [
+        'atakora' => [ // ✅ Corrigé : 'atacora' -> 'atakora'
             ['nom' => 'Boukoumbé', 'lat' => 10.1744, 'lng' => 1.1075],
             ['nom' => 'Cobly', 'lat' => 10.4672, 'lng' => 0.8879],
             ['nom' => 'Kérou', 'lat' => 10.8256, 'lng' => 2.1062],
@@ -123,14 +123,18 @@ class VilleFixtures extends Fixture implements DependentFixtureInterface, Fixtur
         ]
     ];
 
+    // Récupérer tous les départements depuis la base de données
+    $departementRepository = $manager->getRepository(Departement::class);
+
     // Parcourir les départements et créer les villes correspondantes
     foreach ($communesParDepartement as $departementSlug => $communes) {
-      // Vérifier si la référence de département existe
-      if (!$this->hasReference('departement_' . $departementSlug, Departement::class)) {
+      // Récupérer le département par son slug
+      $departement = $departementRepository->findOneBy(['slug' => $departementSlug]);
+
+      if (!$departement) {
+        echo "⚠️  Département avec slug '$departementSlug' non trouvé\n";
         continue;
       }
-
-      $departement = $this->getReference('departement_' . $departementSlug, Departement::class);
 
       foreach ($communes as $communeData) {
         $ville = new Ville();
@@ -138,6 +142,9 @@ class VilleFixtures extends Fixture implements DependentFixtureInterface, Fixtur
         $ville->setLatitudeCentre($communeData['lat']);
         $ville->setLongitudeCentre($communeData['lng']);
         $ville->setDepartement($departement);
+
+        // Générer le slug manuellement
+        $ville->setSlug($this->slugify($communeData['nom']));
 
         $manager->persist($ville);
 
@@ -147,6 +154,10 @@ class VilleFixtures extends Fixture implements DependentFixtureInterface, Fixtur
     }
 
     $manager->flush();
+
+    echo "✅ " . count($communesParDepartement) . " départements traités\n";
+    $totalCommunes = array_sum(array_map('count', $communesParDepartement));
+    echo "✅ $totalCommunes communes créées\n";
   }
 
   public function getDependencies(): array
