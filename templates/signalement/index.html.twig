@@ -191,7 +191,7 @@
             <div class="collapse" id="filterCollapse">
                 <form action="" method="get" class="row g-3">
                     <input type="hidden" name="tab" value="{{ app.request.query.get('tab', 'my') }}">
-                    
+
                     <div class="col-md-3">
                         <label class="form-label">Statut</label>
                         <select class="form-select" name="statut">
@@ -202,7 +202,7 @@
                             <option value="rejete" {% if app.request.query.get('statut') == 'rejete' %}selected{% endif %}>Rejeté</option>
                         </select>
                     </div>
-                    
+
                     <div class="col-md-3">
                         <label class="form-label">Catégorie</label>
                         <select class="form-select" name="categorie">
@@ -214,7 +214,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
+
                     <div class="col-md-3">
                         <label class="form-label">Ville</label>
                         <select class="form-select" name="ville">
@@ -226,7 +226,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
+
                     <div class="col-md-3">
                         <label class="form-label">Date</label>
                         <select class="form-select" name="date">
@@ -236,7 +236,7 @@
                             <option value="month" {% if app.request.query.get('date') == 'month' %}selected{% endif %}>Ce mois-ci</option>
                         </select>
                     </div>
-                    
+
                     <div class="col-12 text-end">
                         <button type="reset" class="btn btn-outline-secondary me-2" onclick="window.location='{{ path('app_signalements', {'tab': app.request.query.get('tab', 'my')}) }}'">
                             <i class="fas fa-undo me-1"></i> Réinitialiser
@@ -354,12 +354,12 @@
 
                                         <p class="card-text">{{ signalement.description|u.truncate(80, '...') }}</p>
 
-                                        <!-- État de validation -->
+                                        <!-- État de validation avec enum -->
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="badge bg-{{ signalement.etatValidation == 'en_attente' ? 'warning' : (signalement.etatValidation == 'validé' ? 'success' : 'danger') }}">
-                                            <i class="fas {{ signalement.etatValidation == 'en_attente' ? 'fa-clock' : (signalement.etatValidation == 'validé' ? 'fa-check' : 'fa-times') }} me-1"></i>
-                                            {{ signalement.etatValidation|capitalize }}
-                                        </span>
+                                            <span class="badge {{ signalement.etatValidation.badgeClass }}">
+                                                <i class="fas fa-{{ signalement.etatValidation.icon }} me-1"></i>
+                                                {{ signalement.etatValidation.label }}
+                                            </span>
 
                                             <!-- Nombre de commentaires -->
                                             <span class="badge bg-light text-dark">
@@ -369,20 +369,20 @@
                                     </div>
 
                                     <div class="card-footer bg-white border-0">
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-primary flex-fill">
-                                            <i class="fas fa-eye me-2"></i> Consulter le détail
-                                        </a>
-                                        
-                                        {% if is_granted('ROLE_MODERATOR') and not signalement.reparation %}
-                                            <a href="{{ path('app_reparation_new', {'signalement_id': signalement.id}) }}" 
-                                               class="btn btn-success" 
-                                               title="Planifier une réparation">
-                                                <i class="fas fa-tools"></i>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-primary flex-fill">
+                                                <i class="fas fa-eye me-2"></i> Consulter le détail
                                             </a>
-                                        {% endif %}
+
+                                            {% if is_granted('ROLE_MODERATOR') and not signalement.reparation %}
+                                                <a href="{{ path('app_reparation_new', {'signalement_id': signalement.id}) }}"
+                                                   class="btn btn-success"
+                                                   title="Planifier une réparation">
+                                                    <i class="fas fa-tools"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
                         {% endfor %}
@@ -502,12 +502,12 @@
 
                                         <p class="card-text">{{ signalement.description|u.truncate(80, '...') }}</p>
 
-                                        <!-- État de validation et commentaires -->
+                                        <!-- État de validation et commentaires avec enum -->
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="badge bg-{{ signalement.etatValidation == 'en_attente' ? 'warning' : (signalement.etatValidation == 'validé' ? 'success' : 'danger') }}">
-                                            <i class="fas {{ signalement.etatValidation == 'en_attente' ? 'fa-clock' : (signalement.etatValidation == 'validé' ? 'fa-check' : 'fa-times') }} me-1"></i>
-                                            {{ signalement.etatValidation|capitalize }}
-                                        </span>
+                                            <span class="badge {{ signalement.etatValidation.badgeClass }}">
+                                                <i class="fas fa-{{ signalement.etatValidation.icon }} me-1"></i>
+                                                {{ signalement.etatValidation.label }}
+                                            </span>
 
                                             <span class="badge bg-light text-dark">
                                             <i class="fas fa-comments me-1"></i> {{ signalement.commentaires|length }}
@@ -516,20 +516,20 @@
                                     </div>
 
                                     <div class="card-footer bg-white border-0">
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-primary flex-fill">
-                                            <i class="fas fa-eye me-2"></i> Consulter le détail
-                                        </a>
-                                        
-                                        {% if is_granted('ROLE_MODERATOR') and not signalement.reparation %}
-                                            <a href="{{ path('app_reparation_new', {'signalement_id': signalement.id}) }}" 
-                                               class="btn btn-success" 
-                                               title="Planifier une réparation">
-                                                <i class="fas fa-tools"></i>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-primary flex-fill">
+                                                <i class="fas fa-eye me-2"></i> Consulter le détail
                                             </a>
-                                        {% endif %}
+
+                                            {% if is_granted('ROLE_MODERATOR') and not signalement.reparation %}
+                                                <a href="{{ path('app_reparation_new', {'signalement_id': signalement.id}) }}"
+                                                   class="btn btn-success"
+                                                   title="Planifier une réparation">
+                                                    <i class="fas fa-tools"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
                         {% endfor %}
@@ -608,26 +608,7 @@
                 }
             }
 
-            // Ajouter l'onglet aux liens de pagination
-            document.querySelectorAll('#my-signalements .pagination a').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    const href = this.getAttribute('href');
-                    if (href && !href.includes('tab=')) {
-                        this.setAttribute('href', href + (href.includes('?') ? '&' : '?') + 'tab=my');
-                    }
-                });
-            });
-
-            document.querySelectorAll('#all-signalements .pagination a').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    const href = this.getAttribute('href');
-                    if (href && !href.includes('tab=')) {
-                        this.setAttribute('href', href + (href.includes('?') ? '&' : '?') + 'tab=all');
-                    }
-                });
-            });
-
-            // Animation au défilement
+            // Animation au défilement - CORRECTION DE LA CLASSE
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -639,6 +620,7 @@
                 threshold: 0.1
             });
 
+            // ✅ CORRECTION ICI : signalement-card (sans 's')
             document.querySelectorAll('.signalement-card').forEach(card => {
                 observer.observe(card);
             });

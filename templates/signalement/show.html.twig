@@ -166,15 +166,6 @@
 
 {% block body %}
     <div class="container-fluid mt-4 px-4">
-        {# Affichage des messages flash #}
-        {% for label, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="alert alert-{{ label }} alert-dismissible fade show mb-4" role="alert">
-                    <i class="bi bi-info-circle me-2"></i>{{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endfor %}
 
         <!-- Fil d'Ariane -->
         <nav aria-label="breadcrumb" class="mb-4">
@@ -185,7 +176,7 @@
             </ol>
         </nav>
 
-        <!-- En-tête du signalement -->
+        <!-- En-tête du signalements -->
         <div class="detail-header">
             <div class="row align-items-center">
                 <div class="col-md-8">
@@ -217,11 +208,11 @@
                     </div>
                     <div>
                         <span class="status-badge
-                            {% if signalement.etatValidation == 'en_attente' %}bg-warning
-                            {% elseif signalement.etatValidation == 'valide' %}bg-success
-                            {% elseif signalement.etatValidation == 'rejete' %}bg-danger
+                            {% if signalement.etatValidation.value == 'en_attente' %}bg-warning
+                            {% elseif signalement.etatValidation.value == 'validé' %}bg-success
+                            {% elseif signalement.etatValidation.value == 'rejeté' %}bg-danger
                             {% endif %} text-white">
-                            <i class="bi bi-check-circle me-1"></i> {{ signalement.etatValidation|replace({'_': ' '})|capitalize }}
+                            <i class="bi bi-check-circle me-1"></i> {{ signalement.etatValidation.value|replace({'_': ' '})|capitalize }}
                         </span>
                     </div>
                 </div>
@@ -239,7 +230,7 @@
             </div>
         </div>
 
-        <!-- Informations du signalement -->
+        <!-- Informations du signalements -->
         <div class="row">
             <div class="col-md-8">
                 <!-- Onglets pour organiser le contenu -->
@@ -333,7 +324,7 @@
                                     </div>
                                     <div class="card-body">
                                         {{ form_start(commentForm) }}
-                                        {{ form_widget(commentForm.contenu, {'attr': {'rows': 3, 'class': 'form-control', 'placeholder': 'Partagez votre avis ou vos informations concernant ce signalement...'}}) }}
+                                        {{ form_widget(commentForm.contenu, {'attr': {'rows': 3, 'class': 'form-control', 'placeholder': 'Partagez votre avis ou vos informations concernant ce signalements...'}}) }}
                                         <button type="submit" class="btn btn-primary mt-3 w-100">
                                             <i class="bi bi-send me-2"></i>Envoyer
                                         </button>
@@ -478,7 +469,7 @@
                                     <h5 class="modal-title">Valider le signalement</h5>
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                 </div>
-                                <form action="{{ path('app_moderation_valider', {'id': signalement.id}) }}" method="post">
+                                <form action="{{ path('app_moderateur_valider', {'id': signalement.id}) }}" method="post">
                                     <div class="modal-body">
                                         <p>Confirmer la validation de ce signalement ?</p>
                                         <div class="mb-3">
@@ -506,7 +497,7 @@
                                     <h5 class="modal-title">Rejeter le signalement</h5>
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                 </div>
-                                <form action="{{ path('app_moderation_rejeter', {'id': signalement.id}) }}" method="post">
+                                <form action="{{ path('app_moderateur_rejeter', {'id': signalement.id}) }}" method="post">
                                     <div class="modal-body">
                                         <p>Confirmer le rejet de ce signalement ?</p>
                                         <div class="mb-3">
@@ -534,7 +525,7 @@
                                     <h5 class="modal-title">Modifier le statut</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
-                                <form action="{{ path('app_moderation_modifier_statut', {'id': signalement.id}) }}" method="post">
+                                <form action="{{ path('app_moderateur_modifier_statut', {'id': signalement.id}) }}" method="post">
                                     <div class="modal-body">
                                         <div class="mb-3">
                                             <label for="newStatus" class="form-label">Nouveau statut</label>
@@ -624,11 +615,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Récupérer les coordonnées du signalement
+            // Récupérer les coordonnées du signalements
             const latitude = {{ signalement.latitude }};
             const longitude = {{ signalement.longitude }};
 
-            // Initialiser la carte centrée sur le signalement avec un zoom approprié
+            // Initialiser la carte centrée sur le signalements avec un zoom approprié
             const map = L.map('detail-map').setView([latitude, longitude], 15);
 
             // Ajouter la couche de tuiles (OpenStreetMap)
@@ -648,13 +639,13 @@
                 popupAnchor: [1, -34]
             });
 
-            // Ajouter un marqueur à la position du signalement
+            // Ajouter un marqueur à la position du signalements
             const marker = L.marker([latitude, longitude], {
                 icon: customIcon,
                 title: "{{ signalement.titre }}"
             }).addTo(map);
 
-            // Ajouter une popup avec les informations du signalement
+            // Ajouter une popup avec les informations du signalements
             marker.bindPopup(`
                 <div class="popup-content">
                     <h5 class="mb-2 fw-bold">{{ signalement.titre }}</h5>

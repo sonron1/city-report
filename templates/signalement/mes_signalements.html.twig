@@ -18,11 +18,11 @@
                             <small class="text-muted">#{{ signalement.id }}</small>
 
                             {# Badge de validation #}
-                            {% if signalement.etatValidation == 'en_attente' %}
+                            {% if signalement.etatValidation.value == 'en_attente' %}
                                 <span class="badge bg-warning">En attente</span>
-                            {% elseif signalement.etatValidation == 'valide' %}
+                            {% elseif signalement.etatValidation.value == 'validé' %}
                                 <span class="badge bg-success">Validé</span>
-                            {% elseif signalement.etatValidation == 'rejete' %}
+                            {% elseif signalement.etatValidation.value == 'rejeté' %}
                                 <span class="badge bg-danger">Rejeté</span>
                             {% endif %}
                         </div>
@@ -46,9 +46,13 @@
                             <div class="mb-2">
                                 <small class="text-muted">
                                     <i class="fas fa-map-marker-alt me-1"></i>
-                                    {{ signalement.ville.nom }}
-                                    {% if signalement.arrondissement %}
-                                        - {{ signalement.arrondissement.nom }}
+                                    {% if signalement.ville %}
+                                        {{ signalement.ville.nom }}
+                                        {% if signalement.arrondissement %}
+                                            - {{ signalement.arrondissement.nom }}
+                                        {% endif %}
+                                    {% else %}
+                                        Localisation non définie
                                     {% endif %}
                                 </small>
                             </div>
@@ -56,7 +60,11 @@
                             <div class="mb-2">
                                 <small class="text-muted">
                                     <i class="fas fa-tag me-1"></i>
-                                    {{ signalement.categorie.nom }}
+                                    {% if signalement.categorie %}
+                                        {{ signalement.categorie.nom }}
+                                    {% else %}
+                                        Non catégorisé
+                                    {% endif %}
                                 </small>
                             </div>
 
@@ -67,7 +75,7 @@
                                 </small>
                             </div>
 
-                            <p class="card-text text-truncate">
+                            <p class="card-text">
                                 {{ signalement.description|length > 100 ? signalement.description|slice(0, 100) ~ '...' : signalement.description }}
                             </p>
 
@@ -85,7 +93,7 @@
                             </div>
 
                             {# Affichage du motif de rejet si applicable #}
-                            {% if signalement.etatValidation == 'rejete' %}
+                            {% if signalement.etatValidation.value == 'rejeté' %}
                                 {% set dernierRejet = null %}
                                 {% for journal in signalement.journalValidations|reverse %}
                                     {% if journal.action == 'Rejet' and journal.commentaire and dernierRejet is null %}
@@ -104,10 +112,10 @@
                             {% endif %}
                         </div>
 
-                        {# ✅ FOOTER AVEC BOUTONS CONDITIONNELS CORRIGÉS #}
+                        {# Footer avec boutons #}
                         <div class="card-footer bg-transparent">
                             <div class="d-flex justify-content-between align-items-center">
-                                {# Bouton Voir (toujours présent) #}
+                                {# Bouton Voir #}
                                 <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
                                    class="btn btn-outline-primary btn-sm">
                                     <i class="fas fa-eye me-1"></i>
@@ -115,17 +123,17 @@
                                 </a>
 
                                 <div>
-                                    {# ✅ Bouton Modifier - UNIQUEMENT si rejeté ET route corrigée #}
-                                    {% if signalement.etatValidation == 'rejete' %}
-                                        <a href="{{ path('app_signalement_edit', {'id': signalement.id}) }}"
+                                    {# Bouton Modifier pour signalements rejetés #}
+                                    {% if signalement.etatValidation.value == 'rejeté' %}
+                                        <a href="{{ path('app_signalement_modifier', {'id': signalement.id}) }}"
                                            class="btn btn-warning btn-sm me-2">
                                             <i class="fas fa-edit me-1"></i>
                                             Modifier
                                         </a>
                                     {% endif %}
 
-                                    {# ✅ Bouton Demande de suppression - avec route correcte #}
-                                    {% if signalement.etatValidation == 'valide' and not signalement.demandeSuppressionStatut %}
+                                    {# Bouton Demande de suppression pour signalements validés #}
+                                    {% if signalement.etatValidation.value == 'validé' and not signalement.demandeSuppressionStatut %}
                                         <form method="post" action="{{ path('app_signalement_demande_suppression', {'id': signalement.id}) }}" style="display: inline-block;">
                                             <input type="hidden" name="_token" value="{{ csrf_token('delete_request' ~ signalement.id) }}">
                                             <button type="submit" class="btn btn-outline-danger btn-sm"
@@ -168,7 +176,7 @@
             {% endfor %}
         </div>
 
-        {# Statistiques en bas de page #}
+        {# Statistiques #}
         {% if signalements|length > 0 %}
             <div class="row mt-5">
                 <div class="col-12">
@@ -181,9 +189,9 @@
                             <div class="row text-center">
                                 {% set stats = {
                                     'total': signalements|length,
-                                    'en_attente': signalements|filter(s => s.etatValidation == 'en_attente')|length,
-                                    'valides': signalements|filter(s => s.etatValidation == 'valide')|length,
-                                    'rejetes': signalements|filter(s => s.etatValidation == 'rejete')|length
+                                    'en_attente': signalements|filter(s => s.etatValidation.value == 'en_attente')|length,
+                                    'valides': signalements|filter(s => s.etatValidation.value == 'validé')|length,
+                                    'rejetes': signalements|filter(s => s.etatValidation.value == 'rejeté')|length
                                 } %}
 
                                 <div class="col-3">
@@ -217,7 +225,7 @@
             </div>
         {% endif %}
 
-        {# Bouton pour créer un nouveau signalement #}
+        {# Bouton nouveau signalement #}
         <div class="text-center mt-4">
             <a href="{{ path('app_signalement_nouveau') }}" class="btn btn-success btn-lg">
                 <i class="fas fa-plus me-2"></i>

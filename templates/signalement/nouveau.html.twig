@@ -43,7 +43,8 @@
             <div class="col-lg-10 mx-auto">
                 {% for label, messages in app.flashes %}
                     {% for message in messages %}
-                        <div class="alert alert-{{ label }} alert-dismissible fade show">
+                        <div class="alert alert-{% if label == 'error' %}danger{% else %}{{ label }}{% endif %} alert-dismissible fade show">
+                            <i class="fas fa-{% if label == 'success' %}check-circle{% elseif label == 'error' %}exclamation-triangle{% elseif label == 'warning' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
                             {{ message }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
                         </div>
@@ -55,7 +56,7 @@
                         <h1 class="h3 mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>Nouveau signalement</h1>
                     </div>
                     <div class="card-body p-4">
-                        {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate', 'id': 'signalement-form'}}) }}
+                        {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate', 'id': 'signalements-form'}}) }}
                         <!-- Informations générales -->
                         <div class="card mb-4">
                             <div class="card-header bg-light">
@@ -268,7 +269,7 @@
 
         // Valider le formulaire avant soumission
         function validateFormBeforeSubmit() {
-            const form = document.getElementById('signalement-form');
+            const form = document.getElementById('signalements-form');
             const latitudeField = document.getElementById('signalement_type_form_latitude');
             const longitudeField = document.getElementById('signalement_type_form_longitude');
             const errorElement = document.getElementById('coordinates-error');
