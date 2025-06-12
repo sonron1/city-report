@@ -15,6 +15,15 @@
         <server name="SHELL_VERBOSITY" value="-1" />
         <server name="SYMFONY_PHPUNIT_REMOVE" value="" />
         <server name="SYMFONY_PHPUNIT_VERSION" value="9.5" />
+
+        <!-- ###+ symfony/brevo-notifier ### -->
+        <!-- BREVO_DSN=brevo://API_KEY@default?sender=SENDER -->
+        <!-- ###- symfony/brevo-notifier ### -->
+
+        <!-- ###+ symfony/brevo-mailer ### -->
+        <!-- MAILER_DSN=brevo+api://KEY@default -->
+        <!-- MAILER_DSN=brevo+smtp://USERNAME:PASSWORD@default -->
+        <!-- ###- symfony/brevo-mailer ### -->
     </php>
 
     <testsuites>

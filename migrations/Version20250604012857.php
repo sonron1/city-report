@@ -93,22 +93,22 @@ final class Version20250604012857 extends AbstractMigration
             CREATE INDEX IDX_8FDF219DFB88E14F ON reparation (utilisateur_id)
         SQL);
         $this->addSql(<<<'SQL'
-            CREATE TABLE signalement (id SERIAL NOT NULL, utilisateur_id INT NOT NULL, categorie_id INT NOT NULL, ville_id INT NOT NULL, cluster_id INT DEFAULT NULL, arrondissement_id INT DEFAULT NULL, titre VARCHAR(255) NOT NULL, description TEXT NOT NULL, photo_url VARCHAR(255) NOT NULL, latitude DOUBLE PRECISION NOT NULL, longitude DOUBLE PRECISION NOT NULL, date_signalement TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, statut VARCHAR(50) NOT NULL, priorite INT NOT NULL, etat_validation VARCHAR(50) NOT NULL, demande_suppression_statut VARCHAR(20) DEFAULT NULL, date_demande_suppression_statut TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, PRIMARY KEY(id))
+            CREATE TABLE signalements (id SERIAL NOT NULL, utilisateur_id INT NOT NULL, categorie_id INT NOT NULL, ville_id INT NOT NULL, cluster_id INT DEFAULT NULL, arrondissement_id INT DEFAULT NULL, titre VARCHAR(255) NOT NULL, description TEXT NOT NULL, photo_url VARCHAR(255) NOT NULL, latitude DOUBLE PRECISION NOT NULL, longitude DOUBLE PRECISION NOT NULL, date_signalement TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, statut VARCHAR(50) NOT NULL, priorite INT NOT NULL, etat_validation VARCHAR(50) NOT NULL, demande_suppression_statut VARCHAR(20) DEFAULT NULL, date_demande_suppression_statut TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, PRIMARY KEY(id))
         SQL);
         $this->addSql(<<<'SQL'
-            CREATE INDEX IDX_F4B55114FB88E14F ON signalement (utilisateur_id)
+            CREATE INDEX IDX_F4B55114FB88E14F ON signalements (utilisateur_id)
         SQL);
         $this->addSql(<<<'SQL'
-            CREATE INDEX IDX_F4B55114BCF5E72D ON signalement (categorie_id)
+            CREATE INDEX IDX_F4B55114BCF5E72D ON signalements (categorie_id)
         SQL);
         $this->addSql(<<<'SQL'
-            CREATE INDEX IDX_F4B55114A73F0036 ON signalement (ville_id)
+            CREATE INDEX IDX_F4B55114A73F0036 ON signalements (ville_id)
         SQL);
         $this->addSql(<<<'SQL'
-            CREATE INDEX IDX_F4B55114C36A3328 ON signalement (cluster_id)
+            CREATE INDEX IDX_F4B55114C36A3328 ON signalements (cluster_id)
         SQL);
         $this->addSql(<<<'SQL'
-            CREATE INDEX IDX_F4B55114407DBC11 ON signalement (arrondissement_id)
+            CREATE INDEX IDX_F4B55114407DBC11 ON signalements (arrondissement_id)
         SQL);
         $this->addSql(<<<'SQL'
             CREATE TABLE utilisateur (id SERIAL NOT NULL, ville_residence_id INT NOT NULL, email VARCHAR(180) NOT NULL, roles JSON NOT NULL, password VARCHAR(255) NOT NULL, nom VARCHAR(255) NOT NULL, prenom VARCHAR(255) NOT NULL, date_inscription TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, est_valide BOOLEAN NOT NULL, confirmation_token VARCHAR(100) DEFAULT NULL, token_expiry_date TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, PRIMARY KEY(id))
@@ -173,13 +173,13 @@ final class Version20250604012857 extends AbstractMigration
             ALTER TABLE cluster ADD CONSTRAINT FK_E5C56994A73F0036 FOREIGN KEY (ville_id) REFERENCES ville (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE commentaire ADD CONSTRAINT FK_67F068BC65C5E57E FOREIGN KEY (signalement_id) REFERENCES signalement (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE
+            ALTER TABLE commentaire ADD CONSTRAINT FK_67F068BC65C5E57E FOREIGN KEY (signalement_id) REFERENCES signalements (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE commentaire ADD CONSTRAINT FK_67F068BCFB88E14F FOREIGN KEY (utilisateur_id) REFERENCES utilisateur (id) ON DELETE CASCADE NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE journal_validation ADD CONSTRAINT FK_8BCC417A65C5E57E FOREIGN KEY (signalement_id) REFERENCES signalement (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+            ALTER TABLE journal_validation ADD CONSTRAINT FK_8BCC417A65C5E57E FOREIGN KEY (signalement_id) REFERENCES signalements (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE journal_validation ADD CONSTRAINT FK_8BCC417A20A01F78 FOREIGN KEY (moderateur_id) REFERENCES utilisateur (id) NOT DEFERRABLE INITIALLY IMMEDIATE
@@ -191,34 +191,34 @@ final class Version20250604012857 extends AbstractMigration
             ALTER TABLE message ADD CONSTRAINT FK_B6BD307FA4F84F6E FOREIGN KEY (destinataire_id) REFERENCES utilisateur (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE message ADD CONSTRAINT FK_B6BD307F2F504A83 FOREIGN KEY (signalement_concerne_id) REFERENCES signalement (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+            ALTER TABLE message ADD CONSTRAINT FK_B6BD307F2F504A83 FOREIGN KEY (signalement_concerne_id) REFERENCES signalements (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE notification ADD CONSTRAINT FK_BF5476CAA4F84F6E FOREIGN KEY (destinataire_id) REFERENCES utilisateur (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE notification ADD CONSTRAINT FK_BF5476CA65C5E57E FOREIGN KEY (signalement_id) REFERENCES signalement (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+            ALTER TABLE notification ADD CONSTRAINT FK_BF5476CA65C5E57E FOREIGN KEY (signalement_id) REFERENCES signalements (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE reparation ADD CONSTRAINT FK_8FDF219D65C5E57E FOREIGN KEY (signalement_id) REFERENCES signalement (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+            ALTER TABLE reparation ADD CONSTRAINT FK_8FDF219D65C5E57E FOREIGN KEY (signalement_id) REFERENCES signalements (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE reparation ADD CONSTRAINT FK_8FDF219DFB88E14F FOREIGN KEY (utilisateur_id) REFERENCES utilisateur (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE signalement ADD CONSTRAINT FK_F4B55114FB88E14F FOREIGN KEY (utilisateur_id) REFERENCES utilisateur (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+            ALTER TABLE signalements ADD CONSTRAINT FK_F4B55114FB88E14F FOREIGN KEY (utilisateur_id) REFERENCES utilisateur (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE signalement ADD CONSTRAINT FK_F4B55114BCF5E72D FOREIGN KEY (categorie_id) REFERENCES categorie (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+            ALTER TABLE signalements ADD CONSTRAINT FK_F4B55114BCF5E72D FOREIGN KEY (categorie_id) REFERENCES categorie (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE signalement ADD CONSTRAINT FK_F4B55114A73F0036 FOREIGN KEY (ville_id) REFERENCES ville (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+            ALTER TABLE signalements ADD CONSTRAINT FK_F4B55114A73F0036 FOREIGN KEY (ville_id) REFERENCES ville (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE signalement ADD CONSTRAINT FK_F4B55114C36A3328 FOREIGN KEY (cluster_id) REFERENCES cluster (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+            ALTER TABLE signalements ADD CONSTRAINT FK_F4B55114C36A3328 FOREIGN KEY (cluster_id) REFERENCES cluster (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE signalement ADD CONSTRAINT FK_F4B55114407DBC11 FOREIGN KEY (arrondissement_id) REFERENCES arrondissement (id) NOT DEFERRABLE INITIALLY IMMEDIATE
+            ALTER TABLE signalements ADD CONSTRAINT FK_F4B55114407DBC11 FOREIGN KEY (arrondissement_id) REFERENCES arrondissement (id) NOT DEFERRABLE INITIALLY IMMEDIATE
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE utilisateur ADD CONSTRAINT FK_1D1C63B3FD871CC9 FOREIGN KEY (ville_residence_id) REFERENCES ville (id) NOT DEFERRABLE INITIALLY IMMEDIATE
@@ -274,19 +274,19 @@ final class Version20250604012857 extends AbstractMigration
             ALTER TABLE reparation DROP CONSTRAINT FK_8FDF219DFB88E14F
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE signalement DROP CONSTRAINT FK_F4B55114FB88E14F
+            ALTER TABLE signalements DROP CONSTRAINT FK_F4B55114FB88E14F
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE signalement DROP CONSTRAINT FK_F4B55114BCF5E72D
+            ALTER TABLE signalements DROP CONSTRAINT FK_F4B55114BCF5E72D
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE signalement DROP CONSTRAINT FK_F4B55114A73F0036
+            ALTER TABLE signalements DROP CONSTRAINT FK_F4B55114A73F0036
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE signalement DROP CONSTRAINT FK_F4B55114C36A3328
+            ALTER TABLE signalements DROP CONSTRAINT FK_F4B55114C36A3328
         SQL);
         $this->addSql(<<<'SQL'
-            ALTER TABLE signalement DROP CONSTRAINT FK_F4B55114407DBC11
+            ALTER TABLE signalements DROP CONSTRAINT FK_F4B55114407DBC11
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE utilisateur DROP CONSTRAINT FK_1D1C63B3FD871CC9
@@ -322,7 +322,7 @@ final class Version20250604012857 extends AbstractMigration
             DROP TABLE reparation
         SQL);
         $this->addSql(<<<'SQL'
-            DROP TABLE signalement
+            DROP TABLE signalements
         SQL);
         $this->addSql(<<<'SQL'
             DROP TABLE utilisateur

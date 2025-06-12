@@ -4,7 +4,7 @@ Encore
     .setOutputPath('public/build/')
     .setPublicPath('/build')
     .addEntry('app', './assets/app.js')
-    .addEntry('signalement-map', './assets/js/signalement-map.js')
+    .addEntry('signalements-map', './assets/js/signalement-map.js')
     .addEntry('carte-index', './assets/js/carte-index.js')
     .addEntry('admin', './assets/js/admin.js') // Script pour l'administration
     .addStyleEntry('styles', './assets/styles/app.scss')
@@ -16,6 +16,14 @@ Encore
     .enableSourceMaps(!Encore.isProduction())
     .enableVersioning(Encore.isProduction())
     .enableSassLoader()
+    //
+    //
+    .cleanupOutputBeforeBuild()
+    .enableBuildNotifications()
+    .enableSourceMaps(!Encore.isProduction())
+    // enables hashed filenames (e.g. app.abc123.css)
+    .enableVersioning(Encore.isProduction())
+    //
     // Copier les images de Leaflet
     .copyFiles({
         from: './node_modules/leaflet/dist/images',

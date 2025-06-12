@@ -25,6 +25,7 @@
         "build": "encore production --progress"
     },
     "dependencies": {
+        "babel-preset-env": "^1.7.0",
         "leaflet": "^1.9.4",
         "mapbox-gl": "^3.12.0"
     }

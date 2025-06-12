@@ -1,4 +1,4 @@
-// assets/js/signalement-map.js
+// assets/js/signalements-map.js
 
 import { 
     BENIN_CENTER_LAT, 
