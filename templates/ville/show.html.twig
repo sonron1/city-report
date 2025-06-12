@@ -1,293 +1,593 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/layout.html.twig' %}
 
-{% block title %}{{ ville.nom }} - Signalements{% endblock %}
+{% block title %}{{ signalement.titre }} - Administration{% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        #ville-map {
-            height: 500px;
-            width: 100%;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        .card {
-            transition: transform 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            height: 100%;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .card-img-top {
-            height: 200px;
-            object-fit: cover;
-            border-top-left-radius: calc(0.375rem - 1px);
-            border-top-right-radius: calc(0.375rem - 1px);
-        }
-        .category-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: white;
-        }
-        .status-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: white;
-        }
-        .ville-header {
-            background-size: cover;
-            background-position: center;
-            color: white;
-            padding: 60px 0;
-            margin-bottom: 30px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
-            position: relative;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .ville-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1;
-        }
-        .ville-header-content {
-            position: relative;
-            z-index: 2;
-        }
-        .filter-container {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .pagination {
-            justify-content: center;
-            margin-top: 30px;
-        }
-    </style>
+{% block admin_breadcrumb %}
+    <li class="breadcrumb-item">
+        <a href="{{ path('app_admin_signalements') }}">Signalements</a>
+    </li>
+    <li class="breadcrumb-item active">Signalement #{{ signalement.id }}</li>
+{% endblock %}
+
+{% block admin_content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-1">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                Signalement #{{ signalement.id }}
+            </h1>
+            <p class="text-muted mb-0">Vue administrative complète</p>
+        </div>
+        <div class="btn-group">
+            <a href="{{ path('app_admin_signalements') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+            </a>
+            {% if signalement.etatValidation == 'valide' %}
+                <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}"
+                   class="btn btn-info" target="_blank">
+                    <i class="fas fa-external-link-alt me-1"></i> Vue publique
+                </a>
+            {% endif %}
+            <a href="{{ path('app_moderateur_signalements_show', {'id': signalement.id}) }}"
+               class="btn btn-outline-info">
+                <i class="fas fa-gavel me-1"></i> Mode modération
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Informations principales -->
+            <div class="card admin-card mb-4">
+                <div class="card-header admin-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informations du signalement
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="text-primary mb-3">{{ signalement.titre }}</h3>
+
+                    {% if signalement.description %}
+                        <div class="alert alert-light">
+                            <h6><i class="fas fa-align-left me-2"></i>Description :</h6>
+                            <p class="mb-0">{{ signalement.description }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">ID :</td>
+                                    <td><span class="badge bg-primary">#{{ signalement.id }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Adresse :</td>
+                                    <td>{{ signalement.adresse }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Ville :</td>
+                                    <td>
+                                        {% if signalement.ville %}
+                                            <span class="badge bg-primary">
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            {{ signalement.ville.nom }}
+                                        </span>
+                                        {% else %}
+                                            <span class="text-muted">Non définie</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Catégorie :</td>
+                                    <td>
+                                        {% if signalement.categorie %}
+                                            <span class="badge" style="background-color: {{ signalement.categorie.couleur }}">
+                                            {{ signalement.categorie.nom }}
+                                        </span>
+                                        {% else %}
+                                            <span class="text-muted">Non catégorisé</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Priorité :</td>
+                                    <td>
+                                        {% if signalement.priorite %}
+                                            <span class="badge bg-warning">Haute</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Normale</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Date de création :</td>
+                                    <td>{{ signalement.dateSignalement|date('d/m/Y à H:i') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Signalé par :</td>
+                                    <td>
+                                        {% if signalement.utilisateur %}
+                                            <div>
+                                                <strong>{{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }}</strong>
+                                                {% if is_granted('ROLE_ADMIN') %}
+                                                    <br><small class="text-muted">{{ signalement.utilisateur.email }}</small>
+                                                    {% if signalement.utilisateur.telephone %}
+                                                        <br><small class="text-muted">{{ signalement.utilisateur.telephone }}</small>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-danger">
+                                            <i class="fas fa-user-slash me-1"></i>Utilisateur supprimé
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Coordonnées GPS :</td>
+                                    <td>
+                                        {% if signalement.latitude and signalement.longitude %}
+                                            <small>
+                                                Lat: {{ signalement.latitude }}<br>
+                                                Lng: {{ signalement.longitude }}
+                                            </small>
+                                            <br>
+                                            <a href="https://www.google.com/maps?q={{ signalement.latitude }},{{ signalement.longitude }}"
+                                               target="_blank" class="btn btn-sm btn-outline-primary mt-1">
+                                                <i class="fas fa-external-link-alt me-1"></i>Google Maps
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Non disponibles</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Dernière modif :</td>
+                                    <td>
+                                        {% if signalement.dateModification %}
+                                            {{ signalement.dateModification|date('d/m/Y à H:i') }}
+                                        {% else %}
+                                            <span class="text-muted">Jamais modifié</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photos du signalement -->
+            {% if signalement.photos|length > 0 %}
+                <div class="card admin-card mb-4">
+                    <div class="card-header admin-card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-images me-2"></i>
+                            Photos ({{ signalement.photos|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for photo in signalement.photos %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <img src="{{ asset('uploads/signalements/' ~ photo.nomFichier) }}"
+                                             alt="Photo du signalement"
+                                             class="card-img-top"
+                                             data-bs-toggle="modal"
+                                             data-bs-target="#photoModal{{ loop.index }}"
+                                             style="cursor: pointer; height: 200px; object-fit: cover;">
+                                        <div class="card-body p-2">
+                                            <small class="text-muted">
+                                                <i class="fas fa-file me-1"></i>{{ photo.nomFichier }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Modal pour agrandir la photo -->
+                                <div class="modal fade" id="photoModal{{ loop.index }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Photo {{ loop.index }} - {{ photo.nomFichier }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body text-center">
+                                                <img src="{{ asset('uploads/signalements/' ~ photo.nomFichier) }}"
+                                                     alt="Photo du signalement"
+                                                     class="img-fluid">
+                                            </div>
+                                            <div class="modal-footer">
+                                                <a href="{{ asset('uploads/signalements/' ~ photo.nomFichier) }}"
+                                                   download class="btn btn-primary">
+                                                    <i class="fas fa-download me-1"></i>Télécharger
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Commentaires -->
+            {% if signalement.commentaires|length > 0 %}
+                <div class="card admin-card mb-4">
+                    <div class="card-header admin-card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-comments me-2"></i>
+                            Commentaires ({{ signalement.commentaires|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for commentaire in signalement.commentaires %}
+                            <div class="border-bottom pb-3 mb-3 {% if loop.last %}border-0 pb-0 mb-0{% endif %}">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-user text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-0">
+                                                    {% if commentaire.utilisateur %}
+                                                        {{ commentaire.utilisateur.prenom }} {{ commentaire.utilisateur.nom }}
+                                                    {% else %}
+                                                        <span class="text-muted">Utilisateur supprimé</span>
+                                                    {% endif %}
+                                                </h6>
+                                                <small class="text-muted">{{ commentaire.dateCommentaire|date('d/m/Y à H:i') }}</small>
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 mb-0">{{ commentaire.contenu }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Journal de validation -->
+            {% if signalement.journalValidations|length > 0 %}
+                <div class="card admin-card">
+                    <div class="card-header admin-card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>
+                            Historique de modération ({{ signalement.journalValidations|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for journal in signalement.journalValidations %}
+                            <div class="d-flex border-bottom pb-3 mb-3 {% if loop.last %}border-0 pb-0 mb-0{% endif %}">
+                                <div class="me-3">
+                                    {% if journal.action == 'valide' %}
+                                        <i class="fas fa-check-circle text-success fa-2x"></i>
+                                    {% elseif journal.action == 'rejete' %}
+                                        <i class="fas fa-times-circle text-danger fa-2x"></i>
+                                    {% else %}
+                                        <i class="fas fa-circle text-secondary fa-2x"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-0">{{ journal.action|title }}</h6>
+                                            <small class="text-muted">
+                                                Par {{ journal.moderateur.prenom }} {{ journal.moderateur.nom }}
+                                                le {{ journal.dateValidation|date('d/m/Y à H:i') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    {% if journal.commentaire %}
+                                        <div class="mt-2 p-2 bg-light rounded">
+                                            {{ journal.commentaire }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <!-- État et statut -->
+            <div class="card admin-card mb-4">
+                <div class="card-header admin-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        État du signalement
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>État de validation :</strong></label>
+                        <div>
+                            {% if signalement.etatValidation == 'en_attente' %}
+                                <span class="badge bg-warning fs-6">En attente de validation</span>
+                            {% elseif signalement.etatValidation == 'valide' %}
+                                <span class="badge bg-success fs-6">Validé</span>
+                            {% elseif signalement.etatValidation == 'rejete' %}
+                                <span class="badge bg-danger fs-6">Rejeté</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Statut de traitement :</strong></label>
+                        <div>
+                            {% if signalement.statut %}
+                                {% if signalement.statut.value == 'NOUVEAU' %}
+                                    <span class="badge bg-primary fs-6">Nouveau</span>
+                                {% elseif signalement.statut.value == 'EN_COURS' %}
+                                    <span class="badge bg-warning fs-6">En cours</span>
+                                {% elseif signalement.statut.value == 'RESOLU' %}
+                                    <span class="badge bg-success fs-6">Résolu</span>
+                                {% elseif signalement.statut.value == 'ANNULE' %}
+                                    <span class="badge bg-secondary fs-6">Annulé</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">Non défini</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Visibilité publique :</strong></label>
+                        <div>
+                            {% if signalement.etatValidation == 'valide' %}
+                                <span class="badge bg-success fs-6">
+                                <i class="fas fa-eye me-1"></i>Visible
+                            </span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">
+                                <i class="fas fa-eye-slash me-1"></i>Masqué
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Réparation associée -->
+            {% if signalement.reparation %}
+                <div class="card admin-card mb-4">
+                    <div class="card-header admin-card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tools me-2"></i>
+                            Réparation associée
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <strong>Statut :</strong>
+                            <span class="badge {{ signalement.reparation.statut.badgeClass }}">
+                            {{ signalement.reparation.statut.label }}
+                        </span>
+                        </div>
+
+                        {% if signalement.reparation.dateDebut %}
+                            <div class="mb-2">
+                                <strong>Date de début :</strong>
+                                {{ signalement.reparation.dateDebut|date('d/m/Y') }}
+                            </div>
+                        {% endif %}
+
+                        {% if signalement.reparation.cout %}
+                            <div class="mb-2">
+                                <strong>Coût estimé :</strong>
+                                {{ signalement.reparation.cout|number_format(0, ',', ' ') }} FCFA
+                            </div>
+                        {% endif %}
+
+                        {% if signalement.reparation.utilisateur %}
+                            <div class="mb-2">
+                                <strong>Assigné à :</strong>
+                                {{ signalement.reparation.utilisateur.prenom }} {{ signalement.reparation.utilisateur.nom }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Actions administrateur -->
+            <div class="card admin-card mb-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Actions Administrateur
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Attention :</strong> Ces actions sont réservées aux administrateurs et seront enregistrées dans les logs.
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <!-- Suppression définitive -->
+                        <button type="button" class="btn btn-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteModal">
+                            <i class="fas fa-trash me-1"></i>Supprimer définitivement
+                        </button>
+
+                        <!-- Actions de modération directe -->
+                        {% if signalement.etatValidation == 'en_attente' %}
+                            <a href="{{ path('app_moderateur_signalements_show', {'id': signalement.id}) }}"
+                               class="btn btn-warning">
+                                <i class="fas fa-gavel me-1"></i>Modérer ce signalement
+                            </a>
+                        {% endif %}
+
+                        <!-- Voir l'activité utilisateur -->
+                        {% if signalement.utilisateur %}
+                            <a href="{{ path('app_admin_users') }}?search={{ signalement.utilisateur.email }}"
+                               class="btn btn-info">
+                                <i class="fas fa-user me-1"></i>Voir l'utilisateur
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métadonnées techniques -->
+            <div class="card admin-card">
+                <div class="card-header admin-card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        Métadonnées techniques
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr>
+                            <td><strong>ID Base :</strong></td>
+                            <td>{{ signalement.id }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Créé le :</strong></td>
+                            <td>{{ signalement.dateSignalement|date('d/m/Y H:i:s') }}</td>
+                        </tr>
+                        {% if signalement.dateModification %}
+                            <tr>
+                                <td><strong>Modifié le :</strong></td>
+                                <td>{{ signalement.dateModification|date('d/m/Y H:i:s') }}</td>
+                            </tr>
+                        {% endif %}
+                        <tr>
+                            <td><strong>Photos :</strong></td>
+                            <td>{{ signalement.photos|length }} fichier(s)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Commentaires :</strong></td>
+                            <td>{{ signalement.commentaires|length }} commentaire(s)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Validations :</strong></td>
+                            <td>{{ signalement.journalValidations|length }} action(s)</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de suppression définitive -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-trash me-2"></i>Suppression définitive
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>ATTENTION - Action irréversible !</strong>
+                        <p class="mb-0 mt-2">Cette action supprimera définitivement :</p>
+                        <ul class="mb-0 mt-2">
+                            <li>Le signalement et toutes ses données</li>
+                            <li>Toutes les photos associées ({{ signalement.photos|length }} fichiers)</li>
+                            <li>Tous les commentaires ({{ signalement.commentaires|length }} commentaires)</li>
+                            <li>L'historique de modération ({{ signalement.journalValidations|length }} actions)</li>
+                            {% if signalement.reparation %}
+                                <li>La réparation associée</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <h6 class="mt-4">Signalement à supprimer :</h6>
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ signalement.titre }}</h6>
+                            <p class="card-text">{{ signalement.description|slice(0, 100) }}{% if signalement.description|length > 100 %}...{% endif %}</p>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>
+                                    {% if signalement.utilisateur %}
+                                        {{ signalement.utilisateur.prenom }} {{ signalement.utilisateur.nom }} ({{ signalement.utilisateur.email }})
+                                    {% else %}
+                                        Utilisateur supprimé
+                                    {% endif %}
+                                    <br>
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ signalement.dateSignalement|date('d/m/Y H:i') }}
+                                    <br>
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    {% if signalement.ville %}{{ signalement.ville.nom }}{% else %}Ville non définie{% endif %}
+                                </small>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Cette action sera enregistrée dans les logs d'audit système avec votre identifiant.
+                    </div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                        <label class="form-check-label" for="confirmDelete">
+                            Je confirme vouloir supprimer définitivement ce signalement
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Annuler
+                    </button>
+                    <form method="post" action="{{ path('app_admin_signalements_delete_force', {'id': signalement.id}) }}" style="display: inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete_force' ~ signalement.id) }}">
+                        <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                            <i class="fas fa-trash me-1"></i>SUPPRIMER DÉFINITIVEMENT
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialiser la carte
-            const map = L.map('ville-map').setView([
-                {{ ville.latitudeCentre }},
-                {{ ville.longitudeCentre }}
-            ], 13);
+            // Activer le bouton de suppression seulement si la checkbox est cochée
+            const confirmCheckbox = document.getElementById('confirmDelete');
+            const deleteButton = document.getElementById('deleteButton');
 
-            // Ajouter le fond de carte OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+            if (confirmCheckbox && deleteButton) {
+                confirmCheckbox.addEventListener('change', function() {
+                    deleteButton.disabled = !this.checked;
+                });
+            }
 
-            // Ajouter les marqueurs pour chaque signalement
-            {% for signalement in all_signalements_for_map %}
-            L.marker([{{ signalement.latitude }}, {{ signalement.longitude }}])
-                .addTo(map)
-                .bindPopup(`
-                        <strong>{{ signalement.titre }}</strong><br>
-                        <span class="text-muted">{{ signalement.categorie.nom }}</span><br>
-                        <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-primary mt-2">Voir détails</a>
-                    `);
-            {% endfor %}
+            // Réinitialiser la checkbox quand le modal se ferme
+            const deleteModal = document.getElementById('deleteModal');
+            if (deleteModal) {
+                deleteModal.addEventListener('hidden.bs.modal', function() {
+                    if (confirmCheckbox) {
+                        confirmCheckbox.checked = false;
+                        deleteButton.disabled = true;
+                    }
+                });
+            }
         });
     </script>
-{% endblock %}
-
-{% block body %}
-    <div class="container-fluid mt-4 px-4">
-        {# Affichage des messages flash #}
-        {% for label, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="alert alert-{{ label }} alert-dismissible fade show mb-4" role="alert">
-                    <i class="bi bi-info-circle me-2"></i>  {{ message }}
-                </div>
-            {% endfor %}
-        {% endfor %}
-
-        <!-- Fil d'Ariane -->
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ ville.nom }}</li>
-            </ol>
-        </nav>
-
-        <!-- En-tête de la ville -->
-        <div class="ville-header mb-4" style="background-image: url('{{ asset('images/villes/default-city.jpg') }}')">
-            <div class="ville-header-content text-center">
-                <h1 class="display-4 fw-bold">{{ ville.nom }}</h1>
-                <p class="lead">
-                    Département: {{ ville.departement.nom }}
-                    {% if ville.arrondissements|length > 0 %}
-                        | {{ ville.arrondissements|length }} arrondissement(s)
-                    {% endif %}
-                </p>
-                <p>
-                    <i class="bi bi-geo-alt-fill"></i> Coordonnées: {{ ville.latitudeCentre }}, {{ ville.longitudeCentre }}
-                </p>
-            </div>
-        </div>
-
-        <!-- Carte des signalements -->
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="bi bi-map me-2"></i>Carte des signalements à {{ ville.nom }}</h4>
-            </div>
-            <div class="card-body p-0">
-                <div id="ville-map"></div>
-            </div>
-        </div>
-
-        <!-- Filtres -->
-        <div class="filter-container">
-            <h5 class="mb-3"><i class="bi bi-funnel me-2"></i>Filtrer les signalements</h5>
-            <form method="get" class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Statut</label>
-                    <select class="form-select" name="statut">
-                        <option value="">Tous les statuts</option>
-                        <option value="nouveau" {% if app.request.query.get('statut') == 'nouveau' %}selected{% endif %}>Nouveau</option>
-                        <option value="en_cours" {% if app.request.query.get('statut') == 'en_cours' %}selected{% endif %}>En cours</option>
-                        <option value="resolu" {% if app.request.query.get('statut') == 'resolu' %}selected{% endif %}>Résolu</option>
-                        <option value="rejete" {% if app.request.query.get('statut') == 'rejete' %}selected{% endif %}>Rejeté</option>
-                    </select>
-                </div>
-                <!-- Dans ville/show.html.twig, modifions la partie des catégories -->
-                <div class="col-md-3">
-                    <label class="form-label">Catégorie</label>
-                    <select class="form-select" name="categorie">
-                        <option value="">Toutes les catégories</option>
-                        {% for categorie in categories|default([]) %}
-                            <option value="{{ categorie.id }}" {% if app.request.query.get('categorie') == categorie.id|number_format(0, '', '') %}selected{% endif %}>
-                                {{ categorie.nom }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Date</label>
-                    <select class="form-select" name="date">
-                        <option value="">Toutes les dates</option>
-                        <option value="today" {% if app.request.query.get('date') == 'today' %}selected{% endif %}>Aujourd'hui</option>
-                        <option value="week" {% if app.request.query.get('date') == 'week' %}selected{% endif %}>Cette semaine</option>
-                        <option value="month" {% if app.request.query.get('date') == 'month' %}selected{% endif %}>Ce mois-ci</option>
-                    </select>
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-search me-2"></i>Filtrer
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Liste des signalements -->
-        <h2 class="mb-4">Signalements à {{ ville.nom }}</h2>
-
-        {% if signalements_paginator.items|length > 0 %}
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
-                {% for signalement in signalements_paginator.items %}
-                    <div class="col">
-                        <div class="card h-100">
-                            <!-- Badges pour catégorie et statut -->
-                            <span class="category-badge" style="background-color: {{ signalement.categorie.couleur|default('black') }}">
-                                <i class="{{ signalement.categorie.icone }}"></i> {{ signalement.categorie.nom }}
-                            </span>
-                            <span class="status-badge
-                                {% if signalement.statut.value == 'nouveau' %}bg-primary
-                                {% elseif signalement.statut.value == 'en_cours' %}bg-warning
-                                {% elseif signalement.statut.value == 'resolu' %}bg-success
-                                {% elseif signalement.statut.value == 'rejete' %}bg-danger{% endif %}">
-                                {{ signalement.statut.value|replace({'_': ' '})|capitalize }}
-                            </span>
-
-                            <!-- Image du signalement -->
-                            <img src="{{ asset('uploads/' ~ signalement.photoUrl) }}" class="card-img-top" alt="Photo du signalement">
-
-                            <div class="card-body">
-                                <h5 class="card-title">{{ signalement.titre }}</h5>
-                                <p class="card-text">{{ signalement.description|length > 100 ? signalement.description|slice(0, 100) ~ '...' : signalement.description }}</p>
-                            </div>
-                            <div class="card-footer bg-transparent">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        <i class="bi bi-calendar3"></i> {{ signalement.dateSignalement|date('d/m/Y') }}
-                                    </small>
-                                    <a href="{{ path('app_signalement_show', {'id': signalement.id}) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye me-1"></i>Voir détails
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-
-            <!-- Pagination -->
-            {% if signalements_paginator.totalPages > 1 %}
-                <nav aria-label="Pagination des signalements">
-                    <ul class="pagination">
-                        {% if signalements_paginator.hasPreviousPage %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ path('app_ville_show', {'slug': ville.slug, 'page': signalements_paginator.previousPage}) }}">
-                                    <i class="bi bi-chevron-left"></i>
-                                </a>
-                            </li>
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link"><i class="bi bi-chevron-left"></i></span>
-                            </li>
-                        {% endif %}
-
-                        {% for page in signalements_paginator.pageRange %}
-                            <li class="page-item {% if page == signalements_paginator.currentPage %}active{% endif %}">
-                                <a class="page-link" href="{{ path('app_ville_show', {'slug': ville.slug, 'page': page}) }}">{{ page }}</a>
-                            </li>
-                        {% endfor %}
-
-                        {% if signalements_paginator.hasNextPage %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ path('app_ville_show', {'slug': ville.slug, 'page': signalements_paginator.nextPage}) }}">
-                                    <i class="bi bi-chevron-right"></i>
-                                </a>
-                            </li>
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link"><i class="bi bi-chevron-right"></i></span>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-            {% endif %}
-
-        {% else %}
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i> Aucun signalement n'a été trouvé pour cette ville.
-            </div>
-        {% endif %}
-    </div>
 {% endblock %}

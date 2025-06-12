@@ -71,10 +71,10 @@
                         </li>
                     {% endif %}
 
-                    {# Menu Gestion/Modération - OPTIMISÉ pour admins et modérateurs #}
+                    {# Menu Gestion/Modération - AMÉLIORÉ avec les nouvelles routes #}
                     {% if is_granted('ROLE_MODERATOR') %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{ app.request.get('_route') starts with 'app_validation' or app.request.get('_route') starts with 'app_reparation' or app.request.get('_route') starts with 'app_admin' ? 'active' : '' }}"
+                            <a class="nav-link dropdown-toggle {{ app.request.get('_route') starts with 'app_validation' or app.request.get('_route') starts with 'app_reparation' or app.request.get('_route') starts with 'app_admin' or app.request.get('_route') starts with 'app_moderateur' ? 'active' : '' }}"
                                href="#" id="navbarDropdownGestion" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 {% if is_granted('ROLE_ADMIN') %}
                                     <i class="fas fa-cogs me-1"></i> Gestion
@@ -83,15 +83,33 @@
                                 {% endif %}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownGestion">
-                                {# Section Validation #}
+                                {# 🎯 Dashboard Modération - NOUVELLES ROUTES #}
+                                <li><h6 class="dropdown-header">
+                                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard Modération
+                                    </h6></li>
+                                <li><a class="dropdown-item" href="{{ path('app_moderateur_dashboard') }}">
+                                        <i class="fas fa-chart-line me-2"></i> Vue d'ensemble
+                                    </a></li>
+                                <li><a class="dropdown-item" href="{{ path('app_moderateur_statistiques') }}">
+                                        <i class="fas fa-chart-bar me-2"></i> Mes statistiques
+                                    </a></li>
+
+                                {# Section Validation - NOUVELLES ROUTES #}
+                                <li><hr class="dropdown-divider"></li>
                                 <li><h6 class="dropdown-header">
                                         <i class="fas fa-check-circle me-2"></i>Validation
                                     </h6></li>
-                                <li><a class="dropdown-item" href="{{ path('app_validation_index') }}">
-                                        <i class="fas fa-tasks me-2"></i> Signalements en attente
+                                <li><a class="dropdown-item" href="{{ path('app_moderateur_validation') }}">
+                                        <i class="fas fa-clock me-2"></i> Signalements en attente
+                                    </a></li>
+                                <li><a class="dropdown-item" href="{{ path('app_moderateur_signalements') }}">
+                                        <i class="fas fa-list-check me-2"></i> Tous les signalements
+                                    </a></li>
+                                <li><a class="dropdown-item" href="{{ path('app_moderateur_journal') }}">
+                                        <i class="fas fa-history me-2"></i> Mon journal d'activité
                                     </a></li>
 
-                                {# Section Réparations #}
+                                {# Section Réparations (routes existantes) #}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><h6 class="dropdown-header">
                                         <i class="fas fa-tools me-2"></i>Réparations
@@ -107,20 +125,20 @@
                                             <i class="fas fa-shield-alt me-2"></i>Administration
                                         </h6></li>
                                     <li><a class="dropdown-item" href="{{ path('app_admin_dashboard') }}">
-                                            <i class="fas fa-tachometer-alt me-2"></i> Tableau de bord
+                                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard Admin
                                         </a></li>
                                     <li><a class="dropdown-item" href="{{ path('app_admin_users') }}">
                                             <i class="fas fa-users me-2"></i> Utilisateurs
                                         </a></li>
                                     <li><a class="dropdown-item" href="{{ path('app_admin_signalements') }}">
-                                            <i class="fas fa-list-alt me-2"></i> Tous les signalements
+                                            <i class="fas fa-database me-2"></i> Base de données signalements
                                         </a></li>
                                     <li><a class="dropdown-item" href="{{ path('app_admin_demandes_suppression') }}">
                                             <i class="fas fa-trash-alt me-2"></i> Demandes de suppression
                                         </a></li>
                                     <li><a class="dropdown-item" href="{{ path('app_admin_statistiques') }}">
-                                        <i class="fas fa-chart-bar me-2"></i> Statistiques
-                                    </a></li>
+                                            <i class="fas fa-chart-pie me-2"></i> Statistiques globales
+                                        </a></li>
 
                                     {# Section développement (visible uniquement en mode dev) #}
                                     {% if app.environment == 'dev' %}
@@ -128,14 +146,8 @@
                                         <li><h6 class="dropdown-header">
                                                 <i class="fas fa-code me-2"></i>Développement
                                             </h6></li>
-                                        <li><a class="dropdown-item" href="{{ path('dev_error_403') }}" target="_blank">
-                                                <i class="fas fa-shield-alt me-2"></i> Préview 403
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="{{ path('dev_error_404') }}" target="_blank">
-                                                <i class="fas fa-search me-2"></i> Préview 404
-                                            </a></li>
-                                        <li><a class="dropdown-item" href="{{ path('dev_error_500') }}" target="_blank">
-                                                <i class="fas fa-exclamation-triangle me-2"></i> Préview 500
+                                        <li><a class="dropdown-item" href="#">
+                                                <i class="fas fa-bug me-2"></i> Test notifications
                                             </a></li>
                                     {% endif %}
                                 {% endif %}
@@ -145,49 +157,35 @@
                 {% endif %}
             </ul>
 
-            {# Menu utilisateur à droite #}
+            {# Partie droite de la navbar - Utilisateur connecté ou connexion #}
             <ul class="navbar-nav">
                 {% if app.user %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-2"></i>
-                            <span class="d-none d-lg-inline">{{ app.user.prenom }} {{ app.user.nom }}</span>
-                            <span class="d-lg-none">{{ app.user.prenom }}</span>
-                            {% if is_granted('ROLE_ADMIN') %}
-                                <span class="badge bg-danger ms-1">Admin</span>
-                            {% elseif is_granted('ROLE_MODERATOR') %}
-                                <span class="badge bg-warning text-dark ms-1">Mod</span>
-                            {% else %}
-                                <span class="badge bg-primary ms-1 d-none d-lg-inline">User</span>
-                            {% endif %}
-                            {% if not app.user.estValide %}
-                                <span class="badge bg-secondary ms-1">Non validé</span>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i>
+                            {{ app.user.prenom }} {{ app.user.nom }}
+                            {% if not app.user.estValide and not is_granted('ROLE_MODERATOR') %}
+                                <span class="badge bg-warning ms-1">En attente</span>
                             {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
-                            <li><h6 class="dropdown-header">Mon compte</h6></li>
                             <li><a class="dropdown-item" href="{{ path('app_profil_show') }}">
                                     <i class="fas fa-user me-2"></i> Mon profil
                                 </a></li>
+                            <li><a class="dropdown-item" href="{{ path('app_profil_edit') }}">
+                                    <i class="fas fa-edit me-2"></i> Modifier profil
+                                </a></li>
 
-                            {% if app.user.estValide %}
-                                <li><a class="dropdown-item" href="{{ path('app_mes_signalements') }}">
-                                        <i class="fas fa-exclamation-triangle me-2"></i> Mes signalements
-                                    </a></li>
-                                <li><a class="dropdown-item" href="{{ path('app_messages_inbox') }}">
-                                        <i class="fas fa-envelope me-2"></i> Mes messages
-                                        <span id="userMenuMessagesBadge" class="badge bg-danger ms-1 d-none">0</span>
-                                    </a></li>
-                                <li><a class="dropdown-item" href="{{ path('app_profil_activites') }}">
-                                        <i class="fas fa-history me-2"></i> Mes activités
+                            {# Liens spécifiques aux modérateurs/admins #}
+                            {% if is_granted('ROLE_MODERATOR') %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ path('app_moderateur_dashboard') }}">
+                                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard Modération
                                     </a></li>
                             {% endif %}
 
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ path('app_profil_edit') }}">
-                                    <i class="fas fa-edit me-2"></i> Modifier mon profil
-                                </a></li>
-                            <li><a class="dropdown-item text-danger" href="{{ path('app_logout') }}">
+                            <li><a class="dropdown-item" href="{{ path('app_logout') }}">
                                     <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
                                 </a></li>
                         </ul>
@@ -199,7 +197,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-light ms-2" href="{{ path('app_register') }}">
+                        <a class="nav-link" href="{{ path('app_register') }}">
                             <i class="fas fa-user-plus me-1"></i> Inscription
                         </a>
                     </li>
@@ -209,114 +207,18 @@
     </div>
 </nav>
 
-{# CSS pour améliorer le responsive et l'organisation des menus #}
-<style>
-    /* Amélioration des dropdowns */
-    .dropdown-menu {
-        min-width: 280px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border: none;
-        border-radius: 8px;
-    }
-
-    .dropdown-header {
-        font-weight: 600;
-        color: #495057;
-        font-size: 0.875rem;
-        padding: 0.5rem 1rem;
-        margin-bottom: 0.25rem;
-    }
-
-    .dropdown-item {
-        padding: 0.5rem 1rem;
-        transition: all 0.2s ease;
-    }
-
-    .dropdown-item:hover {
-        background-color: #f8f9fa;
-        transform: translateX(2px);
-    }
-
-    /* Responsive navbar */
-    @media (max-width: 992px) {
-        .navbar-nav .nav-link {
-            padding: 0.5rem 0.75rem;
-        }
-
-        .dropdown-menu {
-            min-width: 250px;
-        }
-
-        /* Réduire les badges sur mobile */
-        .badge {
-            font-size: 0.65rem;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .navbar-brand {
-            font-size: 1rem;
-        }
-
-        .nav-link {
-            font-size: 0.9rem;
-        }
-
-        .dropdown-menu {
-            min-width: 220px;
-        }
-    }
-
-    /* Animation pour les icônes */
-    .nav-link i {
-        transition: transform 0.2s ease;
-    }
-
-    .nav-link:hover i {
-        transform: scale(1.1);
-    }
-
-    /* Style pour le badge de messages */
-    #messagesBadge {
-        font-size: 0.65rem;
-        min-width: 18px;
-        height: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-</style>
-
-{# Script pour mettre à jour le compteur de messages non lus (seulement pour utilisateurs validés) #}
+{# Script pour les notifications en temps réel (si implémenté) #}
 {% if app.user and app.user.estValide %}
     <script>
+        // Fonction pour vérifier les nouveaux messages
+        function checkNewMessages() {
+            // Cette fonction peut être implémentée pour vérifier les nouveaux messages via AJAX
+            // et mettre à jour le badge de notification
+        }
+
+        // Vérifier les nouveaux messages toutes les 30 secondes
         document.addEventListener('DOMContentLoaded', function() {
-            function updateMessageCount() {
-                fetch('{{ path('app_messages_count') }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        const badge = document.getElementById('messagesBadge');
-                        const userMenuBadge = document.getElementById('userMenuMessagesBadge');
-                        const count = data.count;
-
-                        if (count > 0) {
-                            document.getElementById('messagesCount').textContent = count;
-                            badge.classList.remove('d-none');
-                            userMenuBadge.textContent = count;
-                            userMenuBadge.classList.remove('d-none');
-                        } else {
-                            badge.classList.add('d-none');
-                            userMenuBadge.classList.add('d-none');
-                        }
-                    })
-                    .catch(error => console.error('Erreur lors de la récupération du nombre de messages:', error));
-            }
-
-            // Mettre à jour au chargement
-            updateMessageCount();
-
-            // Mettre à jour toutes les 30 secondes
-            setInterval(updateMessageCount, 30000);
+            setInterval(checkNewMessages, 30000);
         });
     </script>
 {% endif %}
