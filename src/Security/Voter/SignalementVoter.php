@@ -56,24 +56,24 @@ class SignalementVoter extends Voter
 
     private function canDelete(Signalement $signalement, UserInterface $user): bool
     {
-        // Admins et modérateurs peuvent supprimer n'importe quel signalement
+        // Admins et modérateurs peuvent supprimer n'importe quel signalements
         return $this->security->isGranted('ROLE_MODERATOR');
     }
 
     private function canEdit(Signalement $signalement, UserInterface $user): bool
     {
-        // L'auteur peut modifier son signalement si pas encore validé
+        // L'auteur peut modifier son signalements si pas encore validé
         if ($signalement->getUtilisateur() === $user && $signalement->getEtatValidation() === 'en_attente') {
             return true;
         }
 
-        // Admins et modérateurs peuvent modifier n'importe quel signalement
+        // Admins et modérateurs peuvent modifier n'importe quel signalements
         return $this->security->isGranted('ROLE_MODERATOR');
     }
 
     private function canRequestDelete(Signalement $signalement, UserInterface $user): bool
     {
-        // Seul l'auteur peut demander la suppression de son signalement
+        // Seul l'auteur peut demander la suppression de son signalements
         return $signalement->getUtilisateur() === $user;
     }
 }

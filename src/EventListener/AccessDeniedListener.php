@@ -43,8 +43,8 @@ class AccessDeniedListener implements EventSubscriberInterface
     $message = 'Accès refusé. Vous n\'avez pas les permissions nécessaires.';
     $redirectRoute = 'app_home';
 
-    if (str_contains($route, 'delete') || str_contains($referer, 'signalement')) {
-      $message = 'Seuls les administrateurs peuvent supprimer des signalements. En tant que modérateur, vous pouvez rejeter un signalement.';
+    if (str_contains($route, 'delete') || str_contains($referer, 'signalements')) {
+      $message = 'Seuls les administrateurs peuvent supprimer des signalements. En tant que modérateur, vous pouvez rejeter un signalements.';
       $redirectRoute = $request->headers->get('referer') ? null : 'app_signalements';
     } elseif (str_contains($route, 'admin')) {
       $message = 'Cette section est réservée aux administrateurs.';

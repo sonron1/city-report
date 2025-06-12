@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\Entity\Signalement;
 use App\Entity\Utilisateur;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -138,7 +137,7 @@ class EmailService
     $email = (new Email())
         ->from($this->emailSender)
         ->to($utilisateur->getEmail())
-        ->subject('🎉 Bienvenue sur CityReport !')
+        ->subject('🎉 Bienvenue sur CityFlow Bénin !')
         ->html($this->twig->render('emails/bienvenue.html.twig', [
             'utilisateur' => $utilisateur
         ]));
@@ -169,29 +168,51 @@ class EmailService
       return;
     }
 
-    $resetUrl = $this->urlGenerator->generate(
-        'app_reset_password',
-        ['token' => $token],
-        UrlGeneratorInterface::ABSOLUTE_URL
-    );
+    // Utiliser une route existante ou créer une URL simple
+    $resetUrl = $this->generateSafeUrl('app_login') . '?reset_token=' . $token;
 
     $email = (new Email())
         ->from($this->emailSender)
         ->to($utilisateur->getEmail())
         ->subject('🔑 Réinitialisation de votre mot de passe')
-        ->html($this->twig->render('emails/reset_password.html.twig', [
+        ->html($this->twig->render('emails/reset_mot_de_passe.html.twig', [
             'utilisateur' => $utilisateur,
-            'resetUrl' => $resetUrl
+            'resetUrl' => $resetUrl,
+            'expirationHours' => 24
         ]));
 
     $this->mailer->send($email);
   }
 
-  public function sendSignalementDeletedEmail(Utilisateur $utilisateur, string $titreSignalement, string $motif): void
+  public function sendConfirmationEmail(Utilisateur $utilisateur, string $token): void
   {
     if (!$utilisateur->getEmail()) {
       return;
     }
+
+    // Utiliser une route existante
+    $confirmationUrl = $this->generateSafeUrl('app_request_verify_email') . '?token=' . $token;
+
+    $email = (new Email())
+        ->from($this->emailSender)
+        ->to($utilisateur->getEmail())
+        ->subject('🔐 Confirmez votre adresse email - CityFlow Bénin')
+        ->html($this->twig->render('emails/confirmation_email.html.twig', [
+            'utilisateur' => $utilisateur,
+            'confirmationUrl' => $confirmationUrl
+        ]));
+
+    $this->mailer->send($email);
+  }
+
+  public function sendSignalementDeletedEmail(Utilisateur $utilisateur, string $titreSignalement, string $raison = ''): void
+  {
+    if (!$utilisateur->getEmail()) {
+      return;
+    }
+
+    // Utiliser la route admin dashboard qui existe
+    $dashboardUrl = $this->generateSafeUrl('app_admin_dashboard');
 
     $email = (new Email())
         ->from($this->emailSender)
@@ -200,7 +221,8 @@ class EmailService
         ->html($this->twig->render('emails/signalement_supprime.html.twig', [
             'utilisateur' => $utilisateur,
             'titreSignalement' => $titreSignalement,
-            'motif' => $motif
+            'raison' => $raison,
+            'dashboardUrl' => $dashboardUrl
         ]));
 
     $this->mailer->send($email);
@@ -211,16 +233,19 @@ class EmailService
    */
   private function generateSignalementUrl(Signalement $signalement): string
   {
-    // Si le signalement n'a pas d'ID (test), utiliser une URL factice
     if (!$signalement->getId()) {
-      return 'https://example.com/signalement/test';
+      return '#';
     }
 
-    return $this->urlGenerator->generate(
-        'app_signalement_show',
-        ['id' => $signalement->getId()],
-        UrlGeneratorInterface::ABSOLUTE_URL
-    );
+    try {
+      return $this->urlGenerator->generate(
+          'app_signalement_show',
+          ['id' => $signalement->getId()],
+          UrlGeneratorInterface::ABSOLUTE_URL
+      );
+    } catch (\Exception $e) {
+      return '#';
+    }
   }
 
   /**
@@ -228,12 +253,10 @@ class EmailService
    */
   private function generateSignalementModifierUrl(Signalement $signalement): string
   {
-    // Si le signalement n'a pas d'ID (test), utiliser une URL factice
     if (!$signalement->getId()) {
-      return 'https://example.com/signalement/test/modifier';
+      return '#';
     }
 
-    // Vérifier si la route existe
     try {
       return $this->urlGenerator->generate(
           'app_signalement_modifier',
@@ -241,8 +264,23 @@ class EmailService
           UrlGeneratorInterface::ABSOLUTE_URL
       );
     } catch (\Exception $e) {
-      // Si la route n'existe pas, utiliser une URL factice
-      return 'https://example.com/signalement/' . $signalement->getId() . '/modifier';
+      return '#';
+    }
+  }
+
+  /**
+   * Génère une URL de manière sécurisée
+   */
+  private function generateSafeUrl(string $routeName): string
+  {
+    try {
+      return $this->urlGenerator->generate(
+          $routeName,
+          [],
+          UrlGeneratorInterface::ABSOLUTE_URL
+      );
+    } catch (\Exception $e) {
+      return 'http://localhost:8000'; // URL de fallback
     }
   }
 }
