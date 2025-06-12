@@ -5,42 +5,33 @@ namespace App\Enum;
 enum EtatValidation: string
 {
     case EN_ATTENTE = 'en_attente';
-    case VALIDE = 'validé';
-    case REJETE = 'rejeté';
-    
-    /**
-     * Retourne le libellé formaté pour l'affichage
-     */
-    public function libelle(): string
+    case VALIDE = 'validé';  // ✅ CORRECTION : avec accent pour correspondre à la BD
+    case REJETE = 'rejeté';  // ✅ CORRECTION : avec accent pour correspondre à la BD
+
+    public function getLabel(): string
     {
         return match($this) {
             self::EN_ATTENTE => 'En attente',
             self::VALIDE => 'Validé',
-            self::REJETE => 'Rejeté'
+            self::REJETE => 'Rejeté',
         };
     }
-    
-    /**
-     * Retourne la classe CSS Bootstrap associée à l'état
-     */
-    public function badgeClass(): string
+
+    public function getBadgeClass(): string
     {
         return match($this) {
             self::EN_ATTENTE => 'bg-warning',
             self::VALIDE => 'bg-success',
-            self::REJETE => 'bg-danger'
+            self::REJETE => 'bg-danger',
         };
     }
-    
-    /**
-     * Retourne tous les états disponibles
-     */
-    public static function getChoices(): array
+
+    public function getIcon(): string
     {
-        return [
-            'En attente' => self::EN_ATTENTE->value,
-            'Validé' => self::VALIDE->value,
-            'Rejeté' => self::REJETE->value
-        ];
+        return match($this) {
+            self::EN_ATTENTE => 'clock',
+            self::VALIDE => 'check-circle',
+            self::REJETE => 'x-circle',
+        };
     }
 }

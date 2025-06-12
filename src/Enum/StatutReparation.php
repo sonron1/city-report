@@ -7,40 +7,28 @@ enum StatutReparation: string
     case PLANIFIEE = 'planifiee';
     case EN_COURS = 'en_cours';
     case TERMINEE = 'terminee';
-    
-    /**
-     * Retourne le libellé formaté pour l'affichage
-     */
-    public function libelle(): string
+    case ANNULEE = 'annulee';
+    case SUSPENDUE = 'suspendue';
+
+    public function getLabel(): string
     {
         return match($this) {
             self::PLANIFIEE => 'Planifiée',
             self::EN_COURS => 'En cours',
-            self::TERMINEE => 'Terminée'
+            self::TERMINEE => 'Terminée',
+            self::ANNULEE => 'Annulée',
+            self::SUSPENDUE => 'Suspendue',
         };
     }
-    
-    /**
-     * Retourne la classe CSS Bootstrap associée au statut
-     */
-    public function badgeClass(): string
+
+    public function getBadgeClass(): string
     {
         return match($this) {
-            self::PLANIFIEE => 'bg-info',
-            self::EN_COURS => 'bg-warning',
-            self::TERMINEE => 'bg-success'
+            self::PLANIFIEE => 'bg-warning',
+            self::EN_COURS => 'bg-primary',
+            self::TERMINEE => 'bg-success',
+            self::ANNULEE => 'bg-danger',
+            self::SUSPENDUE => 'bg-secondary',
         };
-    }
-    
-    /**
-     * Retourne tous les statuts disponibles
-     */
-    public static function getChoices(): array
-    {
-        return [
-            'Planifiée' => self::PLANIFIEE->value,
-            'En cours' => self::EN_COURS->value,
-            'Terminée' => self::TERMINEE->value
-        ];
     }
 }
